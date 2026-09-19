@@ -142,9 +142,15 @@
   // Cria uma empresa nova (só o owner tem permissão, via RLS).
   EF.criarEmpresa = async function (nome) {
     if (!ready) return { error: 'EventFlow não está configurado.' };
-    var { data, error } = await client.from('empresas').insert({ nome: nome }).select().maybeSingle();
-    if (error) return { error: error.message };
-    return { ok: true, empresa: data };
+    if (!EF.user || !EF.profile) return { error: 'Sessão ainda não foi inicializada. Recarregue a página.' };
+    if (!EF.isOwner()) return { error: 'Somente o Owner pode criar empresas.' };
+    nome = String(nome || '').trim();
+    if (!nome) return { error: 'Informe o nome da empresa.' };
+
+    var result = await client.from('empresas').insert({ nome: nome }).select('*').single();
+    if (result.error) return { error: result.error.message };
+    if (!result.data) return { error: 'A empresa foi enviada ao banco, mas nenhum registro foi retornado.' };
+    return { ok: true, empresa: result.data };
   };
 
   EF.listarEmpresas = async function () {
