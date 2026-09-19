@@ -30,6 +30,23 @@
   .icone-acao:hover{color:#c9695c;}
   .icone-acao.neutro:hover{color:#7fa8c9;}
   .badge{display:inline-block;padding:3px 9px;border-radius:20px;font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.03em;white-space:nowrap;}
+
+  .sales-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+  .sales-btn{appearance:none;border:1px solid rgba(243,240,234,.12);background:#111214;color:#f3f1ec;border-radius:14px;padding:12px 16px;font-size:13px;font-weight:600;cursor:pointer;transition:.2s ease;}
+  .sales-btn:hover{border-color:rgba(127,168,201,.45);transform:translateY(-1px);}
+  .sales-btn.primary{background:linear-gradient(180deg,#1b2230,#131720);border-color:#253247;color:#f3f1ec;box-shadow:inset 0 1px 0 rgba(255,255,255,.05);}
+  .sales-form{display:grid;gap:18px;}
+  .sales-form-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:14px;}
+  .sales-field{min-width:0;}
+  .sales-field.col-12{grid-column:span 12;}.sales-field.col-8{grid-column:span 8;}.sales-field.col-6{grid-column:span 6;}.sales-field.col-4{grid-column:span 4;}.sales-field.col-3{grid-column:span 3;}
+  .sales-label{display:block;font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:#6e6e73;margin-bottom:8px;}
+  .sales-input,.sales-select,.sales-textarea{width:100%;background:#111214;border:1px solid #202227;border-radius:14px;color:#f3f1ec;font-size:14px;box-sizing:border-box;padding:14px 15px;min-height:48px;}
+  .sales-textarea{min-height:96px;resize:vertical;}
+  .sales-input:focus,.sales-select:focus,.sales-textarea:focus{outline:none;border-color:#3b82c9;box-shadow:0 0 0 3px rgba(59,130,201,.12);}
+  .sales-helper{font-size:12px;color:#7d7d84;margin-top:8px;}
+  .sales-form-footer{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;}
+  .sales-tag{display:inline-flex;align-items:center;gap:8px;padding:10px 12px;border-radius:12px;background:#111214;border:1px solid #202227;color:#8c8c91;font-size:12px;}
+  @media (max-width: 1100px){.sales-field.col-8,.sales-field.col-6,.sales-field.col-4,.sales-field.col-3{grid-column:span 12;}}
 </style>
 <link rel="stylesheet" href="ef-ui.css">
 </head>
@@ -77,7 +94,6 @@
     <div data-areas>
       <div class="mono" style="font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: #4a4a4e; margin-bottom: 12px;">Sistema</div>
       <div style="display: flex; flex-direction: column; gap: 13px;">
-        <a href="especificacoes-equipamento.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Especificações de equipamentos</span></a>
         <a data-usuarios href="usuarios-permissoes.html" style="text-decoration: none; display: block;"><span style="font-size: 12.5px; color: #6e6e73;">Usuários e permissões</span></a>
       </div>
     </div>
@@ -101,10 +117,7 @@
         <h1 style="font-family: 'Space Grotesk', sans-serif; font-size: 24px; font-weight: 600; margin: 0 0 6px; letter-spacing: -.01em;">Vendas</h1>
         <div style="color: #8c8c91; font-size: 13px;" id="resumo">Carregando…</div>
       </div>
-      <div style="display:flex; gap:20px; align-items:flex-start; flex-shrink:0;">
-        <span id="btn-toggle-empresa-form" style="font-size: 12.5px; color: #6e6e73; cursor: pointer;">dados da empresa</span>
-        <span id="btn-toggle-form" style="font-size: 12.5px; color: #7fa8c9; cursor: pointer;">+ Novo orçamento</span>
-      </div>
+      <div class="sales-actions"><button id="btn-toggle-empresa-form" type="button" class="sales-btn">Dados da empresa</button><button id="btn-toggle-form" type="button" class="sales-btn primary">+ Novo orçamento</button></div>
     </div>
 
     <!-- dados da empresa (aparecem no cabeçalho do PDF) -->
@@ -150,55 +163,53 @@
     </div>
 
     <!-- form novo orçamento -->
-    <div id="bloco-form" style="display:none; padding-bottom: 26px; border-bottom: 1px solid #1c1c1f; margin-bottom: 30px;">
-      <form id="form-orcamento">
-        <div style="display: grid; grid-template-columns: 1.3fr 1fr 1fr 130px; gap: 20px; align-items: end; margin-bottom: 18px;">
-          <div>
-            <div class="mono" style="font-size: 9.5px; letter-spacing: .05em; text-transform: uppercase; color: #6e6e73; margin-bottom: 7px;">Cliente</div>
-            <select id="novo-cliente-select" style="width: 100%; border-bottom: 1px solid #29292d; padding-bottom: 8px; color: #f3f1ec; font-size: 13.5px;">
-              <option value="_avulso">— cliente avulso (digitar nome) —</option>
+    <div id="bloco-form" style="display:block; padding-bottom: 26px; border-bottom: 1px solid #1c1c1f; margin-bottom: 30px;">
+      <form id="form-orcamento" class="sales-form add-form-card">
+        <div class="sales-form-grid">
+          <div class="sales-field col-4">
+            <label class="sales-label" for="novo-cliente-select">Cliente cadastrado</label>
+            <select id="novo-cliente-select" class="sales-select">
+              <option value="">Selecionar cliente cadastrado (opcional)</option>
             </select>
-            <input id="novo-cliente" required type="text" placeholder="Ex: Família Silva" style="display:none;
-              width: 100%; background: transparent; border: none; border-bottom: 1px solid #29292d; color: #f3f1ec; font-size: 13.5px; padding-bottom: 8px; box-sizing: border-box; margin-top: 8px;">
+            <div class="sales-helper">Ao selecionar um cliente, os dados abaixo são preenchidos automaticamente.</div>
           </div>
-          <div>
-            <div class="mono" style="font-size: 9.5px; letter-spacing: .05em; text-transform: uppercase; color: #6e6e73; margin-bottom: 7px;">Contato</div>
-            <input id="novo-contato" type="text" placeholder="Telefone ou e-mail"
-              style="width: 100%; background: transparent; border: none; border-bottom: 1px solid #29292d; color: #f3f1ec; font-size: 13.5px; padding-bottom: 8px; box-sizing: border-box;">
+          <div class="sales-field col-4">
+            <label class="sales-label" for="novo-cliente">Nome do cliente</label>
+            <input id="novo-cliente" required type="text" class="sales-input" placeholder="Ex: Família Silva / Empresa XPTO">
           </div>
-          <div>
-            <div class="mono" style="font-size: 9.5px; letter-spacing: .05em; text-transform: uppercase; color: #6e6e73; margin-bottom: 7px;">Evento vinculado</div>
-            <select id="novo-evento" style="width: 100%; border-bottom: 1px solid #29292d; padding-bottom: 8px; color: #f3f1ec; font-size: 13.5px;">
-              <option value="">Nenhum</option>
-            </select>
+          <div class="sales-field col-4">
+            <label class="sales-label" for="novo-contato">Contato</label>
+            <input id="novo-contato" type="text" class="sales-input" placeholder="Telefone ou e-mail">
           </div>
-          <div>
-            <div class="mono" style="font-size: 9.5px; letter-spacing: .05em; text-transform: uppercase; color: #6e6e73; margin-bottom: 7px;">Data</div>
-            <input id="novo-data" type="date"
-              style="width: 100%; background: transparent; border: none; border-bottom: 1px solid #29292d; color: #f3f1ec; font-size: 13px; padding-bottom: 8px; box-sizing: border-box;">
+          <div class="sales-field col-3">
+            <label class="sales-label" for="novo-evento">Evento vinculado</label>
+            <select id="novo-evento" class="sales-select"><option value="">Nenhum</option></select>
+          </div>
+          <div class="sales-field col-3">
+            <label class="sales-label" for="novo-data">Data</label>
+            <input id="novo-data" type="date" class="sales-input">
+          </div>
+          <div class="sales-field col-3">
+            <label class="sales-label" for="novo-vendedor">Vendedor</label>
+            <input id="novo-vendedor" type="text" class="sales-input" placeholder="Nome de quem está vendendo">
+          </div>
+          <div class="sales-field col-3">
+            <label class="sales-label" for="novo-endereco-cliente">Endereço do contratante</label>
+            <input id="novo-endereco-cliente" type="text" class="sales-input" placeholder="Rua, número, cidade-UF">
+          </div>
+          <div class="sales-field col-12">
+            <label class="sales-label" for="novo-observacoes">Observações</label>
+            <textarea id="novo-observacoes" rows="3" class="sales-textarea" placeholder="Condições, forma de pagamento combinada, prazos, observações comerciais..."></textarea>
           </div>
         </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: end; margin-bottom: 18px;">
-          <div>
-            <div class="mono" style="font-size: 9.5px; letter-spacing: .05em; text-transform: uppercase; color: #6e6e73; margin-bottom: 7px;">Endereço do contratante</div>
-            <input id="novo-endereco-cliente" type="text" placeholder="Rua, número, cidade-UF (opcional)"
-              style="width: 100%; background: transparent; border: none; border-bottom: 1px solid #29292d; color: #f3f1ec; font-size: 13.5px; padding-bottom: 8px; box-sizing: border-box;">
+        <div class="sales-form-footer">
+          <div class="sales-tag"><span id="marca-versao-orcamento" class="mono" title="Se esse texto não aparecer na sua tela, o navegador ainda está usando um arquivo antigo em cache.">build: vendas-v7</span></div>
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+            <button id="btn-orcamento" type="submit" class="sales-btn primary">Criar orçamento</button>
+            <div id="orcamento-msg" style="font-size: 12.5px; min-height: 16px;"></div>
           </div>
-          <div>
-            <div class="mono" style="font-size: 9.5px; letter-spacing: .05em; text-transform: uppercase; color: #6e6e73; margin-bottom: 7px;">Vendedor</div>
-            <input id="novo-vendedor" type="text" placeholder="Nome de quem está vendendo"
-              style="width: 100%; background: transparent; border: none; border-bottom: 1px solid #29292d; color: #f3f1ec; font-size: 13.5px; padding-bottom: 8px; box-sizing: border-box;">
-          </div>
-        </div>
-        <div>
-          <div class="mono" style="font-size: 9.5px; letter-spacing: .05em; text-transform: uppercase; color: #6e6e73; margin-bottom: 7px;">Observações</div>
-          <textarea id="novo-observacoes" rows="2" placeholder="Condições, forma de pagamento combinada..."
-            style="width: 100%; background: transparent; border: 1px solid #29292d; border-radius: 6px; color: #f3f1ec; font-size: 13px; padding: 8px 10px; box-sizing: border-box; resize: vertical; margin-bottom: 14px;"></textarea>
-          <button id="btn-orcamento" type="submit" style="background: none; border: none; padding: 0; font-size: 13px; color: #7fa8c9; cursor: pointer; border-bottom: 1px solid #2a3d4d;">+ Criar orçamento</button>
-          <span id="marca-versao-orcamento" class="mono" style="margin-left: 14px; font-size: 9.5px; color: #3a3a3e;" title="Se esse texto não aparecer na sua tela, o navegador ainda está usando um arquivo antigo em cache.">build: vendas-v6</span>
         </div>
       </form>
-      <div id="orcamento-msg" style="margin-top: 10px; font-size: 12.5px; min-height: 16px;"></div>
     </div>
 
     <div id="lista-orcamentos" style="display: flex; flex-direction: column; gap: 22px;"></div>
@@ -248,13 +259,16 @@
 
     var p = EF.profile;
     var nome = p.nome || p.email || 'Usuário';
-    var iniciais = nome.split(' ').filter(Boolean).slice(0, 2).map(function (s) { return s[0].toUpperCase(); }).join('');
-    document.getElementById('novo-data').value = new Date().toISOString().slice(0, 10);
+        document.getElementById('novo-data').value = new Date().toISOString().slice(0, 10);
     document.getElementById('novo-vendedor').value = nome;
 
     document.getElementById('btn-toggle-form').addEventListener('click', function () {
       var bloco = document.getElementById('bloco-form');
       bloco.style.display = bloco.style.display === 'none' ? '' : 'none';
+      if (bloco.style.display !== 'none') {
+        var inputCliente = document.getElementById('novo-cliente');
+        if (inputCliente) inputCliente.focus();
+      }
     });
 
     document.getElementById('btn-toggle-empresa-form').addEventListener('click', function () {
@@ -277,21 +291,13 @@
     });
 
     document.getElementById('novo-cliente-select').addEventListener('change', function () {
-      var inputAvulso = document.getElementById('novo-cliente');
-      if (this.value === '_avulso') {
-        inputAvulso.style.display = '';
-        inputAvulso.required = true;
-        inputAvulso.value = '';
-        inputAvulso.focus();
+      var inputNome = document.getElementById('novo-cliente');
+      var c = CLIENTES.find(function (x) { return x.id === this.value; }.bind(this));
+      if (!c) {
+        inputNome.focus();
         return;
       }
-      // tira o "required" enquanto o campo avulso está escondido — assim,
-      // em qualquer navegador, ele nunca pode travar o envio do formulário
-      // silenciosamente por causa de um campo invisível não preenchido.
-      inputAvulso.style.display = 'none';
-      inputAvulso.required = false;
-      var c = CLIENTES.find(function (x) { return x.id === this.value; }.bind(this));
-      if (!c) return;
+      inputNome.value = c.nome || '';
       document.getElementById('novo-contato').value = c.contato || '';
       document.getElementById('novo-endereco-cliente').value = c.endereco || '';
     });
@@ -308,14 +314,12 @@
       var btn = document.getElementById('btn-orcamento');
       var msg = document.getElementById('orcamento-msg');
       var selectCliente = document.getElementById('novo-cliente-select');
-      var ehAvulso = selectCliente.value === '_avulso';
-      var clienteSelecionado = ehAvulso ? null : CLIENTES.find(function (x) { return x.id === selectCliente.value; });
-      var clienteVal = ehAvulso ? document.getElementById('novo-cliente').value.trim() : (clienteSelecionado ? clienteSelecionado.nome : '');
+      var clienteSelecionado = CLIENTES.find(function (x) { return x.id === selectCliente.value; }) || null;
+      var clienteVal = document.getElementById('novo-cliente').value.trim() || (clienteSelecionado ? clienteSelecionado.nome : '');
       if (!clienteVal) {
         msg.style.color = '#c9695c';
-        var textoAviso = ehAvulso ? 'Digite o nome do cliente.' : 'Escolha um cliente da lista.';
-        msg.textContent = textoAviso;
-        alert(textoAviso);
+        msg.textContent = 'Digite o nome do cliente ou selecione um cadastrado.';
+        alert('Digite o nome do cliente ou selecione um cadastrado.');
         return;
       }
       var contatoVal = document.getElementById('novo-contato').value.trim();
@@ -332,7 +336,7 @@
       var payload = {
         empresa_id: p.empresa_id, cliente: clienteVal, contato: contatoVal, observacoes: obsVal,
         endereco_cliente: enderecoClienteVal, vendedor: vendedorVal,
-        cliente_id: ehAvulso ? null : selectCliente.value
+        cliente_id: clienteSelecionado ? clienteSelecionado.id : null
       };
       if (eventoVal) payload.evento_id = eventoVal;
       if (dataVal) payload.data = dataVal;
@@ -359,8 +363,7 @@
         msg.style.color = '#7cae83';
         msg.textContent = 'Orçamento criado! Adicione os itens no card abaixo.';
         document.getElementById('form-orcamento').reset();
-        document.getElementById('novo-cliente-select').value = '_avulso';
-        document.getElementById('novo-cliente').style.display = '';
+        document.getElementById('novo-cliente-select').value = '';
         document.getElementById('novo-data').value = new Date().toISOString().slice(0, 10);
         document.getElementById('novo-vendedor').value = nome;
 
@@ -390,9 +393,11 @@
   });
 
   async function carregarClientes() {
-    var res = await EF.client.from('clientes').select('id, nome, contato, endereco').eq('empresa_id', EF.profile.empresa_id).eq('ativo', true).order('nome', { ascending: true });
+    var res = await EF.client.from('clientes').select('id, nome, contato, endereco').eq('empresa_id', EF.profile.empresa_id).order('nome', { ascending: true });
+    if (res.error) { CLIENTES = []; console.error('Erro ao carregar clientes:', res.error); return; }
     CLIENTES = res.data || [];
     var select = document.getElementById('novo-cliente-select');
+    select.innerHTML = '<option value=>Selecionar cliente cadastrado (opcional)</option>';
     CLIENTES.forEach(function (c) {
       var opt = document.createElement('option');
       opt.value = c.id;
