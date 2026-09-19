@@ -46,7 +46,7 @@
       ['internet.html','Internet','internet','areas'],['cenografia.html','Cenografia','ceno','areas'],['extras.html','Extras','extras','areas'],['servicos.html','Serviços','servicos','areas']
     ]],
     ['Sistema',[
-      ['especificacoes-equipamento.html','Equipamentos','catalogo','areas'],['usuarios-permissoes.html','Usuários','usuarios','users']
+      ['usuarios-permissoes.html','Usuários','usuarios','users']
     ]]
   ];
 
