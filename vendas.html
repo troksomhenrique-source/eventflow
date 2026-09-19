@@ -826,170 +826,274 @@
 
   function exportarPDF(o, itens, total, evento) {
     if (!window.jspdf) { alert('Biblioteca de PDF não carregou. Verifique sua conexão.'); return; }
-    var doc = new window.jspdf.jsPDF();
 
-    var MARGEM = 14;
-    var LARGURA = 210;
-    var DIREITA = LARGURA - MARGEM; // 196
-    var y = 20;
+    var doc = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
 
-    function checarQuebraPagina(alturaNecessaria) {
-      if (y + alturaNecessaria > 285) { doc.addPage(); y = 20; }
+    // EventFlow PDF Design System — espelha o visual escuro do produto.
+    var C = {
+      bg: [9, 9, 11],
+      surface: [17, 17, 19],
+      elevated: [24, 24, 28],
+      border: [39, 40, 45],
+      text: [243, 240, 234],
+      muted: [140, 140, 145],
+      subtle: [92, 92, 98],
+      accent: [155, 180, 199],
+      success: [124, 174, 131],
+      warning: [196, 165, 116],
+      danger: [201, 105, 92]
+    };
+
+    var PAGE_W = 210, PAGE_H = 297;
+    var M = 14;
+    var CONTENT_W = PAGE_W - (M * 2);
+    var y = 0;
+    var pageNo = 1;
+
+    function fill(rgb) { doc.setFillColor(rgb[0], rgb[1], rgb[2]); }
+    function stroke(rgb) { doc.setDrawColor(rgb[0], rgb[1], rgb[2]); }
+    function textColor(rgb) { doc.setTextColor(rgb[0], rgb[1], rgb[2]); }
+
+    function pageBackground() {
+      fill(C.bg); doc.rect(0, 0, PAGE_W, PAGE_H, 'F');
     }
 
-    function barraPreta(texto, valor, alturaBarra) {
-      alturaBarra = alturaBarra || 8;
-      checarQuebraPagina(alturaBarra + 4);
-      doc.setFillColor(15, 15, 15);
-      doc.rect(MARGEM, y, DIREITA - MARGEM, alturaBarra, 'F');
-      doc.setTextColor(255, 255, 255);
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(10);
-      doc.text(texto, MARGEM + 4, y + alturaBarra / 2 + 3);
-      if (valor !== undefined) {
-        doc.text(valor, DIREITA - 4, y + alturaBarra / 2 + 3, { align: 'right' });
+    function drawBrand(y0) {
+      // marca vetorial simples, inspirada no ícone do EventFlow
+      stroke(C.accent); doc.setLineWidth(0.75);
+      doc.line(M, y0 + 4.2, M + 4.2, y0 + 2.5);
+      doc.line(M + 4.2, y0 + 2.5, M + 8.1, y0 + 5.2);
+      doc.line(M + 8.1, y0 + 5.2, M + 12.2, y0 + 2.8);
+      textColor(C.text); doc.setFont('helvetica', 'bold'); doc.setFontSize(10.5);
+      doc.text('EventFlow', M + 16, y0 + 5.2);
+      textColor(C.subtle); doc.setFont('helvetica', 'normal'); doc.setFontSize(6.8);
+      doc.text('ORCAMENTO COMERCIAL', M + 16, y0 + 9.1);
+    }
+
+    function drawFooter() {
+      var yy = PAGE_H - 10;
+      stroke(C.border); doc.setLineWidth(0.25); doc.line(M, yy - 5, PAGE_W - M, yy - 5);
+      textColor(C.subtle); doc.setFont('helvetica', 'normal'); doc.setFontSize(7);
+      var empresaNome = (EMPRESA && EMPRESA.nome) || 'EventFlow';
+      doc.text(empresaNome, M, yy);
+      doc.text('Gerado pelo EventFlow', PAGE_W / 2, yy, { align: 'center' });
+      doc.text('Pagina ' + pageNo, PAGE_W - M, yy, { align: 'right' });
+    }
+
+    function newPage() {
+      if (pageNo > 1) doc.addPage();
+      pageBackground();
+      drawBrand(10);
+      drawFooter();
+      y = 28;
+    }
+
+    function ensure(h) {
+      if (y + h > PAGE_H - 22) {
+        pageNo += 1;
+        newPage();
       }
-      doc.setTextColor(20, 20, 20);
-      y += alturaBarra + 6;
     }
 
-    // ---- cabeçalho: empresa contratada em cima, data/vendedor ao lado ----
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(26);
-    doc.setTextColor(15, 15, 15);
-    doc.text('Orçamento', MARGEM, y);
-
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'bold');
-    var yDireita = y - 12;
-    var dataFormatada = new Date(o.data + 'T00:00:00').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
-    dataFormatada = dataFormatada.charAt(0).toUpperCase() + dataFormatada.slice(1);
-    doc.text(dataFormatada, DIREITA, yDireita, { align: 'right' });
-    if (o.vendedor) {
-      doc.setFont('helvetica', 'normal');
-      doc.text('Vendedor: ' + o.vendedor, DIREITA, yDireita + 6, { align: 'right' });
-    }
-    if (o.endereco_cliente) {
-      doc.text(o.endereco_cliente, DIREITA, yDireita + 12, { align: 'right' });
+    function roundRect(x, yy, w, h, radius, color, border) {
+      fill(color); stroke(border || color); doc.setLineWidth(0.25);
+      doc.roundedRect(x, yy, w, h, radius, radius, 'FD');
     }
 
-    y += 7;
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9.5);
-    var empresaNome = (EMPRESA && EMPRESA.nome) || '';
-    if (empresaNome) {
-      doc.setFont('helvetica', 'bold');
-      doc.text(empresaNome, MARGEM, y);
-      y += 5;
-      doc.setFont('helvetica', 'normal');
+    function smallLabel(label, x, yy, align) {
+      textColor(C.subtle); doc.setFont('helvetica', 'bold'); doc.setFontSize(6.8);
+      doc.text(String(label).toUpperCase(), x, yy, { align: align || 'left' });
     }
-    var contatoLinhas = [];
-    if (EMPRESA && EMPRESA.email) contatoLinhas.push(EMPRESA.email);
-    if (EMPRESA && EMPRESA.telefone) contatoLinhas.push(EMPRESA.telefone);
-    contatoLinhas.forEach(function (linha) { doc.text(linha, MARGEM, y); y += 5; });
-    if (EMPRESA && EMPRESA.endereco) { doc.text(EMPRESA.endereco, MARGEM, y); y += 5; }
 
-    y += 6;
+    function valueText(value, x, yy, size, align, color) {
+      textColor(color || C.text); doc.setFont('helvetica', 'bold'); doc.setFontSize(size || 9);
+      doc.text(String(value || '-'), x, yy, { align: align || 'left' });
+    }
 
-    // ---- dados do contratante ----
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(10.5);
-    doc.text('Contratante', MARGEM, y);
-    y += 6;
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9.5);
-    doc.text(o.cliente, MARGEM, y);
-    y += 5;
-    if (o.contato) { doc.text(o.contato, MARGEM, y); y += 5; }
-    if (evento) { doc.text('Evento: ' + evento.nome, MARGEM, y); y += 5; }
+    function paragraph(value, x, yy, maxW, size, color, lineHeight) {
+      if (!value) return 0;
+      textColor(color || C.muted); doc.setFont('helvetica', 'normal'); doc.setFontSize(size || 8.2);
+      var lines = doc.splitTextToSize(String(value), maxW);
+      doc.text(lines, x, yy, { lineHeightFactor: lineHeight || 1.35 });
+      return lines.length * ((size || 8.2) * 0.3528 * (lineHeight || 1.35));
+    }
 
-    y += 8;
+    function statusStyle(status) {
+      if (status === 'pago') return { label: 'PAGO', color: C.success };
+      if (status === 'aprovado') return { label: 'APROVADO', color: C.accent };
+      if (status === 'pago_parcial') return { label: 'PAGO PARCIAL', color: [165, 139, 205] };
+      if (status === 'cancelado') return { label: 'CANCELADO', color: C.danger };
+      return { label: 'ORCAMENTO', color: C.warning };
+    }
 
-    // ---- itens agrupados por categoria ----
-    var categoriasOrdem = [];
+    function infoCard(x, yy, w, label, value, secondLine) {
+      var h = secondLine ? 24 : 19;
+      roundRect(x, yy, w, h, 2.5, C.surface, C.border);
+      smallLabel(label, x + 4, yy + 6);
+      valueText(value || '-', x + 4, yy + 12.2, 9.3);
+      if (secondLine) {
+        textColor(C.muted); doc.setFont('helvetica', 'normal'); doc.setFontSize(7.2);
+        doc.text(String(secondLine), x + 4, yy + 18.1);
+      }
+      return h;
+    }
+
+    // ---------- capa / cabecalho ----------
+    newPage();
+
+    var status = statusStyle(o.status);
+    var codigo = String(o.id || '').replace(/-/g, '').slice(0, 8).toUpperCase() || 'NOVO';
+    var dataFmt = new Date(o.data + 'T00:00:00').toLocaleDateString('pt-BR');
+
+    textColor(C.text); doc.setFont('helvetica', 'bold'); doc.setFontSize(25);
+    doc.text('Orcamento', M, y + 11);
+    textColor(C.muted); doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
+    doc.text('#' + codigo + '  /  ' + dataFmt, M, y + 18);
+
+    var pillW = Math.max(28, doc.getTextWidth(status.label) + 10);
+    fill(status.color); doc.roundedRect(PAGE_W - M - pillW, y + 2, pillW, 9, 4.5, 4.5, 'F');
+    doc.setTextColor(9, 9, 11); doc.setFont('helvetica', 'bold'); doc.setFontSize(7.2);
+    doc.text(status.label, PAGE_W - M - (pillW / 2), y + 7.8, { align: 'center' });
+    y += 29;
+
+    // Empresa e cliente em duas colunas
+    var gap = 5;
+    var colW = (CONTENT_W - gap) / 2;
+    var empresaNome = (EMPRESA && EMPRESA.nome) || 'Empresa';
+    var empresaContato = [EMPRESA && EMPRESA.telefone, EMPRESA && EMPRESA.email].filter(Boolean).join('  /  ');
+    var empresaEndereco = (EMPRESA && EMPRESA.endereco) || '';
+    var clienteMeta = [o.contato, o.endereco_cliente].filter(Boolean).join('  /  ');
+
+    roundRect(M, y, colW, 36, 3, C.surface, C.border);
+    smallLabel('Contratada', M + 5, y + 7);
+    valueText(empresaNome, M + 5, y + 14, 11);
+    paragraph(empresaContato, M + 5, y + 20, colW - 10, 7.5, C.muted, 1.15);
+    if (empresaEndereco) paragraph(empresaEndereco, M + 5, y + 28, colW - 10, 7.2, C.subtle, 1.15);
+
+    roundRect(M + colW + gap, y, colW, 36, 3, C.surface, C.border);
+    smallLabel('Contratante', M + colW + gap + 5, y + 7);
+    valueText(o.cliente || '-', M + colW + gap + 5, y + 14, 11);
+    paragraph(clienteMeta, M + colW + gap + 5, y + 20, colW - 10, 7.5, C.muted, 1.15);
+    if (evento) paragraph('Evento: ' + evento.nome, M + colW + gap + 5, y + 29, colW - 10, 7.2, C.accent, 1.15);
+    y += 42;
+
+    // metadados
+    var metaW = (CONTENT_W - 10) / 3;
+    infoCard(M, y, metaW, 'Vendedor', o.vendedor || '-');
+    infoCard(M + metaW + 5, y, metaW, 'Data', dataFmt);
+    infoCard(M + (metaW + 5) * 2, y, metaW, 'Itens', itens.length + (itens.length === 1 ? ' item' : ' itens'));
+    y += 27;
+
+    // ---------- itens por categoria ----------
+    var categorias = [];
     var porCategoria = {};
     itens.forEach(function (it) {
       var cat = it.categoria || 'Geral';
-      if (!porCategoria[cat]) { porCategoria[cat] = []; categoriasOrdem.push(cat); }
+      if (!porCategoria[cat]) { porCategoria[cat] = []; categorias.push(cat); }
       porCategoria[cat].push(it);
     });
 
-    var numero = 1;
-    var colNum = MARGEM + 3, colProd = MARGEM + 14, colPreco = 138, colQt = 162, colTotal = DIREITA - 3;
+    function categoryHeader(cat, subtotal) {
+      ensure(18);
+      textColor(C.text); doc.setFont('helvetica', 'bold'); doc.setFontSize(11.5);
+      doc.text(String(cat).toUpperCase(), M, y + 5);
+      textColor(C.accent); doc.setFont('helvetica', 'bold'); doc.setFontSize(8.2);
+      doc.text(fmtMoeda(subtotal), PAGE_W - M, y + 5, { align: 'right' });
+      y += 9;
 
-    categoriasOrdem.forEach(function (cat) {
-      checarQuebraPagina(20);
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(24);
-      doc.setTextColor(15, 15, 15);
-      doc.text(cat.toUpperCase(), MARGEM, y + 6);
-      y += 14;
+      fill(C.elevated); doc.roundedRect(M, y, CONTENT_W, 9, 2, 2, 'F');
+      smallLabel('Item', M + 4, y + 5.8);
+      smallLabel('Qtd', 132, y + 5.8, 'right');
+      smallLabel('Diaria', 159, y + 5.8, 'right');
+      smallLabel('Subtotal', PAGE_W - M - 4, y + 5.8, 'right');
+      y += 11;
+    }
 
-      // cabeçalho da tabela (barra preta)
-      checarQuebraPagina(9);
-      doc.setFillColor(15, 15, 15);
-      doc.rect(MARGEM, y, DIREITA - MARGEM, 8, 'F');
-      doc.setTextColor(255, 255, 255);
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(9);
-      doc.text('Nº', colNum, y + 5.5);
-      doc.text('PRODUTO', colProd, y + 5.5);
-      doc.text('PREÇO', colPreco, y + 5.5, { align: 'right' });
-      doc.text('QT', colQt, y + 5.5, { align: 'right' });
-      doc.text('TOTAL', colTotal, y + 5.5, { align: 'right' });
-      doc.setTextColor(20, 20, 20);
-      y += 8;
+    categorias.forEach(function (cat) {
+      var arr = porCategoria[cat];
+      var subtotalCat = arr.reduce(function (acc, it) { return acc + Number(it.quantidade || 0) * Number(it.valor_unitario || 0); }, 0);
+      categoryHeader(cat, subtotalCat);
 
-      var subtotalCategoria = 0;
-      porCategoria[cat].forEach(function (it) {
-        checarQuebraPagina(9);
-        var subtotalItem = it.quantidade * it.valor_unitario;
-        subtotalCategoria += subtotalItem;
+      arr.forEach(function (it) {
+        var hasObs = !!(it.observacoes && String(it.observacoes).trim());
+        var rowH = hasObs ? 15 : 11;
+        ensure(rowH + 2);
 
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(9.5);
-        doc.text(String(numero), colNum, y + 6);
-        doc.setFont('helvetica', 'bold');
-        doc.text(String(it.descricao).slice(0, 48), colProd, y + 6);
-        doc.setFont('helvetica', 'bold');
-        doc.text(fmtMoeda(it.valor_unitario), colPreco, y + 6, { align: 'right' });
-        doc.text(String(it.quantidade), colQt, y + 6, { align: 'right' });
-        doc.text(fmtMoeda(subtotalItem), colTotal, y + 6, { align: 'right' });
+        stroke(C.border); doc.setLineWidth(0.18); doc.line(M, y + rowH, PAGE_W - M, y + rowH);
+        textColor(C.text); doc.setFont('helvetica', 'bold'); doc.setFontSize(8.8);
+        var itemLines = doc.splitTextToSize(String(it.descricao || '-'), 91);
+        doc.text(itemLines.slice(0, 1), M + 4, y + 5.5);
 
-        doc.setDrawColor(225, 225, 225);
-        doc.setLineWidth(0.15);
-        doc.line(MARGEM, y + 9, DIREITA, y + 9);
+        if (hasObs) {
+          textColor(C.subtle); doc.setFont('helvetica', 'normal'); doc.setFontSize(6.8);
+          var obs = doc.splitTextToSize(String(it.observacoes), 90);
+          doc.text(obs.slice(0, 1), M + 4, y + 10.5);
+        }
 
-        y += 10;
-        numero++;
+        textColor(C.muted); doc.setFont('helvetica', 'normal'); doc.setFontSize(8.3);
+        doc.text(String(it.quantidade), 132, y + 5.5, { align: 'right' });
+        doc.text(fmtMoeda(Number(it.valor_unitario || 0)), 159, y + 5.5, { align: 'right' });
+        textColor(C.text); doc.setFont('helvetica', 'bold');
+        doc.text(fmtMoeda(Number(it.quantidade || 0) * Number(it.valor_unitario || 0)), PAGE_W - M - 4, y + 5.5, { align: 'right' });
+        y += rowH;
       });
-
-      barraPreta('TOTAL', fmtMoeda(subtotalCategoria));
+      y += 8;
     });
 
-    // ---- total geral (quando há mais de uma categoria) ----
-    if (categoriasOrdem.length > 1) {
-      barraPreta('TOTAL GERAL', fmtMoeda(total), 10);
+    if (!itens.length) {
+      ensure(28);
+      roundRect(M, y, CONTENT_W, 24, 3, C.surface, C.border);
+      valueText('Nenhum item adicionado ao orcamento.', M + 5, y + 10, 9);
+      paragraph('Adicione equipamentos ou servicos antes de exportar para compor o valor final.', M + 5, y + 16, CONTENT_W - 10, 7.5, C.muted, 1.2);
+      y += 30;
     }
 
-    // ---- observações ----
+    // ---------- total ----------
+    ensure(38);
+    var totalBoxH = o.valor_pago > 0 ? 33 : 28;
+    roundRect(M, y, CONTENT_W, totalBoxH, 3, C.surface, C.border);
+    smallLabel('Valor total do orcamento', M + 5, y + 8);
+    textColor(C.text); doc.setFont('helvetica', 'bold'); doc.setFontSize(20);
+    doc.text(fmtMoeda(total), M + 5, y + 19);
+
+    if (o.valor_pago > 0) {
+      smallLabel('Valor pago', PAGE_W - M - 5, y + 8, 'right');
+      valueText(fmtMoeda(o.valor_pago), PAGE_W - M - 5, y + 16, 10.5, 'right', C.success);
+      var saldo = Math.max(0, total - Number(o.valor_pago || 0));
+      textColor(C.muted); doc.setFont('helvetica', 'normal'); doc.setFontSize(7.2);
+      doc.text('Saldo: ' + fmtMoeda(saldo), PAGE_W - M - 5, y + 23, { align: 'right' });
+    } else {
+      textColor(C.accent); doc.setFont('helvetica', 'bold'); doc.setFontSize(8.5);
+      doc.text('VALOR PROPOSTO', PAGE_W - M - 5, y + 17, { align: 'right' });
+    }
+    y += totalBoxH + 8;
+
+    // ---------- observacoes ----------
     if (o.observacoes) {
-      checarQuebraPagina(20);
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(9.5);
-      doc.text('Observações', MARGEM, y);
-      y += 5;
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(9);
-      var linhasObs = doc.splitTextToSize(o.observacoes, DIREITA - MARGEM);
-      doc.text(linhasObs, MARGEM, y);
+      var linesObs = doc.splitTextToSize(String(o.observacoes), CONTENT_W - 10);
+      var obsH = Math.max(24, 15 + linesObs.length * 3.8);
+      ensure(obsH + 6);
+      roundRect(M, y, CONTENT_W, obsH, 3, C.surface, C.border);
+      smallLabel('Observacoes e condicoes', M + 5, y + 7);
+      textColor(C.muted); doc.setFont('helvetica', 'normal'); doc.setFontSize(8);
+      doc.text(linesObs, M + 5, y + 14, { lineHeightFactor: 1.35 });
+      y += obsH + 8;
     }
 
-    var clienteSlug = o.cliente
-      .normalize('NFD').replace(/[̀-ͯ]/g, '') // remove acentos
+    // ---------- assinatura / validade ----------
+    ensure(34);
+    roundRect(M, y, CONTENT_W, 27, 3, C.elevated, C.border);
+    smallLabel('Proposta comercial', M + 5, y + 7);
+    textColor(C.muted); doc.setFont('helvetica', 'normal'); doc.setFontSize(7.7);
+    doc.text('Este documento apresenta os itens, quantidades e valores acordados para a proposta acima.', M + 5, y + 14);
+    textColor(C.accent); doc.setFont('helvetica', 'bold'); doc.setFontSize(7.7);
+    doc.text('EventFlow / Operacao de eventos', M + 5, y + 21);
+
+    // salva
+    var clienteSlug = (o.cliente || 'cliente')
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
       .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-    var nomeArquivo = 'orcamento-' + clienteSlug + '.pdf';
-    doc.save(nomeArquivo);
+    doc.save('orcamento-' + clienteSlug + '-' + codigo.toLowerCase() + '.pdf');
   }
 
   function escapeHtml(s) {
