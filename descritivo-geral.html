@@ -1,0 +1,1551 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Descritivo Geral — EventFlow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="ef-config.js"></script>
+<script src="ef-auth.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<style>
+  body{margin:0;background:#0a0a0b;font-family:'Inter',sans-serif;color:#f3f1ec;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  .disp{font-family:'Space Grotesk',sans-serif;}
+  select{font-family:'IBM Plex Mono',monospace;background:transparent;border:none;color:inherit;font-size:12.5px;cursor:pointer;color-scheme:dark;}
+  select option{background:#0d0d0f;color:#f3f1ec;}
+  select:focus{outline:none;}
+  input, textarea{font-family:'Inter',sans-serif;}
+  input::placeholder, textarea::placeholder{color:#4a4a4e;}
+  input:focus, textarea:focus{outline:none;border-color:#3b82c9 !important;}
+  body [data-financeiro]{display:none !important;}
+  html[data-financeiro="true"] body [data-financeiro]{display:block !important;}
+  body [data-areas]{display:none !important;}
+  html[data-areas="true"] body [data-areas]{display:block !important;}
+  body [data-usuarios]{display:none !important;}
+  html[data-usuarios="true"] body [data-usuarios]{display:block !important;}
+  .secao{padding: 26px 0; border-bottom: 1px solid #1c1c1f;}
+  .secao:last-child{border-bottom:none;}
+  .rotulo-mini{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:#6e6e73;margin-bottom:7px;}
+  .campo{width:100%;background:transparent;border:none;border-bottom:1px solid #29292d;color:#f3f1ec;font-size:13.5px;padding-bottom:8px;box-sizing:border-box;}
+
+  /* ===== design system do card / relatório — copiado verbatim do modelo de referência ===== */
+  .card{background:#131315;border:1px solid #1c1c1f;border-radius:4px;margin-bottom:18px;padding:22px}
+  .section-title{margin:0 0 14px;font-weight:600;font-size:15px;font-family:'Space Grotesk',sans-serif;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+  .badge{display:inline-block;font-family:'Space Grotesk',sans-serif;font-size:10px;font-weight:600;letter-spacing:.03em;padding:3px 9px;border-radius:20px;vertical-align:middle}
+  .badge-ok{background:rgba(124,174,131,0.16);color:#7cae83}
+  .badge-warn{background:rgba(179,86,74,0.18);color:#c9695c}
+  .badge-neutral{background:rgba(140,140,145,0.16);color:#8c8c91}
+  .igrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}
+  .inote{background:#1a1a1d;border:1px dashed #29292d;color:#8c8c91;border-radius:3px;padding:8px 10px;font-size:11px;margin-top:6px}
+  .warn{font-weight:700;color:#ff8a80}
+
+  /* ===== específico do Descritivo Geral ===== */
+  .mod-row{display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid #1c1c1f;}
+  .mod-row:last-child{border-bottom:none;}
+  .mod-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+  .mod-dot-ok{background:#7cae83;}
+  .mod-dot-warn{background:#c9b25a;}
+  .mod-dot-pending{background:#c9695c;}
+  .mod-dot-empty{background:#4a4a4e;}
+  .mod-nome{font-family:'Space Grotesk',sans-serif;font-size:13.5px;font-weight:600;min-width:150px;}
+  .mod-sub{color:#6e6e73;font-size:12px;flex-grow:1;}
+  .mod-badge{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.05em;font-weight:600;padding:4px 10px;border-radius:3px;flex-shrink:0;white-space:nowrap;}
+  .mod-badge-ok{background:rgba(124,174,131,0.14);color:#7cae83;}
+  .mod-badge-warn{background:rgba(201,178,90,0.14);color:#c9b25a;}
+  .mod-badge-pending{background:rgba(201,105,92,0.14);color:#c9695c;}
+  .mod-badge-empty{background:rgba(140,140,145,0.14);color:#8c8c91;}
+
+  .layout-desc{display:grid;grid-template-columns:1fr 300px;gap:24px;align-items:start;}
+  .painel-export{position:sticky;top:24px;}
+  .progress-bar-track{width:100%;height:5px;border-radius:3px;background:#1c1c1f;overflow:hidden;margin:10px 0 4px;}
+  .progress-bar-fill{height:100%;background:#7fa8c9;border-radius:3px;transition:width .3s;}
+  .btn-export{display:block;width:100%;box-sizing:border-box;text-align:center;font-family:'Space Grotesk',sans-serif;font-size:12.5px;font-weight:600;padding:11px;border-radius:5px;margin-bottom:8px;cursor:pointer;border:1px solid transparent;text-decoration:none;}
+  .btn-export-disabled{background:#1a1a1d;color:#4a4a4e;border-color:#29292d;cursor:not-allowed;}
+  .btn-export-primary{background:#7fa8c9;color:#0a0a0b;}
+  .btn-export-secondary{background:transparent;color:#f3f1ec;border-color:#29292d;}
+  .estrutura-item{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid #1c1c1f;font-size:12.5px;}
+  .estrutura-item:last-child{border-bottom:none;}
+  .estrutura-num{color:#4a4a4e;font-family:'IBM Plex Mono',monospace;font-size:11px;flex-shrink:0;width:22px;}
+  .estrutura-nome-link{color:#7fa8c9;}
+  .engenharia-input{width:100%;background:transparent;border:none;border-bottom:1px solid #29292d;color:#f3f1ec;font-size:13.5px;padding:8px 0;box-sizing:border-box;}
+  .engenharia-input:focus{border-bottom-color:#3b82c9 !important;}
+</style>
+<link rel="stylesheet" href="ef-ui.css">
+</head>
+<body>
+
+<div style="width: 100%; min-height: 100vh; box-sizing: border-box; display: flex; background: #0a0a0b; color: #f3f1ec;">
+
+  <!-- ============ SIDEBAR ============ -->
+  <div style="width: 220px; flex-shrink: 0; display: flex; flex-direction: column; padding: 36px 24px; box-sizing: border-box;">
+
+    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 40px;">
+      <a href="dashboard.html" style="text-decoration: none; display: flex; align-items: center; gap: 10px;">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" style="flex-shrink: 0;"><path d="M2 12c2 0 2-6.5 4-6.5S8 12 10 12s2-6.5 4-6.5" stroke="#7fa8c9" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div style="font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 13.5px; letter-spacing: -.01em; color: #f3f1ec;">EventFlow</div>
+      </a>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 32px;">
+      <a href="dashboard.html" style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Dashboard</span></a>
+      <a href="agenda.html" style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Agenda</span></a>
+      <a href="estoque.html" style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Estoque</span></a>
+      <a href="clientes.html" data-financeiro style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Clientes</span></a>
+      <a href="vendas.html" data-financeiro style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Vendas</span></a>
+      <a href="chat.html" style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Chat</span></a>
+      <a href="notas.html" style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Notas</span></a>
+    </div>
+
+    <div data-areas>
+      <div class="mono" style="font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: #4a4a4e; margin-bottom: 12px;">Áreas do projeto</div>
+      <div style="display: flex; flex-direction: column; gap: 13px; margin-bottom: 32px;">
+        <a href="calculadora-som.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Som</span></a>
+        <a href="calculadora-luz.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Luz</span></a>
+        <a href="video.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Vídeo</span></a>
+        <a href="estrutura.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Estrutura</span></a>
+        <a href="internet.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Internet</span></a>
+        <a href="cenografia.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Cenografia</span></a>
+        <a href="extras.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Extras</span></a>
+        <a href="servicos.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Serviços</span></a>
+        <a href="logistica.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Logística</span></a>
+        <div style="display: flex; align-items: center; gap: 9px;">
+          <span style="width: 4px; height: 4px; border-radius: 50%; background: #7fa8c9; flex-shrink: 0;"></span>
+          <span style="font-size: 12.5px; color: #f3f1ec; font-weight: 600;">Descritivo Geral</span>
+        </div>
+        <a href="ordem-servico.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Ordem de Serviço</span></a>
+      </div>
+    </div>
+
+    <div data-areas>
+      <div class="mono" style="font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: #4a4a4e; margin-bottom: 12px;">Sistema</div>
+      <div style="display: flex; flex-direction: column; gap: 13px;">
+        <a href="especificacoes-equipamento.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Especificações de equipamentos</span></a>
+        <a data-usuarios href="usuarios-permissoes.html" style="text-decoration: none; display: block;"><span style="font-size: 12.5px; color: #6e6e73;">Usuários e permissões</span></a>
+      </div>
+    </div>
+
+    <div style="margin-top: auto; padding-top: 18px; border-top: 1px solid #1c1c1f; display: flex; align-items: center; gap: 10px;">
+      <div id="user-initials" style="width: 26px; height: 26px; border-radius: 50%; background: #1a1a1d; display: flex; align-items: center; justify-content: center; font-family: 'Space Grotesk', sans-serif; font-size: 10.5px; font-weight: 600; color: #b8b8bc; flex-shrink: 0;">··</div>
+      <div style="flex-grow: 1; min-width: 0;">
+        <div id="user-name" style="font-size: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Carregando…</div>
+        <div id="user-role" class="mono" style="font-size: 9px; color: #6e6e73; margin-top: 1px;">—</div>
+      </div>
+      <span id="logout" title="Sair" style="cursor: pointer; color: #6e6e73; font-size: 11px; flex-shrink: 0;">sair</span>
+    </div>
+  </div>
+
+  <!-- ============ MAIN ============ -->
+  <div style="flex-grow: 1; padding: 36px 48px 36px 0; box-sizing: border-box; min-width: 0;" class="export-bar">
+
+    <div style="margin-bottom: 8px;">
+      <div class="mono" style="color: #6e6e73; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 10px;">ÁREAS DO PROJETO / DESCRITIVO GERAL</div>
+      <h1 style="font-family: 'Space Grotesk', sans-serif; font-size: 24px; font-weight: 600; margin: 0 0 6px; letter-spacing: -.01em;">Descritivo Geral</h1>
+      <div style="color: #8c8c91; font-size: 13px;" id="resumo">Status consolidado do documento técnico do evento — módulos, engenharia e exportação.</div>
+    </div>
+
+    <div class="secao">
+      <div style="max-width: 360px; margin-top: 14px; margin-bottom: 4px;">
+        <div class="rotulo-mini">Evento</div>
+        <select id="select-evento" style="width: 100%; border-bottom: 1px solid #29292d; padding-bottom: 8px; color: #f3f1ec; font-size: 13.5px;">
+          <option value="">— selecione um evento —</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="bloco-sem-evento" class="secao" style="color: #4a4a4e; font-size: 13px;">Selecione um evento pra ver o status do Descritivo Geral.</div>
+
+    <div id="bloco-com-evento" style="display:none;">
+
+      <div class="secao" style="border-bottom:none; padding-top: 18px;">
+        <div class="layout-desc">
+          <div>
+
+            <!-- STATUS DOS MÓDULOS -->
+            <div class="card">
+              <div class="section-title">Status dos módulos <span id="modulos-contador" class="badge badge-neutral">0/6 completos</span></div>
+              <div id="modulos-lista"></div>
+            </div>
+
+            <!-- DADOS DE ENGENHARIA -->
+            <div class="card">
+              <div class="section-title">Dados de engenharia do evento</div>
+              <div style="color:#6e6e73; font-size:11.5px; margin-bottom:16px; line-height:1.5;">Esses dois valores liberam os cálculos estruturais de solo (Memorial Solo e a seção correspondente do PDF). Ficam salvos no próprio evento.</div>
+              <div class="igrid">
+                <div>
+                  <div class="rotulo-mini">Capacidade do piso do local (kg/m²)</div>
+                  <input id="input-capacidade-piso" class="engenharia-input" type="number" min="0" step="0.1" placeholder="ex: 500">
+                </div>
+                <div>
+                  <div class="rotulo-mini">Pressão de vento de projeto (kgf/m²)</div>
+                  <input id="input-pressao-vento" class="engenharia-input" type="number" min="0" step="0.1" placeholder="deixe em branco se indoor">
+                </div>
+              </div>
+              <label style="display:flex; align-items:center; gap:8px; margin-top:14px; font-size:12.5px; color:#c9c9cc; cursor:pointer;">
+                <input id="input-evento-indoor" type="checkbox" style="cursor:pointer;">
+                Evento indoor / sem exposição a vento
+              </label>
+              <div id="engenharia-alerta" class="inote" style="display:none; margin-top:14px;"></div>
+            </div>
+
+            <!-- ESTRUTURA DO DOCUMENTO -->
+            <div class="card">
+              <div class="section-title">Estrutura do documento final</div>
+              <div id="estrutura-lista"></div>
+            </div>
+
+          </div>
+
+          <!-- PAINEL DE EXPORTAÇÃO -->
+          <div class="painel-export">
+            <div class="card">
+              <div class="mono" style="font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: #6e6e73; margin-bottom: 16px;">Exportação</div>
+
+              <div class="rotulo-mini">Progresso geral</div>
+              <div class="disp" id="progresso-pct" style="font-size: 30px; font-weight: 700; line-height:1;">0%</div>
+              <div class="progress-bar-track"><div class="progress-bar-fill" id="progresso-fill" style="width:0%;"></div></div>
+
+              <div style="margin-top:20px;">
+                <div class="rotulo-mini">Páginas estimadas</div>
+                <div class="disp" id="paginas-estimadas" style="font-size: 22px; font-weight: 700;">—</div>
+              </div>
+
+              <div id="export-bloqueado" style="margin-top:22px;">
+                <button class="btn-export btn-export-disabled" disabled>Gerar PDF</button>
+                <div style="color:#6e6e73; font-size:11px; line-height:1.5;" id="export-bloqueado-motivo">indisponível até completar os módulos</div>
+              </div>
+
+              <div id="export-liberado" style="margin-top:22px; display:none;">
+                <a id="btn-pdf" class="btn-export btn-export-primary">Exportar PDF</a>
+                <a id="btn-aereo" class="btn-export btn-export-secondary">Exportar Memorial Aéreo (Excel)</a>
+                <a id="btn-solo" class="btn-export btn-export-secondary">Exportar Memorial Solo (Excel)</a>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<script>
+  'use strict';
+
+  var ROLE_LABEL = { gerencia: 'Gerência', producao: 'Produção', estoque: 'Estoque' };
+
+  var EVENTOS = [];
+  var ESTOQUE = []; // todos os itens de estoque da empresa
+  var ESTOQUE_MAP = {};
+  var eventoSelecionadoId = '';
+  var EVENTO_ATUAL = null;
+
+  var VARAS_SOM = [];
+  var VARAS_LUZ = [];
+  var LED_TABELAS = [];
+  var VIDEO_CASAS = [];
+  var CENO_PECAS = [];
+  var SERV_EQUIP = [];
+  var SERV_AVULSOS = [];
+
+  var AREA_PADRAO_SOLO_M2 = 10; // fallback quando não há footprint conhecido (Som/Luz solo sem dado de área)
+
+  document.addEventListener('DOMContentLoaded', async function () {
+    if (!window.EF || !EF.ready) return;
+    var ok = await EF.init({ areasOnly: true });
+    if (!ok) return;
+
+    var p = EF.profile;
+    var nome = p.nome || p.email || 'Usuário';
+    var iniciais = nome.split(' ').filter(Boolean).slice(0, 2).map(function (s) { return s[0].toUpperCase(); }).join('');
+    document.getElementById('user-name').textContent = nome;
+    document.getElementById('user-role').textContent = ROLE_LABEL[p.role] || p.role;
+    document.getElementById('user-initials').textContent = iniciais || '··';
+    document.getElementById('logout').onclick = function () { EF.logout(); };
+
+    document.getElementById('select-evento').addEventListener('change', async function () {
+      EF.setEventoSelecionado(this.value);
+      await selecionarEvento(this.value);
+    });
+
+    document.getElementById('input-capacidade-piso').addEventListener('change', salvarEngenharia);
+    document.getElementById('input-pressao-vento').addEventListener('change', salvarEngenharia);
+    document.getElementById('input-evento-indoor').addEventListener('change', salvarEngenharia);
+
+    await carregarEventos();
+    await carregarEstoque();
+    renderizarEstruturaDocumento();
+  });
+
+  async function selecionarEvento(id) {
+    eventoSelecionadoId = id;
+    if (!eventoSelecionadoId) {
+      document.getElementById('bloco-sem-evento').style.display = '';
+      document.getElementById('bloco-com-evento').style.display = 'none';
+      return;
+    }
+    document.getElementById('bloco-sem-evento').style.display = 'none';
+    document.getElementById('bloco-com-evento').style.display = '';
+    await carregarTudo();
+  }
+
+  async function carregarEventos() {
+    var res = await EF.client.from('eventos').select('*').eq('empresa_id', EF.profile.empresa_id).order('data_inicio', { ascending: false });
+    EVENTOS = res.data || [];
+    var select = document.getElementById('select-evento');
+    EVENTOS.forEach(function (ev) {
+      var opt = document.createElement('option');
+      opt.value = ev.id;
+      opt.textContent = ev.nome + (ev.data_inicio ? ' — ' + new Date(ev.data_inicio).toLocaleDateString('pt-BR') : '');
+      select.appendChild(opt);
+    });
+    var lembrado = EF.getEventoSelecionado();
+    if (lembrado && EVENTOS.some(function (ev) { return ev.id === lembrado; })) {
+      select.value = lembrado;
+      await selecionarEvento(lembrado);
+    }
+  }
+
+  async function carregarEstoque() {
+    var res = await EF.client.from('estoque_itens').select('*').eq('empresa_id', EF.profile.empresa_id);
+    ESTOQUE = res.data || [];
+    ESTOQUE_MAP = {};
+    ESTOQUE.forEach(function (it) { ESTOQUE_MAP[it.id] = it; });
+  }
+
+  function itemPorId(id) { return id ? ESTOQUE_MAP[id] : null; }
+
+  // ---------------- CARREGAMENTO DO EVENTO ----------------
+
+  async function carregarTudo() {
+    EVENTO_ATUAL = EVENTOS.find(function (e) { return e.id === eventoSelecionadoId; }) || null;
+    if (!EVENTO_ATUAL) {
+      var resEv = await EF.client.from('eventos').select('*').eq('id', eventoSelecionadoId).maybeSingle();
+      EVENTO_ATUAL = resEv.data || null;
+    }
+
+    document.getElementById('input-capacidade-piso').value = (EVENTO_ATUAL && EVENTO_ATUAL.capacidade_piso_kgm2 != null) ? EVENTO_ATUAL.capacidade_piso_kgm2 : '';
+    document.getElementById('input-pressao-vento').value = (EVENTO_ATUAL && EVENTO_ATUAL.pressao_vento_kgfm2 != null) ? EVENTO_ATUAL.pressao_vento_kgfm2 : '';
+    document.getElementById('input-evento-indoor').checked = !!(EVENTO_ATUAL && EVENTO_ATUAL.evento_indoor);
+
+    // varas (Som + Luz), com itens e itens da vara vinculada
+    var resVaras = await EF.client.from('evento_varas').select('*').eq('evento_id', eventoSelecionadoId).order('ordem', { ascending: true });
+    var varas = resVaras.data || [];
+    for (var i = 0; i < varas.length; i++) {
+      var resItens = await EF.client.from('evento_vara_itens').select('*').eq('vara_id', varas[i].id).order('ordem', { ascending: true });
+      varas[i].itens = resItens.data || [];
+    }
+    var varasPorId = {};
+    varas.forEach(function (v) { varasPorId[v.id] = v; });
+    for (var j = 0; j < varas.length; j++) {
+      var v = varas[j];
+      if (v.vinculada_com && varasPorId[v.vinculada_com]) {
+        v._itensVinculados = varasPorId[v.vinculada_com].itens || [];
+      } else {
+        v._itensVinculados = [];
+      }
+    }
+    VARAS_SOM = varas.filter(function (v) { return v.categoria === 'Som'; });
+    VARAS_LUZ = varas.filter(function (v) { return v.categoria === 'Luz'; });
+
+    var resLed = await EF.client.from('evento_led_tabelas').select('*').eq('evento_id', eventoSelecionadoId).order('ordem', { ascending: true });
+    LED_TABELAS = resLed.data || [];
+
+    var resVideo = await EF.client.from('evento_video_casas').select('*').eq('evento_id', eventoSelecionadoId).order('ordem', { ascending: true });
+    VIDEO_CASAS = resVideo.data || [];
+
+    var resCeno = await EF.client.from('evento_cenografia_pecas').select('*').eq('evento_id', eventoSelecionadoId).order('ordem', { ascending: true });
+    CENO_PECAS = resCeno.data || [];
+
+    var resServEquip = await EF.client.from('evento_equipamentos').select('*, estoque_itens(*)').eq('evento_id', eventoSelecionadoId);
+    SERV_EQUIP = (resServEquip.data || []).filter(function (row) {
+      var item = row.estoque_itens;
+      return item && item.categoria === 'Serviços';
+    });
+
+    var resServAvulsos = await EF.client.from('evento_servicos_avulsos').select('*').eq('evento_id', eventoSelecionadoId).order('ordem', { ascending: true });
+    SERV_AVULSOS = resServAvulsos.data || [];
+
+    renderizarTudo();
+  }
+
+  async function salvarEngenharia() {
+    if (!eventoSelecionadoId) return;
+    var cap = document.getElementById('input-capacidade-piso').value;
+    var vento = document.getElementById('input-pressao-vento').value;
+    var indoor = document.getElementById('input-evento-indoor').checked;
+    var payload = {
+      capacidade_piso_kgm2: cap === '' ? null : parseFloat(cap),
+      pressao_vento_kgfm2: vento === '' ? null : parseFloat(vento),
+      evento_indoor: indoor
+    };
+    await EF.client.from('eventos').update(payload).eq('id', eventoSelecionadoId);
+    if (EVENTO_ATUAL) {
+      EVENTO_ATUAL.capacidade_piso_kgm2 = payload.capacidade_piso_kgm2;
+      EVENTO_ATUAL.pressao_vento_kgfm2 = payload.pressao_vento_kgfm2;
+      EVENTO_ATUAL.evento_indoor = payload.evento_indoor;
+    }
+    renderizarTudo();
+  }
+
+  // ---------------- CÁLCULOS DE PESO — adaptados de calculadora-som.html / calculadora-luz.html ----------------
+
+  function itemLinhaPeso(it) {
+    if (it.estoque_item_id) {
+      var item = itemPorId(it.estoque_item_id);
+      return item && item.peso_kg != null ? item.peso_kg : null;
+    }
+    return it.peso_manual != null ? it.peso_manual : null;
+  }
+
+  function itemLinhaConsumo(it) {
+    if (it.estoque_item_id) {
+      var item = itemPorId(it.estoque_item_id);
+      return item && item.consumo_w != null ? item.consumo_w : null;
+    }
+    return it.consumo_manual != null ? it.consumo_manual : null;
+  }
+
+  function pesoItensDaVara(vara) {
+    var total = 0;
+    (vara.itens || []).forEach(function (it) {
+      var p = itemLinhaPeso(it);
+      if (p != null) total += p * it.quantidade;
+    });
+    return total;
+  }
+
+  function pesoTalhaDaVara(vara) {
+    if (!vara.usa_talha) return 0;
+    var t = vara.talha_item_id ? itemPorId(vara.talha_item_id) : null;
+    if (!t || t.peso_kg == null) return 0;
+    return t.peso_kg * (vara.qtd_talhas || 1);
+  }
+
+  function pesoBoxDaVara(vara) {
+    if (!vara.usa_box) return 0;
+    var b = vara.box_item_id ? itemPorId(vara.box_item_id) : null;
+    if (!b || b.peso_kg == null || !vara.comprimento_box) return 0;
+    return b.peso_kg * vara.comprimento_box;
+  }
+
+  function pesoItensVinculados(vara) {
+    if (!vara._itensVinculados || !vara._itensVinculados.length) return 0;
+    var total = 0;
+    vara._itensVinculados.forEach(function (it) {
+      var peso = it.estoque_item_id
+        ? (itemPorId(it.estoque_item_id) && itemPorId(it.estoque_item_id).peso_kg != null ? itemPorId(it.estoque_item_id).peso_kg : null)
+        : (it.peso_manual != null ? it.peso_manual : null);
+      if (peso != null) total += peso * it.quantidade;
+    });
+    return total;
+  }
+
+  function pesoDaVara(vara) {
+    return pesoItensDaVara(vara) + pesoItensVinculados(vara) + pesoTalhaDaVara(vara) + pesoBoxDaVara(vara);
+  }
+
+  function pesoPorPontoDaVara(vara) {
+    if (vara.peso_por_ponto_manual != null) return vara.peso_por_ponto_manual;
+    var peso = pesoDaVara(vara);
+    return vara.qtd_pontos ? peso / vara.qtd_pontos : peso;
+  }
+
+  function consumoDaVara(vara) {
+    var total = 0;
+    (vara.itens || []).forEach(function (it) {
+      var c = itemLinhaConsumo(it);
+      if (c != null) total += c * it.quantidade;
+    });
+    return total;
+  }
+
+  // peso de uma tabela de Painel de LED — simplificação: área total (largura x
+  // altura) x peso/m² do painel A (o principal), + sustentação. Não reproduz
+  // a engenharia fina de "quanto de cada painel A/B" feita em painel-de-led.html.
+  function pesoDaLed(t) {
+    var pesoM2 = 0;
+    if (t.painel_a_ativo && t.painel_a_item_id) {
+      var ia = itemPorId(t.painel_a_item_id);
+      if (ia && ia.peso_kg != null) pesoM2 = ia.peso_kg;
+    } else if (t.painel_b_ativo && t.painel_b_item_id) {
+      var ib = itemPorId(t.painel_b_item_id);
+      if (ib && ib.peso_kg != null) pesoM2 = ib.peso_kg;
+    }
+    var area = (t.largura_m || 0) * (t.altura_m || 0);
+    var total = area * pesoM2;
+    (t.aparelhos_sustentacao || []).forEach(function (l) {
+      var item = itemPorId(l.item_id);
+      if (item && item.peso_kg != null) total += (parseInt(l.qtd, 10) || 0) * item.peso_kg;
+    });
+    return total;
+  }
+
+  function alturaDaLed(t) {
+    if (t.modo_montagem === 'rigging' && t.altura_rigging) return t.altura_rigging;
+    return t.altura_m || 0;
+  }
+
+  // ---------------- STATUS DOS MÓDULOS ----------------
+
+  function statusSom() {
+    if (!VARAS_SOM.length) return { status: 'empty', sub: 'Este evento não usa Som — módulo não aplicável.' };
+    var comItens = VARAS_SOM.filter(function (v) { return (v.itens || []).length > 0; });
+    var comSuspensaoDados = VARAS_SOM.filter(function (v) { return !v.suspenso || v.qtd_pontos > 0; });
+    if (comItens.length === VARAS_SOM.length && comSuspensaoDados.length === VARAS_SOM.length) {
+      return { status: 'ok', sub: VARAS_SOM.length + ' posição(ões) com equipamentos, pontos e energia preenchidos.' };
+    }
+    var faltando = VARAS_SOM.length - comItens.length;
+    return { status: 'warn', sub: faltando > 0 ? faltando + ' posição(ões) sem equipamento cadastrado.' : 'Falta especificar pontos de ancoragem de alguma posição.' };
+  }
+
+  function statusLuz() {
+    if (!VARAS_LUZ.length) return { status: 'empty', sub: 'Este evento não usa Luz — módulo não aplicável.' };
+    var comItens = VARAS_LUZ.filter(function (v) { return (v.itens || []).length > 0; });
+    if (comItens.length === VARAS_LUZ.length) {
+      return { status: 'ok', sub: VARAS_LUZ.length + ' posição(ões) com equipamentos e energia preenchidos.' };
+    }
+    return { status: 'warn', sub: (VARAS_LUZ.length - comItens.length) + ' posição(ões) sem equipamento cadastrado.' };
+  }
+
+  function statusLed() {
+    if (!LED_TABELAS.length) return { status: 'empty', sub: 'Este evento não usa Painel de LED — módulo não aplicável.' };
+    var completos = LED_TABELAS.filter(function (t) {
+      var temPainel = (t.painel_a_ativo && t.painel_a_item_id) || (t.painel_b_ativo && t.painel_b_item_id);
+      var temProcessadora = (t.processadoras || []).length > 0;
+      var temDimensao = (t.largura_m || 0) > 0 && (t.altura_m || 0) > 0;
+      return temPainel && temProcessadora && temDimensao;
+    });
+    if (completos.length === LED_TABELAS.length) {
+      return { status: 'ok', sub: LED_TABELAS.length + ' painel(éis) com modelo, dimensão e processadora preenchidos.' };
+    }
+    var semProc = LED_TABELAS.filter(function (t) { return !(t.processadoras || []).length; }).length;
+    return { status: 'warn', sub: semProc > 0 ? 'Falta especificar processadora em ' + semProc + ' painel(éis).' : 'Falta modelo ou dimensão de algum painel.' };
+  }
+
+  function statusVideo() {
+    if (!VIDEO_CASAS.length) return { status: 'empty', sub: 'Este evento não usa Vídeo/streaming — módulo não aplicável.' };
+    var completos = VIDEO_CASAS.filter(function (c) {
+      return ((c.kits || []).length > 0 || (c.cameras || []).length > 0);
+    });
+    if (completos.length === VIDEO_CASAS.length) {
+      return { status: 'ok', sub: VIDEO_CASAS.length + ' House(s) com kits/câmeras preenchidos.' };
+    }
+    return { status: 'warn', sub: (VIDEO_CASAS.length - completos.length) + ' House(s) sem kit nem câmera.' };
+  }
+
+  function statusCenografia() {
+    if (!CENO_PECAS.length) return { status: 'empty', sub: 'Este evento não usa Cenografia — módulo não aplicável.' };
+    var completos = CENO_PECAS.filter(function (p) {
+      return p.estrutura_base && ((p.largura_m || 0) > 0 || (p.profundidade_m || 0) > 0) && ((p.materiais || []).length > 0 || (p.elementos || []).length > 0);
+    });
+    if (completos.length === CENO_PECAS.length) {
+      return { status: 'ok', sub: CENO_PECAS.length + ' peça(s) com estrutura, dimensão e materiais/elementos preenchidos.' };
+    }
+    return { status: 'warn', sub: (CENO_PECAS.length - completos.length) + ' peça(s) sem dimensão ou materiais.' };
+  }
+
+  function statusServicos() {
+    var total = SERV_EQUIP.length + SERV_AVULSOS.length;
+    if (!total) return { status: 'empty', sub: 'Este evento não tem Serviços reservados — módulo não aplicável.' };
+    return { status: 'ok', sub: SERV_EQUIP.length + ' equipamento(s) de Estoque + ' + SERV_AVULSOS.length + ' serviço(s) avulso(s) contratado(s).' };
+  }
+
+  function precisaCapacidadePiso() {
+    var temSoloSom = VARAS_SOM.some(function (v) { return !v.suspenso; });
+    var temSoloLuz = VARAS_LUZ.some(function (v) { return !v.suspenso; });
+    var temSoloLed = LED_TABELAS.some(function (t) { return t.modo_montagem !== 'rigging'; });
+    var temCeno = CENO_PECAS.some(function (p) { return p.estrutura_base; });
+    return temSoloSom || temSoloLuz || temSoloLed || temCeno;
+  }
+
+  function capacidadePisoPreenchida() {
+    return !!(EVENTO_ATUAL && EVENTO_ATUAL.capacidade_piso_kgm2 != null);
+  }
+
+  function ventoResolvido() {
+    if (!EVENTO_ATUAL) return true;
+    if (EVENTO_ATUAL.evento_indoor) return true;
+    return EVENTO_ATUAL.pressao_vento_kgfm2 != null;
+  }
+
+  function temEstruturaSoloComAltura() {
+    var ledAlta = LED_TABELAS.some(function (t) { return t.modo_montagem !== 'rigging' && alturaDaLed(t) > 0; });
+    var cenoAlta = CENO_PECAS.some(function (p) { return p.estrutura_base === 'truss'; });
+    return ledAlta || cenoAlta;
+  }
+
+  // ---------------- RENDER ----------------
+
+  function badgeClasse(status) {
+    return status === 'ok' ? 'ok' : (status === 'warn' ? 'warn' : (status === 'empty' ? 'empty' : 'pending'));
+  }
+  function badgeLabel(status) {
+    return status === 'ok' ? 'PRONTO' : (status === 'warn' ? 'EM ANDAMENTO' : (status === 'empty' ? 'NÃO UTILIZADO' : 'PENDENTE'));
+  }
+
+  function renderizarTudo() {
+    var modulos = [
+      { nome: 'Som', calc: statusSom() },
+      { nome: 'Luz', calc: statusLuz() },
+      { nome: 'Painel de LED', calc: statusLed() },
+      { nome: 'Vídeo', calc: statusVideo() },
+      { nome: 'Cenografia', calc: statusCenografia() },
+      { nome: 'Serviços', calc: statusServicos() }
+    ];
+
+    // engenharia: se falta capacidade do piso e existe estrutura de solo, degrada o(s) módulo(s) de solo pra pendente
+    var precisaPiso = precisaCapacidadePiso();
+    var pisoOk = capacidadePisoPreenchida();
+    if (precisaPiso && !pisoOk) {
+      modulos.forEach(function (m) {
+        if (m.calc.status === 'ok') {
+          m.calc = { status: 'warn', sub: m.calc.sub + ' Falta informar a capacidade do piso do local para fechar o cálculo estrutural.' };
+        }
+      });
+    }
+
+    var contadorEl = document.getElementById('modulos-contador');
+    var modulosUsados = modulos.filter(function (m) { return m.calc.status !== 'empty'; });
+    var okCount = modulos.filter(function (m) { return m.calc.status === 'ok'; }).length;
+    var totalUsados = modulosUsados.length;
+    contadorEl.textContent = totalUsados ? (okCount + '/' + totalUsados + ' completos') : 'nenhum módulo em uso';
+    contadorEl.className = 'badge ' + (totalUsados === 0 ? 'badge-neutral' : (okCount === totalUsados ? 'badge-ok' : (okCount === 0 ? 'badge-neutral' : 'badge-warn')));
+
+    var listaEl = document.getElementById('modulos-lista');
+    listaEl.innerHTML = modulos.map(function (m) {
+      var cls = badgeClasse(m.calc.status);
+      return '<div class="mod-row">' +
+        '<span class="mod-dot mod-dot-' + cls + '"></span>' +
+        '<span class="mod-nome">' + m.nome + '</span>' +
+        '<span class="mod-sub">' + m.calc.sub + '</span>' +
+        '<span class="mod-badge mod-badge-' + cls + '">' + badgeLabel(m.calc.status) + '</span>' +
+        '</div>';
+    }).join('');
+
+    // engenharia — alerta
+    var alertaEl = document.getElementById('engenharia-alerta');
+    var avisos = [];
+    if (precisaPiso && !pisoOk) avisos.push('Falta informar a capacidade do piso do local — obrigatório porque este evento tem estrutura de solo (Som, Luz, LED ou Cenografia).');
+    if (temEstruturaSoloComAltura() && !ventoResolvido()) avisos.push('Há estrutura de solo com altura relevante — informe a pressão de vento de projeto ou marque o evento como indoor.');
+    if (avisos.length) {
+      alertaEl.style.display = '';
+      alertaEl.innerHTML = avisos.map(function (a) { return '<div class="warn">⚠ ' + a + '</div>'; }).join('');
+    } else {
+      alertaEl.style.display = 'none';
+    }
+
+    // progresso geral — só considera módulos realmente usados neste evento + (1 gate de engenharia se aplicável)
+    var totalGates = totalUsados + (precisaPiso ? 1 : 0) + (temEstruturaSoloComAltura() ? 1 : 0);
+    var okGates = okCount + (precisaPiso && pisoOk ? 1 : 0) + (temEstruturaSoloComAltura() && ventoResolvido() ? 1 : 0);
+    var pct = totalGates ? Math.round(okGates / totalGates * 100) : 100;
+    document.getElementById('progresso-pct').textContent = pct + '%';
+    document.getElementById('progresso-fill').style.width = pct + '%';
+
+    // páginas estimadas: capa(1) + resumo(1) + módulos populados x ~2.5 + memória de cálculo(1) + fechamento(1)
+    var modulosPopulados = modulos.filter(function (m) { return m.calc.status !== 'empty'; }).length;
+    var paginas = 2 + Math.round(modulosPopulados * 2.5) + 2;
+    document.getElementById('paginas-estimadas').textContent = paginas;
+
+    // exportação sempre disponível — módulos/campos em branco simplesmente não entram no documento,
+    // eles não bloqueiam a geração (nem todo evento usa cenografia, streaming/PTZ, etc.)
+    var blocoBloqueado = document.getElementById('export-bloqueado');
+    var blocoLiberado = document.getElementById('export-liberado');
+    if (blocoBloqueado) blocoBloqueado.style.display = 'none';
+    blocoLiberado.style.display = '';
+    document.getElementById('btn-pdf').onclick = function (e) { e.preventDefault(); exportarPDF(); };
+    document.getElementById('btn-aereo').onclick = function (e) { e.preventDefault(); exportarMemorialAereo(); };
+    var btnSolo = document.getElementById('btn-solo');
+    btnSolo.classList.remove('btn-export-disabled');
+    btnSolo.classList.add('btn-export-secondary');
+    btnSolo.onclick = function (e) { e.preventDefault(); exportarMemorialSolo(); };
+  }
+
+  function renderizarEstruturaDocumento() {
+    var itens = ['Capa e dados do evento'];
+    if (VARAS_SOM.length) itens.push('Descritivo técnico de Som');
+    if (VARAS_LUZ.length) itens.push('Descritivo técnico de Luz');
+    if (LED_TABELAS.length) itens.push('Descritivo técnico de Painel de LED');
+    if (VIDEO_CASAS.length) itens.push('Descritivo técnico de Vídeo');
+    if (CENO_PECAS.length) itens.push('Descritivo técnico de Cenografia');
+    if (SERV_EQUIP.length + SERV_AVULSOS.length) itens.push('Descritivo técnico de Serviços');
+    itens.push('Resumo de custos e observações finais');
+    document.getElementById('estrutura-lista').innerHTML = itens.map(function (t, i) {
+      var num = String(i + 1).padStart(2, '0');
+      var isModulo = i > 0 && i < itens.length - 1;
+      return '<div class="estrutura-item"><span class="estrutura-num">' + num + '</span><span' + (isModulo ? ' class="estrutura-nome-link"' : '') + '>' + t + '</span></div>';
+    }).join('');
+  }
+
+  // ---------------- HELPERS DE FORMATAÇÃO (compartilhados PDF + Excel) ----------------
+
+  function esc(s) { return (s == null ? '' : String(s)).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+  function fmtKg(n) { return (n || n === 0) ? n.toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + ' kg' : '—'; }
+  function fmtNum(n, casas) { return (n || n === 0) ? n.toLocaleString('pt-BR', { maximumFractionDigits: casas == null ? 1 : casas }) : '—'; }
+
+  var DISCLAIMER = 'Este documento é uma referência técnica gerada automaticamente a partir dos dados cadastrados no sistema. Os cálculos de carga, pontos de içamento e estabilidade devem ser conferidos e assinados por um responsável técnico habilitado (engenheiro ou profissional competente) antes de serem usados para aprovação do evento junto ao Corpo de Bombeiros ou órgão fiscalizador.';
+
+  // ---------------- MEMÓRIA DE CÁLCULO ESTRUTURAL (compartilhada PDF + base p/ excel) ----------------
+
+  // varas de Som/Luz suspensas, já mesclando pares vinculada_com num único bloco
+  // nome de exibição de um item de vara (Estoque ou avulso/manual)
+  function nomeItemVara(it) {
+    if (it.estoque_item_id) {
+      var item = itemPorId(it.estoque_item_id);
+      return item ? item.nome : (it.nome_manual || 'Item');
+    }
+    return it.nome_manual || 'Item';
+  }
+
+  // quebra por-item (equipamento / marca e modelo | quant. | peso unitário | peso total) de uma vara,
+  // no mesmo formato usado pelo memorial aéreo real — inclui itens da vara vinculada e a talha/box como linha própria
+  function itensDetalhadosDaVara(vara) {
+    var out = [];
+    (vara.itens || []).forEach(function (it) {
+      var pesoUnit = itemLinhaPeso(it);
+      out.push({ nome: nomeItemVara(it), qtd: it.quantidade, pesoUnit: pesoUnit, pesoTotal: pesoUnit != null ? pesoUnit * it.quantidade : null });
+    });
+    (vara._itensVinculados || []).forEach(function (it) {
+      var pesoUnit = itemLinhaPeso(it);
+      out.push({ nome: nomeItemVara(it), qtd: it.quantidade, pesoUnit: pesoUnit, pesoTotal: pesoUnit != null ? pesoUnit * it.quantidade : null });
+    });
+    if (vara.usa_talha && vara.talha_item_id) {
+      var t = itemPorId(vara.talha_item_id);
+      if (t) out.push({ nome: 'Talha — ' + t.nome, qtd: vara.qtd_talhas || 1, pesoUnit: t.peso_kg, pesoTotal: t.peso_kg != null ? t.peso_kg * (vara.qtd_talhas || 1) : null });
+    }
+    if (vara.usa_box && vara.box_item_id && vara.comprimento_box) {
+      var b = itemPorId(vara.box_item_id);
+      if (b) out.push({ nome: 'Box truss — ' + b.nome, qtd: vara.comprimento_box, pesoUnit: b.peso_kg, pesoTotal: b.peso_kg != null ? b.peso_kg * vara.comprimento_box : null });
+    }
+    return out;
+  }
+
+  function estruturasAereas() {
+    var blocos = [];
+    var usados = {};
+    var todas = VARAS_SOM.concat(VARAS_LUZ).filter(function (v) { return v.suspenso; });
+    todas.forEach(function (v) {
+      if (usados[v.id]) return;
+      var parceira = null;
+      if (v.vinculada_com) {
+        parceira = todas.find(function (o) { return o.id === v.vinculada_com; });
+      }
+      var nome = v.nome + (parceira ? ' + ' + parceira.nome : '');
+      var pesoTotal = pesoDaVara(v); // já soma itens vinculados (sem duplicar talha/box)
+      var qtdPontos = v.qtd_pontos || 1;
+      var pesoPorPonto = pesoPorPontoDaVara(v);
+      // capacidade do ponto: usa talha se houver, senão box
+      var itemCap = v.usa_talha && v.talha_item_id ? itemPorId(v.talha_item_id) : (v.usa_box && v.box_item_id ? itemPorId(v.box_item_id) : null);
+      var capKgInfo = capacidadeDoItem(itemCap);
+      var consumoW = consumoDaVara(v) + (parceira ? consumoDaVara(parceira) : 0);
+      var amps = consumoW / 220;
+      var circuitos = Math.ceil(amps / 20) || (consumoW > 0 ? 1 : 0);
+      var itens = itensDetalhadosDaVara(v);
+      if (parceira) itens = itens.concat(itensDetalhadosDaVara(parceira));
+      blocos.push({
+        nome: nome, categoria: v.categoria + (parceira ? ' + ' + parceira.categoria : ''),
+        pesoTotal: pesoTotal, qtdPontos: qtdPontos, pesoPorPonto: pesoPorPonto,
+        capacidadeUtil: capKgInfo.capacidadeUtil, capacidadeInformada: capKgInfo.informada,
+        consumoW: consumoW, circuitos: circuitos, itens: itens
+      });
+      usados[v.id] = true;
+      if (parceira) usados[parceira.id] = true;
+    });
+
+    // painéis de LED em rigging — soma no bloco da vara vinculada se houver, senão vira bloco próprio
+    LED_TABELAS.filter(function (t) { return t.modo_montagem === 'rigging'; }).forEach(function (t) {
+      var pesoLed = pesoDaLed(t);
+      var varaAlvo = t.vinculada_com ? todas.find(function (v) { return v.id === t.vinculada_com; }) : null;
+      var blocoAlvo = varaAlvo ? blocos.find(function (b) { return b.nome.indexOf(varaAlvo.nome) !== -1; }) : null;
+      var itemLed = { nome: 'Painel de LED — ' + t.nome, qtd: 1, pesoUnit: pesoLed, pesoTotal: pesoLed };
+      if (blocoAlvo) {
+        blocoAlvo.pesoTotal += pesoLed;
+        blocoAlvo.pesoPorPonto = blocoAlvo.qtdPontos ? blocoAlvo.pesoTotal / blocoAlvo.qtdPontos : blocoAlvo.pesoTotal;
+        blocoAlvo.nome += ' (+ LED ' + t.nome + ')';
+        blocoAlvo.itens.push(itemLed);
+      } else {
+        blocos.push({
+          nome: 'LED ' + t.nome, categoria: 'Painel de LED',
+          pesoTotal: pesoLed, qtdPontos: 1, pesoPorPonto: pesoLed,
+          capacidadeUtil: null, capacidadeInformada: false,
+          consumoW: 0, circuitos: 0, itens: [itemLed]
+        });
+      }
+    });
+
+    return blocos;
+  }
+
+  function capacidadeDoItem(item) {
+    if (!item) return { capacidadeUtil: null, informada: false };
+    var specs = item.especificacoes || {};
+    var capKg = specs.capacidade_kg != null ? parseFloat(specs.capacidade_kg) : null;
+    if (capKg == null || isNaN(capKg)) return { capacidadeUtil: null, informada: false };
+    var fator = specs.fator_seguranca != null ? parseFloat(specs.fator_seguranca) : 0.8;
+    if (isNaN(fator)) fator = 0.8;
+    return { capacidadeUtil: capKg * fator, informada: true };
+  }
+
+  // estruturas de solo (não suspensas): varas solo, LED ground/modular, cenografia com estrutura_base
+  function estruturasSolo() {
+    var blocos = [];
+    VARAS_SOM.concat(VARAS_LUZ).filter(function (v) { return !v.suspenso; }).forEach(function (v) {
+      blocos.push({
+        nome: v.nome, categoria: v.categoria, pesoTotal: pesoDaVara(v),
+        areaM2: AREA_PADRAO_SOLO_M2, areaEstimada: true, alturaM: 0, larguraBaseM: 1,
+        itens: itensDetalhadosDaVara(v)
+      });
+    });
+    LED_TABELAS.filter(function (t) { return t.modo_montagem !== 'rigging'; }).forEach(function (t) {
+      var area = (t.largura_m || 0) * (t.altura_m || 0);
+      var itensLed = [{ nome: 'Painel de LED — ' + t.nome, qtd: 1, pesoUnit: pesoDaLed(t), pesoTotal: pesoDaLed(t) }];
+      (t.aparelhos_sustentacao || []).forEach(function (l) {
+        var item = itemPorId(l.item_id);
+        if (item) itensLed.push({ nome: item.nome, qtd: parseInt(l.qtd, 10) || 0, pesoUnit: item.peso_kg, pesoTotal: item.peso_kg != null ? item.peso_kg * (parseInt(l.qtd, 10) || 0) : null });
+      });
+      blocos.push({
+        nome: 'LED ' + t.nome, categoria: 'Painel de LED', pesoTotal: pesoDaLed(t),
+        areaM2: area > 0 ? area : AREA_PADRAO_SOLO_M2, areaEstimada: area <= 0,
+        alturaM: alturaDaLed(t), larguraBaseM: t.largura_m || 1, itens: itensLed
+      });
+    });
+    CENO_PECAS.filter(function (p) { return p.estrutura_base; }).forEach(function (p) {
+      var area = (p.largura_m || 0) * (p.profundidade_m || 0);
+      var pesoMateriais = 0; // sem peso_kg/m² fixo no schema de cenografia — materiais reservados não carregam peso estruturado
+      blocos.push({
+        nome: p.nome, categoria: 'Cenografia (' + p.estrutura_base + ')', pesoTotal: pesoMateriais,
+        areaM2: area > 0 ? area : AREA_PADRAO_SOLO_M2, areaEstimada: area <= 0,
+        alturaM: p.estrutura_base === 'truss' ? 3 : 0, larguraBaseM: p.largura_m || 1,
+        semPesoConhecido: true, itens: []
+      });
+    });
+    return blocos;
+  }
+
+  function calculoTombamento(bloco) {
+    if (!bloco.alturaM || bloco.alturaM <= 0) return null;
+    if (!EVENTO_ATUAL) return null;
+    if (EVENTO_ATUAL.evento_indoor) return { naoAplicavel: true };
+    if (EVENTO_ATUAL.pressao_vento_kgfm2 == null) return { naoCalculado: true };
+    var pressao = EVENTO_ATUAL.pressao_vento_kgfm2;
+    var areaFrontal = (bloco.larguraBaseM || 1) * bloco.alturaM;
+    var momentoTombamento = pressao * areaFrontal * (bloco.alturaM / 2);
+    var momentoEstabilizante = (bloco.pesoTotal || 0) * ((bloco.larguraBaseM || 1) / 2);
+    var fator = momentoTombamento > 0 ? momentoEstabilizante / momentoTombamento : Infinity;
+    return { fator: fator, instavel: fator < 1.5 };
+  }
+
+  function round1(n) { return n == null ? null : Math.round(n * 10) / 10; }
+  function slug(s) { return (s || 'evento').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''); }
+  function fmtMoedaBR(v) { return 'R$ ' + (v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 }); }
+  function somaPesoItens(itens) {
+    var s = 0;
+    (itens || []).forEach(function (it) { if (it.pesoTotal != null) s += it.pesoTotal; });
+    return s;
+  }
+
+  // ---------------- EXPORTAR PDF (jsPDF — mesmo estilo preto/branco/cinza do Orçamento em vendas.html) ----------------
+
+  function exportarPDF() {
+    if (!window.jspdf) { alert('Biblioteca de PDF não carregou. Verifique sua conexão.'); return; }
+    var ev = EVENTO_ATUAL;
+    var doc = new window.jspdf.jsPDF();
+
+    var MARGEM = 14, LARGURA = 210, DIREITA = LARGURA - MARGEM, y = 20;
+
+    function checarQuebraPagina(alturaNecessaria) {
+      if (y + alturaNecessaria > 282) { doc.addPage(); y = 20; }
+    }
+
+    function tituloSecao(numero, nome) {
+      checarQuebraPagina(18);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(21);
+      doc.setTextColor(15, 15, 15);
+      doc.text(numero + ' — ' + nome, MARGEM, y + 4);
+      y += 9;
+      doc.setDrawColor(15, 15, 15);
+      doc.setLineWidth(0.9);
+      doc.line(MARGEM, y, DIREITA, y);
+      y += 8;
+    }
+
+    function subTitulo(t) {
+      checarQuebraPagina(8);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10.5);
+      doc.setTextColor(15, 15, 15);
+      doc.text(t, MARGEM, y);
+      y += 6;
+    }
+
+    function kpiBoxes(items) {
+      checarQuebraPagina(24);
+      var totalW = DIREITA - MARGEM, gap = 4, n = items.length;
+      var boxW = (totalW - gap * (n - 1)) / n;
+      var topY = y;
+      items.forEach(function (it, i) {
+        var x = MARGEM + i * (boxW + gap);
+        doc.setDrawColor(15, 15, 15);
+        doc.setLineWidth(0.8);
+        doc.line(x, topY, x + boxW, topY);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(15);
+        doc.setTextColor(15, 15, 15);
+        doc.text(String(it.big), x, topY + 9);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(6.8);
+        doc.setTextColor(110, 110, 115);
+        var labelLines = doc.splitTextToSize(String(it.label || ''), boxW - 2);
+        doc.text(labelLines, x, topY + 14);
+      });
+      doc.setTextColor(20, 20, 20);
+      y = topY + 22;
+    }
+
+    function notaCaixa(text) {
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8.5);
+      var lines = doc.splitTextToSize(text, DIREITA - MARGEM - 6);
+      var h = lines.length * 4 + 6;
+      checarQuebraPagina(h);
+      doc.setDrawColor(210, 210, 210);
+      doc.setLineWidth(0.2);
+      doc.rect(MARGEM, y, DIREITA - MARGEM, h);
+      doc.setTextColor(90, 90, 95);
+      doc.text(lines, MARGEM + 3, y + 5.5);
+      doc.setTextColor(20, 20, 20);
+      y += h + 6;
+    }
+
+    function avisoTexto(text) {
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      doc.setTextColor(15, 15, 15);
+      var lines = doc.splitTextToSize('ATENÇÃO — ' + text, DIREITA - MARGEM);
+      checarQuebraPagina(lines.length * 5 + 4);
+      doc.text(lines, MARGEM, y + 4);
+      y += lines.length * 5 + 6;
+      doc.setFont('helvetica', 'normal');
+    }
+
+    function tabela(headers, rows, rightColsIdx) {
+      rightColsIdx = rightColsIdx || [];
+      checarQuebraPagina(11);
+      var totalW = DIREITA - MARGEM;
+      var n = headers.length;
+      var colW = totalW / n;
+      doc.setFillColor(15, 15, 15);
+      doc.rect(MARGEM, y, totalW, 7, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(7.2);
+      headers.forEach(function (h, i) {
+        var x0 = MARGEM + i * colW;
+        var right = rightColsIdx.indexOf(i) !== -1;
+        doc.text(String(h).toUpperCase(), right ? x0 + colW - 2 : x0 + 2, y + 4.8, { align: right ? 'right' : 'left' });
+      });
+      doc.setTextColor(20, 20, 20);
+      y += 7;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7.8);
+      rows.forEach(function (r) {
+        var cellLines = r.map(function (c) { return doc.splitTextToSize(c == null ? '—' : String(c), colW - 4); });
+        var rowLines = Math.max.apply(null, cellLines.map(function (l) { return l.length; }));
+        var rowH = Math.max(7, rowLines * 3.6 + 3);
+        checarQuebraPagina(rowH + 2);
+        cellLines.forEach(function (lines, i) {
+          var x0 = MARGEM + i * colW;
+          var right = rightColsIdx.indexOf(i) !== -1;
+          doc.text(lines, right ? x0 + colW - 2 : x0 + 2, y + 4.6, { align: right ? 'right' : 'left' });
+        });
+        doc.setDrawColor(225, 225, 225);
+        doc.setLineWidth(0.15);
+        doc.line(MARGEM, y + rowH, DIREITA, y + rowH);
+        y += rowH + 1;
+      });
+      y += 5;
+    }
+
+    // ---- CAPA ----
+    var agora = new Date().toLocaleDateString('pt-BR');
+    var dataIni = ev && ev.data_inicio ? new Date(ev.data_inicio).toLocaleDateString('pt-BR') : '';
+    var dataFim = ev && ev.data_fim ? new Date(ev.data_fim).toLocaleDateString('pt-BR') : '';
+    var periodo = dataIni + (dataFim && dataFim !== dataIni ? ' — ' + dataFim : '');
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(26);
+    doc.setTextColor(15, 15, 15);
+    doc.text('Descritivo Geral', MARGEM, y);
+    doc.setFontSize(10);
+    doc.text(agora, DIREITA, y - 12, { align: 'right' });
+    doc.setFont('helvetica', 'normal');
+    doc.text('EventFlow', DIREITA, y - 6, { align: 'right' });
+
+    y += 10;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(15);
+    doc.text(ev.nome || 'Evento', MARGEM, y);
+    y += 7;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9.5);
+    doc.setTextColor(90, 90, 95);
+    doc.text((ev.local || 'Local não informado') + (periodo ? ' · ' + periodo : ''), MARGEM, y);
+    doc.setTextColor(20, 20, 20);
+    y += 12;
+
+    subTitulo('Resumo técnico');
+    kpiBoxes([
+      { big: VARAS_SOM.length + VARAS_LUZ.length, label: 'Posições de rigging (Som + Luz)' },
+      { big: LED_TABELAS.length, label: 'Painéis de LED' },
+      { big: VIDEO_CASAS.length, label: 'Houses de vídeo' },
+      { big: CENO_PECAS.length, label: 'Peças cenográficas' }
+    ]);
+    notaCaixa('Cliente: ' + (ev.cliente || '—') + '   ·   Status do evento: ' + (ev.status || '—') + '   ·   Capacidade do piso informada: ' +
+      (ev.capacidade_piso_kgm2 != null ? ev.capacidade_piso_kgm2 + ' kg/m²' : 'não informada') + '   ·   Evento indoor: ' + (ev.evento_indoor ? 'sim' : 'não'));
+
+    // ---- MÓDULOS ----
+    // módulos que este evento não usa (sem nenhum dado cadastrado) são simplesmente
+    // omitidos do documento, em vez de imprimir uma página vazia com aviso — nem todo
+    // evento usa cenografia, streaming/PTZ, etc.
+    var modulosDef = [
+      { nome: 'SOM', fn: paginaSomPdf, vazio: !VARAS_SOM.length },
+      { nome: 'LUZ', fn: paginaLuzPdf, vazio: !VARAS_LUZ.length },
+      { nome: 'PAINEL DE LED', fn: paginaLedPdf, vazio: !LED_TABELAS.length },
+      { nome: 'VÍDEO', fn: paginaVideoPdf, vazio: !VIDEO_CASAS.length },
+      { nome: 'CENOGRAFIA', fn: paginaCenografiaPdf, vazio: !CENO_PECAS.length },
+      { nome: 'SERVIÇOS', fn: paginaServicosPdf, vazio: !(SERV_EQUIP.length + SERV_AVULSOS.length) }
+    ];
+    var numSecao = 2;
+    modulosDef.forEach(function (m) {
+      if (m.vazio) return;
+      doc.addPage(); y = 20;
+      tituloSecao(String(numSecao).padStart(2, '0'), m.nome);
+      numSecao++;
+      m.fn();
+    });
+
+    doc.addPage(); y = 20;
+    tituloSecao('—', 'MEMÓRIA DE CÁLCULO ESTRUTURAL');
+    paginaMemoriaCalculoPdf();
+
+    doc.addPage(); y = 20;
+    tituloSecao(String(numSecao).padStart(2, '0'), 'RESUMO E OBSERVAÇÕES FINAIS');
+    notaCaixa('Custos financeiros deste evento ficam detalhados na área de Vendas do sistema — esta seção do Descritivo Geral se concentra nos dados técnicos e estruturais acima.');
+    checarQuebraPagina(10);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9.5);
+    doc.setTextColor(15, 15, 15);
+    doc.text('Aviso de responsabilidade técnica', MARGEM, y);
+    y += 5;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.5);
+    var linhasDisc = doc.splitTextToSize(DISCLAIMER, DIREITA - MARGEM - 6);
+    var hDisc = linhasDisc.length * 4 + 6;
+    checarQuebraPagina(hDisc);
+    doc.setDrawColor(15, 15, 15);
+    doc.setLineWidth(0.5);
+    doc.rect(MARGEM, y, DIREITA - MARGEM, hDisc);
+    doc.setTextColor(20, 20, 20);
+    doc.text(linhasDisc, MARGEM + 3, y + 5.5);
+    y += hDisc + 6;
+
+    // ---- rodapé em todas as páginas ----
+    var totalPaginas = doc.internal.getNumberOfPages();
+    for (var p = 1; p <= totalPaginas; p++) {
+      doc.setPage(p);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(140, 140, 145);
+      doc.text((ev.nome || 'Evento') + ' · Descritivo Técnico', MARGEM, 291);
+      doc.text('Página ' + p + ' de ' + totalPaginas, DIREITA, 291, { align: 'right' });
+    }
+
+    doc.save('Descritivo_Geral_' + slug(ev.nome) + '.pdf');
+
+    // ---- páginas de cada módulo (fecham sobre as funções acima) ----
+
+    function paginaSomPdf() {
+      if (!VARAS_SOM.length) { notaCaixa('Nenhuma posição de Som cadastrada para este evento.'); return; }
+      var pesoTotal = 0, consumoTotal = 0;
+      VARAS_SOM.forEach(function (v) { pesoTotal += pesoDaVara(v); consumoTotal += consumoDaVara(v); });
+      kpiBoxes([
+        { big: VARAS_SOM.length, label: 'Posições' },
+        { big: fmtKg(pesoTotal), label: 'Peso total' },
+        { big: Math.round(consumoTotal) + ' W', label: 'Consumo total' },
+        { big: VARAS_SOM.filter(function (v) { return v.suspenso; }).length, label: 'Suspensas (voadas)' }
+      ]);
+      subTitulo('Posições');
+      tabela(['Posição', 'Suspenso', 'Itens', 'Peso', 'Peso/ponto', 'Consumo'],
+        VARAS_SOM.map(function (v) {
+          return [v.nome, v.suspenso ? 'Sim (' + v.qtd_pontos + ' pt)' : 'Não', (v.itens || []).length, fmtKg(pesoDaVara(v)), v.suspenso ? fmtKg(pesoPorPontoDaVara(v)) : '—', Math.round(consumoDaVara(v)) + ' W'];
+        }), [2, 3, 4, 5]);
+    }
+
+    function paginaLuzPdf() {
+      if (!VARAS_LUZ.length) { notaCaixa('Nenhuma posição de Luz cadastrada para este evento.'); return; }
+      var pesoTotal = 0, consumoTotal = 0;
+      VARAS_LUZ.forEach(function (v) { pesoTotal += pesoDaVara(v); consumoTotal += consumoDaVara(v); });
+      kpiBoxes([
+        { big: VARAS_LUZ.length, label: 'Posições' },
+        { big: fmtKg(pesoTotal), label: 'Peso total' },
+        { big: Math.round(consumoTotal) + ' W', label: 'Consumo total' },
+        { big: VARAS_LUZ.filter(function (v) { return v.suspenso; }).length, label: 'Suspensas (voadas)' }
+      ]);
+      subTitulo('Posições');
+      tabela(['Posição', 'Suspenso', 'Itens', 'Peso', 'Peso/ponto', 'Consumo'],
+        VARAS_LUZ.map(function (v) {
+          return [v.nome, v.suspenso ? 'Sim (' + v.qtd_pontos + ' pt)' : 'Não', (v.itens || []).length, fmtKg(pesoDaVara(v)), v.suspenso ? fmtKg(pesoPorPontoDaVara(v)) : '—', Math.round(consumoDaVara(v)) + ' W'];
+        }), [2, 3, 4, 5]);
+    }
+
+    function paginaLedPdf() {
+      if (!LED_TABELAS.length) { notaCaixa('Nenhum painel de LED cadastrado para este evento.'); return; }
+      var areaTotal = 0, pesoTotal = 0;
+      LED_TABELAS.forEach(function (t) { areaTotal += (t.largura_m || 0) * (t.altura_m || 0); pesoTotal += pesoDaLed(t); });
+      kpiBoxes([
+        { big: LED_TABELAS.length, label: 'Painéis' },
+        { big: fmtNum(areaTotal, 1) + ' m²', label: 'Área total' },
+        { big: fmtKg(pesoTotal), label: 'Peso total' },
+        { big: LED_TABELAS.filter(function (t) { return t.modo_montagem === 'rigging'; }).length, label: 'Em rigging (voados)' }
+      ]);
+      subTitulo('Painéis');
+      tabela(['Painel', 'Modo', 'Dimensão', 'Peso', 'Vinculado a vara'],
+        LED_TABELAS.map(function (t) {
+          return [t.nome, t.modo_montagem, fmtNum(t.largura_m, 2) + ' × ' + fmtNum(t.altura_m, 2) + ' m', fmtKg(pesoDaLed(t)), t.vinculada_com ? 'Sim' : 'Não'];
+        }), [3]);
+    }
+
+    function paginaVideoPdf() {
+      if (!VIDEO_CASAS.length) { notaCaixa('Nenhuma House de vídeo cadastrada para este evento.'); return; }
+      kpiBoxes([
+        { big: VIDEO_CASAS.length, label: 'Houses' },
+        { big: VIDEO_CASAS.reduce(function (s, c) { return s + (c.kits || []).length; }, 0), label: 'Kits aplicados' },
+        { big: VIDEO_CASAS.reduce(function (s, c) { return s + (c.cameras || []).length; }, 0), label: 'Câmeras avulsas' },
+        { big: VIDEO_CASAS.filter(function (c) { return c.link_internet; }).length, label: 'Com link de internet' }
+      ]);
+      subTitulo('Houses');
+      tabela(['House', 'Kits', 'Câmeras', 'Streaming'],
+        VIDEO_CASAS.map(function (c) {
+          return [c.nome, (c.kits || []).length, (c.cameras || []).length, (c.plataforma_streaming || '—') + (c.mbps_internet ? ' · ' + c.mbps_internet + ' Mbps' : '')];
+        }), [1, 2]);
+    }
+
+    function paginaCenografiaPdf() {
+      if (!CENO_PECAS.length) { notaCaixa('Nenhuma peça cenográfica cadastrada para este evento.'); return; }
+      kpiBoxes([
+        { big: CENO_PECAS.length, label: 'Peças' },
+        { big: CENO_PECAS.filter(function (p) { return p.estrutura_base === 'truss'; }).length, label: 'Com estrutura truss' },
+        { big: CENO_PECAS.reduce(function (s, p) { return s + (p.materiais || []).length; }, 0), label: 'Materiais reservados' },
+        { big: CENO_PECAS.reduce(function (s, p) { return s + (p.mao_de_obra || []).reduce(function (s2, m) { return s2 + (m.quantidade || 0); }, 0); }, 0), label: 'Mão de obra (pessoas)' }
+      ]);
+      subTitulo('Peças');
+      tabela(['Peça', 'Tipo', 'Estrutura', 'Dimensão'],
+        CENO_PECAS.map(function (p) {
+          return [p.nome, p.tipo_peca, p.estrutura_base, fmtNum(p.largura_m, 2) + ' × ' + fmtNum(p.profundidade_m, 2) + ' m'];
+        }));
+    }
+
+    function paginaServicosPdf() {
+      if (!SERV_EQUIP.length && !SERV_AVULSOS.length) { notaCaixa('Nenhum equipamento ou serviço avulso reservado para este evento.'); return; }
+      kpiBoxes([
+        { big: SERV_EQUIP.length, label: 'Equipamentos de Estoque' },
+        { big: SERV_AVULSOS.length, label: 'Serviços avulsos' },
+        { big: '—', label: ' ' },
+        { big: '—', label: ' ' }
+      ]);
+      if (SERV_EQUIP.length) {
+        subTitulo('Equipamentos reservados');
+        tabela(['Item', 'Quantidade'], SERV_EQUIP.map(function (r) {
+          return [r.estoque_itens ? r.estoque_itens.nome : '—', r.quantidade];
+        }), [1]);
+      }
+      if (SERV_AVULSOS.length) {
+        subTitulo('Serviços avulsos / terceirizados');
+        tabela(['Serviço', 'Fornecedor', 'Valor'], SERV_AVULSOS.map(function (s) {
+          return [s.nome, s.fornecedor || '—', s.valor != null ? fmtMoedaBR(s.valor) : '—'];
+        }), [2]);
+      }
+    }
+
+    function paginaMemoriaCalculoPdf() {
+      var aereas = estruturasAereas();
+      subTitulo('Estruturas suspensas (memorial aéreo)');
+      if (!aereas.length) {
+        notaCaixa('Nenhuma estrutura suspensa neste evento.');
+      } else {
+        tabela(['Estrutura', 'Peso total', 'Pontos', 'Peso/ponto', 'Capacidade útil', 'Margem', 'Status'],
+          aereas.map(function (b) {
+            var margem = b.capacidadeInformada ? fmtKg(b.capacidadeUtil - b.pesoPorPonto) : '—';
+            var status = !b.capacidadeInformada ? 'CAPACIDADE NÃO INFORMADA' : (b.capacidadeUtil >= b.pesoPorPonto ? 'OK' : 'SOBRECARREGADO');
+            return [b.nome, fmtKg(b.pesoTotal), b.qtdPontos, fmtKg(b.pesoPorPonto), b.capacidadeInformada ? fmtKg(b.capacidadeUtil) : 'não informado', margem, status];
+          }), [1, 2, 3, 4, 5]);
+        notaCaixa('Circuitos AC de referência calculados a 20A/220V monofásico por posição — disjuntor de referência: ajustar conforme especificação real do quadro.');
+      }
+
+      subTitulo('Estruturas de solo (memorial solo)');
+      var solos = estruturasSolo();
+      if (!solos.length) {
+        notaCaixa('Nenhuma estrutura de solo neste evento.');
+      } else if (!capacidadePisoPreenchida()) {
+        avisoTexto('Falta informar a capacidade do piso do local — comparação de carga distribuída não calculada.');
+      } else {
+        var capPiso = EVENTO_ATUAL.capacidade_piso_kgm2;
+        tabela(['Estrutura', 'Peso total', 'Área de base', 'Carga distribuída', 'Comparação', 'Tombamento'],
+          solos.map(function (b) {
+            var carga = b.areaM2 ? b.pesoTotal / b.areaM2 : 0;
+            var comparacao = carga <= capPiso ? 'OK' : 'EXCEDE A CAPACIDADE DO PISO';
+            var tomb = calculoTombamento(b);
+            var tombTxt = !tomb ? '—' : (tomb.naoAplicavel ? 'não aplicável (indoor)' : (tomb.naoCalculado ? 'NÃO CALCULADO' : (tomb.instavel ? 'INSTÁVEL — reforçar contrapeso/base' : 'OK (fator ' + tomb.fator.toFixed(2) + ')')));
+            return [b.nome + (b.areaEstimada ? ' (área estimada)' : '') + (b.semPesoConhecido ? ' — peso não modelado' : ''), fmtKg(b.pesoTotal), fmtNum(b.areaM2, 1) + ' m²', fmtNum(carga, 1) + ' kg/m²', comparacao, tombTxt];
+          }), [1, 2, 3]);
+      }
+    }
+  }
+
+  // ---------------- EXPORTAR EXCEL — MEMORIAIS (Aéreo / Solo) ----------------
+  // Visual replicado do template de referência (padrão Vetnil/Maurinho Rigging):
+  // barra de título azul, faixa cinza de identificação do evento, cada
+  // "ESTRUTURA N" com cabeçalho azul-escuro (texto branco), linha cinza de
+  // PONTOS DE FIXAÇÃO/ÁREA DE CONTATO, cabeçalho de colunas cinza, células
+  // de resultado com fundo cinza claro, bordas finas em toda a grade.
+  // Usa ExcelJS (em vez do SheetJS/XLSX usado no resto do app) porque é a
+  // única lib disponível no navegador que grava cor/fonte/borda de verdade
+  // num .xlsx — o SheetJS community só grava os valores, sem estilo nenhum
+  // (por isso a exportação antiga saía toda em branco/sem formatação).
+
+  var AVISOS_MEMORIAL_AEREO = [
+    'Limite de carga por vara cênica de referência é definido pela capacidade cadastrada do item de talha/box utilizado, já com 20% de margem de segurança aplicada (inexatidão de carga, cabeamentos, acessórios, sobrecarga de içamento, etc).',
+    'O projeto aéreo e o memorial de cálculo devem ser compatíveis.',
+    'A ART/RRT deve estar de acordo com o projeto aprovado pelo engenheiro responsável do local e, preferencialmente, deve ser validada antes da emissão definitiva. Nela deve conter a carga total de projeto e a quantidade de pontos aéreos utilizados. Importante: a ART/RRT só tem validade mediante ao pagamento do boleto.',
+    'A montagem será liberada após o recebimento da ART ou RRT e comprovante de pagamento do boleto. Quaisquer divergências entre a montagem e o projeto aprovado ocasionará a interrupção do serviço.',
+    'As equipes de montagem devem ser capacitadas conforme as Normas Regulamentadoras vigentes. Todos os certificados deverão ser apresentados aos responsáveis no local (NR 11 ou 18 e NR 35).',
+    'É expressamente obrigatório o uso de EPI (Equipamento de Proteção Individual) durante o trabalho.'
+  ];
+
+  function dataIniStr(ev) {
+    return (ev.data_inicio ? new Date(ev.data_inicio).toLocaleDateString('pt-BR') : '') + (ev.data_fim ? ' — ' + new Date(ev.data_fim).toLocaleDateString('pt-BR') : '');
+  }
+
+  // ---- paleta e estilos de célula (extraídos do template de referência) ----
+  var COR_MEMORIAL_TITULO = 'FF558ED5';
+  var COR_MEMORIAL_ESTRUTURA = 'FF376092';
+  var COR_MEMORIAL_LABEL = 'FFD9D9D9';
+  var COR_MEMORIAL_HEADER = 'FFBFBFBF';
+  var COR_MEMORIAL_CALC = 'FFE7E7E7';
+  var BORDA_FINA_MEMORIAL = { style: 'thin', color: { argb: 'FF000000' } };
+
+  function bordaFinaMemorial(cell) {
+    cell.border = { top: BORDA_FINA_MEMORIAL, bottom: BORDA_FINA_MEMORIAL, left: BORDA_FINA_MEMORIAL, right: BORDA_FINA_MEMORIAL };
+  }
+  function celTituloPrincipal(cell, texto) {
+    cell.value = texto;
+    cell.font = { name: 'Arial', size: 13, bold: true };
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COR_MEMORIAL_TITULO } };
+    cell.alignment = { horizontal: 'left', vertical: 'middle' };
+    cell.border = { top: BORDA_FINA_MEMORIAL, bottom: { style: 'medium', color: { argb: 'FF000000' } }, left: BORDA_FINA_MEMORIAL, right: BORDA_FINA_MEMORIAL };
+  }
+  function celLabelIdent(cell, texto) {
+    cell.value = texto;
+    cell.font = { name: 'Arial', size: 10.5 };
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COR_MEMORIAL_LABEL } };
+    cell.alignment = { horizontal: 'left', vertical: 'middle' };
+    bordaFinaMemorial(cell);
+  }
+  function celValorIdent(cell, texto) {
+    cell.value = texto;
+    cell.font = { name: 'Arial', size: 10.5, bold: true };
+    cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+    bordaFinaMemorial(cell);
+  }
+  function celEstruturaTitulo(cell, texto) {
+    cell.value = texto;
+    cell.font = { name: 'Calibri', size: 12, bold: true, color: { argb: 'FFFFFFFF' } };
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COR_MEMORIAL_ESTRUTURA } };
+    cell.alignment = { horizontal: 'left', vertical: 'middle' };
+    bordaFinaMemorial(cell);
+  }
+  function celEstruturaSecundario(cell, texto) {
+    cell.value = texto;
+    cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FFFFFFFF' } };
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COR_MEMORIAL_ESTRUTURA } };
+    cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+    bordaFinaMemorial(cell);
+  }
+  function celLabelCinza(cell, texto, alinh) {
+    cell.value = texto;
+    cell.font = { name: 'Calibri', size: 11, bold: true };
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COR_MEMORIAL_HEADER } };
+    cell.alignment = { horizontal: alinh || 'right', vertical: 'middle' };
+    bordaFinaMemorial(cell);
+  }
+  function celHeaderColuna(cell, texto) {
+    cell.value = texto;
+    cell.font = { name: 'Calibri', size: 11, bold: true };
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COR_MEMORIAL_HEADER } };
+    cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+    bordaFinaMemorial(cell);
+  }
+  function celValorCalc(cell, valor, negrito, tamanho) {
+    cell.value = valor;
+    cell.font = { name: 'Calibri', size: tamanho || 11, bold: !!negrito };
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COR_MEMORIAL_CALC } };
+    cell.alignment = { horizontal: 'center', vertical: 'middle' };
+    if (typeof valor === 'number') cell.numFmt = '0.00';
+    bordaFinaMemorial(cell);
+  }
+  function celItem(cell, valor, alinh) {
+    cell.value = valor;
+    cell.font = { name: 'Calibri', size: 11 };
+    cell.alignment = { horizontal: alinh || 'center', vertical: 'middle' };
+    bordaFinaMemorial(cell);
+  }
+
+  // cabeçalho comum: barra de título + EVENTO/LOCAL/DATA DO EVENTO/DATA DA MONTAGEM
+  function construirCabecalhoMemorial(ws, tituloTexto, ev) {
+    ws.mergeCells(2, 2, 2, 10);
+    celTituloPrincipal(ws.getCell(2, 2), tituloTexto);
+
+    // cada campo ocupa 2 colunas da grade (junto com a coluna seguinte) pra
+    // caber rótulos e valores compridos (datas em intervalo, nomes de local)
+    // sem o texto vazar por cima da borda da célula vizinha.
+    var campos = [
+      { c: 2, label: 'EVENTO:', valor: ev.nome || '' },
+      { c: 4, label: 'LOCAL:', valor: ev.local || '' },
+      { c: 7, label: 'DATA DO EVENTO:', valor: dataIniStr(ev) },
+      { c: 9, label: 'DATA DA MONTAGEM:', valor: '' }
+    ];
+    campos.forEach(function (campo) {
+      ws.mergeCells(3, campo.c, 3, campo.c + 1);
+      ws.mergeCells(4, campo.c, 4, campo.c + 1);
+      celLabelIdent(ws.getCell(3, campo.c), campo.label);
+      celValorIdent(ws.getCell(4, campo.c), campo.valor);
+    });
+    return 6; // primeira linha livre após o cabeçalho
+  }
+
+  // grade compartilhada de "ESTRUTURA N" (2 por linha) — usada pelo Aéreo e pelo Solo
+  function construirGradeMemorial(ws, startRow, blocos, opts) {
+    var linha = startRow;
+    for (var i = 0; i < blocos.length; i += 2) {
+      var left = blocos[i], right = blocos[i + 1];
+      var leftItens = left ? left.itens : [];
+      var rightItens = right ? right.itens : [];
+      var maxItens = Math.max(leftItens.length, rightItens.length, 3);
+      var totalEqL = somaPesoItens(leftItens), totalEqR = somaPesoItens(rightItens);
+
+      if (left) {
+        ws.mergeCells(linha, 2, linha, 4);
+        celEstruturaTitulo(ws.getCell(linha, 2), ' ESTRUTURA ' + String(i + 1).padStart(2, '0') + ' — ' + left.nome);
+        celEstruturaSecundario(ws.getCell(linha, 5), opts.labelSecundario);
+      }
+      if (right) {
+        ws.mergeCells(linha, 7, linha, 9);
+        celEstruturaTitulo(ws.getCell(linha, 7), ' ESTRUTURA ' + String(i + 2).padStart(2, '0') + ' — ' + right.nome);
+        celEstruturaSecundario(ws.getCell(linha, 10), opts.labelSecundario);
+      }
+      linha++;
+
+      if (left) {
+        ws.mergeCells(linha, 2, linha, 4);
+        celLabelCinza(ws.getCell(linha, 2), opts.infoLabel(left));
+        celValorCalc(ws.getCell(linha, 5), opts.calcularSecundario(left, totalEqL), true, 13);
+      }
+      if (right) {
+        ws.mergeCells(linha, 7, linha, 9);
+        celLabelCinza(ws.getCell(linha, 7), opts.infoLabel(right));
+        celValorCalc(ws.getCell(linha, 10), opts.calcularSecundario(right, totalEqR), true, 13);
+      }
+      linha++;
+
+      if (left) {
+        celHeaderColuna(ws.getCell(linha, 2), opts.equipHeaderLabel);
+        celHeaderColuna(ws.getCell(linha, 3), 'QUANT.');
+        celHeaderColuna(ws.getCell(linha, 4), 'PESO UNITÁRIO');
+        celHeaderColuna(ws.getCell(linha, 5), 'PESO TOTAL');
+      }
+      if (right) {
+        celHeaderColuna(ws.getCell(linha, 7), opts.equipHeaderLabel);
+        celHeaderColuna(ws.getCell(linha, 8), 'QUANT.');
+        celHeaderColuna(ws.getCell(linha, 9), 'PESO UNITÁRIO');
+        celHeaderColuna(ws.getCell(linha, 10), 'PESO TOTAL');
+      }
+      linha++;
+
+      for (var k = 0; k < maxItens; k++) {
+        var li = leftItens[k], ri = rightItens[k];
+        if (left) {
+          celItem(ws.getCell(linha, 2), li ? li.nome : '', 'left');
+          celItem(ws.getCell(linha, 3), li ? li.qtd : '');
+          celItem(ws.getCell(linha, 4), li ? li.pesoUnit : '');
+          celValorCalc(ws.getCell(linha, 5), li ? round1(li.pesoTotal) : '');
+        }
+        if (right) {
+          celItem(ws.getCell(linha, 7), ri ? ri.nome : '', 'left');
+          celItem(ws.getCell(linha, 8), ri ? ri.qtd : '');
+          celItem(ws.getCell(linha, 9), ri ? ri.pesoUnit : '');
+          celValorCalc(ws.getCell(linha, 10), ri ? round1(ri.pesoTotal) : '');
+        }
+        linha++;
+      }
+
+      if (left) { ws.mergeCells(linha, 2, linha, 4); celLabelCinza(ws.getCell(linha, 2), opts.totalLabel); celValorCalc(ws.getCell(linha, 5), round1(totalEqL), true); }
+      if (right) { ws.mergeCells(linha, 7, linha, 9); celLabelCinza(ws.getCell(linha, 7), opts.totalLabel); celValorCalc(ws.getCell(linha, 10), round1(totalEqR), true); }
+      linha++;
+
+      if (left) { ws.mergeCells(linha, 2, linha, 4); celLabelCinza(ws.getCell(linha, 2), '20% DE SEGURANÇA'); celValorCalc(ws.getCell(linha, 5), round1(totalEqL * 0.2), true); }
+      if (right) { ws.mergeCells(linha, 7, linha, 9); celLabelCinza(ws.getCell(linha, 7), '20% DE SEGURANÇA'); celValorCalc(ws.getCell(linha, 10), round1(totalEqR * 0.2), true); }
+      linha++;
+
+      if (left) { ws.mergeCells(linha, 2, linha, 4); celLabelCinza(ws.getCell(linha, 2), 'TOTAL'); celValorCalc(ws.getCell(linha, 5), round1(totalEqL * 1.2), true); }
+      if (right) { ws.mergeCells(linha, 7, linha, 9); celLabelCinza(ws.getCell(linha, 7), 'TOTAL'); celValorCalc(ws.getCell(linha, 10), round1(totalEqR * 1.2), true); }
+      linha++;
+
+      linha++; // linha em branco entre pares de estruturas
+    }
+    return linha;
+  }
+
+  async function baixarWorkbookMemorial(wb, nomeArquivo) {
+    var buffer = await wb.xlsx.writeBuffer();
+    var blob = new Blob([buffer], { type: 'application/octet-stream' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = nomeArquivo;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  }
+
+  async function exportarMemorialAereo() {
+    if (typeof ExcelJS === 'undefined') { alert('Biblioteca de exportação (ExcelJS) não carregou — verifique a conexão e tente de novo.'); return; }
+    var ev = EVENTO_ATUAL;
+    var aereas = estruturasAereas();
+    if (!aereas.length) { alert('Nenhuma estrutura suspensa cadastrada para este evento — nada a exportar no Memorial Aéreo.'); return; }
+
+    var wb = new ExcelJS.Workbook();
+    var ws = wb.addWorksheet('Memorial Aéreo', { views: [{ showGridLines: false }] });
+    ws.columns = [
+      { width: 2.5 }, { width: 32 }, { width: 8 }, { width: 14 }, { width: 18 }, { width: 3 },
+      { width: 32 }, { width: 8 }, { width: 14 }, { width: 18 }
+    ];
+
+    construirCabecalhoMemorial(ws, 'MEMORIAL DE CÁLCULO DE ESTRUTURA AÉREA', ev);
+
+    var proximaLinha = construirGradeMemorial(ws, 6, aereas, {
+      labelSecundario: 'Kg por ponto',
+      infoLabel: function (bloco) { return 'PONTOS DE FIXAÇÃO (' + (bloco.qtdPontos || 1) + ')'; },
+      calcularSecundario: function (bloco, total) { return round1((total * 1.2) / (bloco.qtdPontos || 1)); },
+      equipHeaderLabel: 'EQUIPAMENTO / MARCA E MODELO',
+      totalLabel: 'TOTAL DE EQUIPAMENTO'
+    });
+
+    var cargaTotal = 0, pontosTotais = 0;
+    aereas.forEach(function (b) { cargaTotal += somaPesoItens(b.itens) * 1.2; pontosTotais += (b.qtdPontos || 1); });
+
+    var linha = proximaLinha + 1;
+    ws.mergeCells(linha, 2, linha, 4);
+    celLabelCinza(ws.getCell(linha, 2), 'CARGA TOTAL DE PROJETO (Kg):');
+    celValorCalc(ws.getCell(linha, 5), round1(cargaTotal), true, 13);
+    linha++;
+    ws.mergeCells(linha, 2, linha, 4);
+    celLabelCinza(ws.getCell(linha, 2), 'PONTOS AÉREOS TOTAIS UTILIZADOS:');
+    celValorCalc(ws.getCell(linha, 5), pontosTotais, true, 13);
+    linha += 2;
+
+    AVISOS_MEMORIAL_AEREO.forEach(function (t) {
+      ws.mergeCells(linha, 2, linha, 10);
+      var c = ws.getCell(linha, 2);
+      c.value = t;
+      c.font = { name: 'Calibri', size: 9.5, italic: true, color: { argb: 'FF444444' } };
+      c.alignment = { horizontal: 'left', vertical: 'middle', wrapText: true };
+      ws.getRow(linha).height = 28;
+      linha += 2;
+    });
+
+    ['ENGENHEIRO/ARQUITETO RESPONSÁVEL:', 'CREA/CAU:', 'ART/RRT:', 'ASSINATURA:'].forEach(function (rotulo) {
+      var c = ws.getCell(linha, 2);
+      c.value = rotulo;
+      c.font = { name: 'Calibri', size: 11, bold: true };
+      linha += 2;
+    });
+
+    await baixarWorkbookMemorial(wb, 'Memorial_Aereo_' + slug(ev.nome) + '.xlsx');
+  }
+
+  async function exportarMemorialSolo() {
+    if (typeof ExcelJS === 'undefined') { alert('Biblioteca de exportação (ExcelJS) não carregou — verifique a conexão e tente de novo.'); return; }
+    var ev = EVENTO_ATUAL;
+    if (precisaCapacidadePiso() && !capacidadePisoPreenchida()) {
+      alert('Informe a capacidade do piso do local no card "Dados de engenharia do evento" antes de exportar o Memorial Solo.');
+      return;
+    }
+    var solos = estruturasSolo();
+    if (!solos.length) { alert('Nenhuma estrutura de solo cadastrada para este evento — nada a exportar no Memorial Solo.'); return; }
+    var capPiso = ev.capacidade_piso_kgm2;
+
+    var wb = new ExcelJS.Workbook();
+    var ws = wb.addWorksheet('Memorial Solo', { views: [{ showGridLines: false }] });
+    ws.columns = [
+      { width: 2.5 }, { width: 32 }, { width: 8 }, { width: 14 }, { width: 18 }, { width: 3 },
+      { width: 32 }, { width: 8 }, { width: 14 }, { width: 18 }
+    ];
+
+    construirCabecalhoMemorial(ws, 'MEMORIAL DE CÁLCULO DE ESTRUTURAS EM SOLO', ev);
+
+    var proximaLinha = construirGradeMemorial(ws, 6, solos, {
+      labelSecundario: 'DISTRIBUIÇÃO DE CARGA KG/M²',
+      infoLabel: function () { return 'ÁREA DE CONTATO EM M²'; },
+      calcularSecundario: function (bloco, total) { return bloco.areaM2 ? round1((total * 1.2) / bloco.areaM2) : ''; },
+      equipHeaderLabel: 'EQUIPAMENTO',
+      totalLabel: 'TOTAL DE EQUIPAMENTOS'
+    });
+
+    var cargaTotalKg = 0;
+    solos.forEach(function (b) { cargaTotalKg += somaPesoItens(b.itens) * 1.2; });
+
+    var linha = proximaLinha + 1;
+    ws.mergeCells(linha, 2, linha, 4);
+    celLabelCinza(ws.getCell(linha, 2), 'CARGA TOTAL (KG):');
+    celValorCalc(ws.getCell(linha, 5), round1(cargaTotalKg), true, 13);
+    linha += 2;
+
+    var linhaAssinatura = linha;
+    ['ENGENHEIRO/ARQUITETO RESPONSÁVEL:', 'CREA/CAU:', 'ART/RRT:', 'ASSINATURA:'].forEach(function (rotulo) {
+      var c = ws.getCell(linha, 2);
+      c.value = rotulo;
+      c.font = { name: 'Calibri', size: 11, bold: true };
+      linha += 2;
+    });
+
+    // tabela-resumo ESTRUTURAS | DISTRIBUIÇÃO DE CARGA KG/M² | STATUS, ao lado do bloco de assinatura
+    var linhaResumo = linhaAssinatura;
+    celHeaderColuna(ws.getCell(linhaResumo, 7), 'ESTRUTURAS');
+    ws.mergeCells(linhaResumo, 8, linhaResumo, 9);
+    celHeaderColuna(ws.getCell(linhaResumo, 8), 'DISTRIBUIÇÃO DE CARGA KG/M²');
+    celHeaderColuna(ws.getCell(linhaResumo, 10), 'STATUS');
+    linhaResumo++;
+    solos.forEach(function (b, i) {
+      var carga = b.areaM2 ? (somaPesoItens(b.itens) * 1.2) / b.areaM2 : 0;
+      var comparacao = capPiso == null ? 'não calculado' : (carga <= capPiso ? 'OK' : 'EXCEDE A CAPACIDADE DO PISO');
+      celItem(ws.getCell(linhaResumo, 7), ' ESTRUTURA ' + String(i + 1).padStart(2, '0') + ' — ' + b.nome, 'left');
+      ws.mergeCells(linhaResumo, 8, linhaResumo, 9);
+      celItem(ws.getCell(linhaResumo, 8), b.areaM2 ? round1(carga) : '');
+      var statusCell = ws.getCell(linhaResumo, 10);
+      celItem(statusCell, comparacao);
+      statusCell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: comparacao === 'OK' ? 'FF2E7D32' : (comparacao === 'não calculado' ? 'FF444444' : 'FFC0392B') } };
+      linhaResumo++;
+    });
+
+    await baixarWorkbookMemorial(wb, 'Memorial_Solo_' + slug(ev.nome) + '.xlsx');
+  }
+
+</script>
+
+<script src="ef-ui.js"></script>
+</body>
+</html>

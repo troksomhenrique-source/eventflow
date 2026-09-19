@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Clientes — EventFlow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="ef-config.js"></script>
+<script src="ef-auth.js"></script>
+<style>
+  body{margin:0;background:#0a0a0b;font-family:'Inter',sans-serif;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  .disp{font-family:'Space Grotesk',sans-serif;}
+  select{font-family:'IBM Plex Mono',monospace;background:transparent;border:none;color:inherit;font-size:12.5px;cursor:pointer;color-scheme:dark;}
+  select option{background:#0d0d0f;color:#f3f1ec;}
+  select:focus{outline:none;}
+  input, textarea{font-family:'Inter',sans-serif;}
+  input::placeholder, textarea::placeholder{color:#4a4a4e;}
+  input:focus, textarea:focus{outline:none;border-color:#3b82c9 !important;}
+  body [data-financeiro]{display:none !important;}
+  html[data-financeiro="true"] body [data-financeiro]{display:block !important;}
+  body [data-areas]{display:none !important;}
+  html[data-areas="true"] body [data-areas]{display:block !important;}
+  body [data-usuarios]{display:none !important;}
+  html[data-usuarios="true"] body [data-usuarios]{display:block !important;}
+  .icone-acao{cursor:pointer;color:#6e6e73;font-size:11px;}
+  .icone-acao:hover{color:#c9695c;}
+  .campo-mini{width:100%;background:transparent;border:none;border-bottom:1px solid #29292d;color:#f3f1ec;font-size:12.5px;padding-bottom:5px;box-sizing:border-box;}
+  .rotulo-mini{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:#6e6e73;margin-bottom:7px;}
+  .card-cliente{border-bottom:1px solid #1c1c1f; padding:16px 0;}
+  .card-cliente:last-child{border-bottom:none;}
+  .add-form-card{background:#131315;border:1px solid #1c1c1f;border-radius:8px;padding:14px 16px;}
+  .add-form-titulo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:#6e6e73;margin-bottom:12px;}
+  .add-form-label{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.05em;text-transform:uppercase;color:#6e6e73;margin-bottom:6px;}
+  .add-form-input{width:100%;background:transparent;border:none;border-bottom:1px solid #29292d;color:#f3f1ec;font-size:13px;padding-bottom:8px;box-sizing:border-box;}
+  .add-form-link{background:none;border:none;padding:0 0 8px;font-size:13px;color:#7fa8c9;cursor:pointer;border-bottom:1px solid #2a3d4d;white-space:nowrap;}
+</style>
+<link rel="stylesheet" href="ef-ui.css">
+</head>
+<body>
+
+<div style="width: 100%; min-height: 100vh; box-sizing: border-box; display: flex; background: #0a0a0b; color: #f3f1ec;">
+
+  <!-- ============ SIDEBAR ============ -->
+  <div style="width: 220px; flex-shrink: 0; display: flex; flex-direction: column; padding: 36px 24px; box-sizing: border-box;">
+
+    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 40px;">
+      <a href="dashboard.html" style="text-decoration: none; display: flex; align-items: center; gap: 10px;">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" style="flex-shrink: 0;"><path d="M2 12c2 0 2-6.5 4-6.5S8 12 10 12s2-6.5 4-6.5" stroke="#7fa8c9" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div style="font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 13.5px; letter-spacing: -.01em; color: #f3f1ec;">EventFlow</div>
+      </a>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 32px;">
+      <a href="dashboard.html" style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Dashboard</span></a>
+      <a href="agenda.html" style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Agenda</span></a>
+      <a href="estoque.html" style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Estoque</span></a>
+      <div data-financeiro style="display: flex; align-items: center; gap: 9px;">
+        <span style="width: 4px; height: 4px; border-radius: 50%; background: #7fa8c9; flex-shrink: 0;"></span>
+        <span style="font-size: 13px; font-weight: 600; color: #f3f1ec;">Clientes</span>
+      </div>
+      <a href="vendas.html" data-financeiro style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Vendas</span></a>
+      <a href="chat.html" style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Chat</span></a>
+      <a href="notas.html" style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Notas</span></a>
+    </div>
+
+    <div data-areas>
+      <div class="mono" style="font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: #4a4a4e; margin-bottom: 12px;">Áreas do projeto</div>
+      <div style="display: flex; flex-direction: column; gap: 13px; margin-bottom: 32px;">
+        <a href="calculadora-som.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Som</span></a>
+        <a href="calculadora-luz.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Luz</span></a>
+        <a href="video.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Vídeo</span></a>
+        <a href="estrutura.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Estrutura</span></a>
+        <a href="internet.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Internet</span></a>
+        <a href="cenografia.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Cenografia</span></a>
+        <a href="extras.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Extras</span></a>
+        <a href="servicos.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Serviços</span></a>
+        <a href="logistica.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Logística</span></a>
+        <a href="descritivo-geral.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Descritivo Geral</span></a>
+        <a href="ordem-servico.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Ordem de Serviço</span></a>
+      </div>
+    </div>
+
+    <div data-areas>
+      <div class="mono" style="font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: #4a4a4e; margin-bottom: 12px;">Sistema</div>
+      <div style="display: flex; flex-direction: column; gap: 13px;">
+        <a href="especificacoes-equipamento.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Especificações de equipamentos</span></a>
+        <a data-usuarios href="usuarios-permissoes.html" style="text-decoration: none; display: block;"><span style="font-size: 12.5px; color: #6e6e73;">Usuários e permissões</span></a>
+      </div>
+    </div>
+
+    <div style="margin-top: auto; padding-top: 18px; border-top: 1px solid #1c1c1f; display: flex; align-items: center; gap: 10px;">
+      <div id="user-initials" style="width: 26px; height: 26px; border-radius: 50%; background: #1a1a1d; display: flex; align-items: center; justify-content: center; font-family: 'Space Grotesk', sans-serif; font-size: 10.5px; font-weight: 600; color: #b8b8bc; flex-shrink: 0;">··</div>
+      <div style="flex-grow: 1; min-width: 0;">
+        <div id="user-name" style="font-size: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Carregando…</div>
+        <div id="user-role" class="mono" style="font-size: 9px; color: #6e6e73; margin-top: 1px;">—</div>
+      </div>
+      <span id="logout" title="Sair" style="cursor: pointer; color: #6e6e73; font-size: 11px; flex-shrink: 0;">sair</span>
+    </div>
+  </div>
+
+  <!-- ============ MAIN ============ -->
+  <div style="flex-grow: 1; padding: 36px 48px 36px 0; box-sizing: border-box; min-width: 0;">
+
+    <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 30px;">
+      <div>
+        <div class="mono" style="color: #6e6e73; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 10px;" id="hoje"></div>
+        <h1 style="font-family: 'Space Grotesk', sans-serif; font-size: 24px; font-weight: 600; margin: 0 0 6px; letter-spacing: -.01em;">Clientes</h1>
+        <div style="color: #8c8c91; font-size: 13px;">Cadastre uma vez e reaproveite em Vendas — ao montar um orçamento, é só escolher o cliente da lista.</div>
+      </div>
+      <span id="btn-toggle-form" style="font-size: 12.5px; color: #7fa8c9; cursor: pointer; flex-shrink:0;">+ Cadastrar cliente</span>
+    </div>
+
+    <!-- KPI row -->
+    <div style="display: flex; padding: 20px 0; border-top: 1px solid #1c1c1f; border-bottom: 1px solid #1c1c1f; margin-bottom: 30px;">
+      <div style="flex: 1; padding-right: 26px; border-right: 1px solid #1c1c1f;">
+        <div class="mono" style="font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: #6e6e73; margin-bottom: 10px;">Clientes cadastrados</div>
+        <div id="kpi-total" style="font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 600;">—</div>
+      </div>
+      <div style="flex: 1; padding-left: 26px;">
+        <div class="mono" style="font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: #6e6e73; margin-bottom: 10px;">Com orçamento vinculado</div>
+        <div id="kpi-com-orcamento" style="font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 600;">—</div>
+      </div>
+    </div>
+
+    <!-- form novo cliente -->
+    <div id="bloco-form" class="add-form-card" style="display:none; margin-bottom: 30px;">
+      <div class="add-form-titulo">Cadastrar cliente</div>
+      <form id="form-cliente">
+        <div style="display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 20px; align-items: end; margin-bottom: 18px;">
+          <div>
+            <div class="add-form-label">Nome</div>
+            <input id="novo-nome" required type="text" placeholder="Ex: Família Silva, Empresa XPTO Ltda" class="add-form-input">
+          </div>
+          <div>
+            <div class="add-form-label">Contato</div>
+            <input id="novo-contato" type="text" placeholder="Telefone ou e-mail" class="add-form-input">
+          </div>
+          <div>
+            <div class="add-form-label">CPF/CNPJ</div>
+            <input id="novo-documento" type="text" placeholder="Opcional" class="add-form-input">
+          </div>
+        </div>
+        <div style="margin-bottom: 18px;">
+          <div class="add-form-label">Endereço</div>
+          <input id="novo-endereco" type="text" placeholder="Rua, número, cidade-UF (opcional)" class="add-form-input">
+        </div>
+        <div>
+          <div class="add-form-label">Observações</div>
+          <textarea id="novo-observacoes" rows="2" placeholder="Preferências, histórico, condições combinadas..."
+            style="width: 100%; background: transparent; border: 1px solid #29292d; border-radius: 6px; color: #f3f1ec; font-size: 13px; padding: 8px 10px; box-sizing: border-box; resize: vertical; margin-bottom: 14px;"></textarea>
+          <button id="btn-cliente" type="submit" class="add-form-link">+ Cadastrar cliente</button>
+        </div>
+      </form>
+      <div id="cliente-msg" style="margin-top: 10px; font-size: 12.5px; min-height: 16px;"></div>
+    </div>
+
+    <div id="lista-clientes"></div>
+    <div id="clientes-vazio" style="display:none; color: #4a4a4e; font-size: 13px;">Nenhum cliente cadastrado ainda.</div>
+
+  </div>
+</div>
+
+<script>
+(function () {
+  var ROLE_LABEL = { gerencia: 'Gerência', producao: 'Produção', estoque: 'Estoque' };
+  var CLIENTES = [];
+  var ORCAMENTOS_CLIENTE_IDS = {};
+
+  function escapeHtml(v) {
+    return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  document.addEventListener('DOMContentLoaded', async function () {
+    if (!window.EF || !EF.ready) return;
+    var ok = await EF.init({ gerenciaOnly: true });
+    if (!ok) return;
+
+    document.getElementById('hoje').textContent = new Date().toLocaleDateString('pt-BR', {
+      weekday: 'long', day: '2-digit', month: 'long'
+    });
+
+    var p = EF.profile;
+    var nome = p.nome || p.email || 'Usuário';
+    var iniciais = nome.split(' ').filter(Boolean).slice(0, 2).map(function (s) { return s[0].toUpperCase(); }).join('');
+    document.getElementById('user-name').textContent = nome;
+    document.getElementById('user-role').textContent = ROLE_LABEL[p.role] || p.role;
+    document.getElementById('user-initials').textContent = iniciais || '··';
+    document.getElementById('logout').onclick = function () { EF.logout(); };
+
+    document.getElementById('btn-toggle-form').addEventListener('click', function () {
+      var bloco = document.getElementById('bloco-form');
+      bloco.style.display = bloco.style.display === 'none' ? '' : 'none';
+    });
+
+    document.getElementById('form-cliente').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var btn = document.getElementById('btn-cliente');
+      var msg = document.getElementById('cliente-msg');
+      var nomeVal = document.getElementById('novo-nome').value.trim();
+      var contatoVal = document.getElementById('novo-contato').value.trim();
+      var documentoVal = document.getElementById('novo-documento').value.trim();
+      var enderecoVal = document.getElementById('novo-endereco').value.trim();
+      var obsVal = document.getElementById('novo-observacoes').value.trim();
+
+      btn.disabled = true;
+      msg.style.color = '#8c8c91';
+      msg.textContent = 'Salvando...';
+
+      var { error } = await EF.client.from('clientes').insert({
+        empresa_id: p.empresa_id,
+        nome: nomeVal,
+        contato: contatoVal,
+        documento: documentoVal,
+        endereco: enderecoVal,
+        observacoes: obsVal
+      });
+
+      btn.disabled = false;
+      if (error) {
+        msg.style.color = '#c9695c';
+        msg.textContent = error.message;
+        return;
+      }
+      msg.style.color = '#7cae83';
+      msg.textContent = 'Cliente cadastrado!';
+      document.getElementById('form-cliente').reset();
+      await carregarClientes();
+    });
+
+    await carregarClientes();
+  });
+
+  async function carregarClientes() {
+    var { data, error } = await EF.client.from('clientes').select('*').eq('empresa_id', EF.profile.empresa_id).order('nome', { ascending: true });
+    if (error) { return; }
+    CLIENTES = data || [];
+
+    var { data: orcamentos } = await EF.client.from('orcamentos').select('cliente_id').eq('empresa_id', EF.profile.empresa_id).not('cliente_id', 'is', null);
+    ORCAMENTOS_CLIENTE_IDS = {};
+    (orcamentos || []).forEach(function (o) { ORCAMENTOS_CLIENTE_IDS[o.cliente_id] = (ORCAMENTOS_CLIENTE_IDS[o.cliente_id] || 0) + 1; });
+
+    document.getElementById('kpi-total').textContent = CLIENTES.length;
+    document.getElementById('kpi-com-orcamento').textContent = Object.keys(ORCAMENTOS_CLIENTE_IDS).length;
+
+    renderizarClientes();
+  }
+
+  function renderizarClientes() {
+    var wrap = document.getElementById('lista-clientes');
+    document.getElementById('clientes-vazio').style.display = CLIENTES.length ? 'none' : '';
+    wrap.innerHTML = '';
+
+    CLIENTES.forEach(function (c) {
+      var qtdOrcamentos = ORCAMENTOS_CLIENTE_IDS[c.id] || 0;
+      var card = document.createElement('div');
+      card.className = 'card-cliente';
+      card.innerHTML =
+        '<div style="display:flex; align-items:flex-start; justify-content:space-between; gap:16px;">' +
+          '<div style="flex:1; min-width:0;">' +
+            '<div style="font-family:\'Space Grotesk\', sans-serif; font-size:14.5px; font-weight:600;">' + escapeHtml(c.nome) + '</div>' +
+            '<div style="color:#8c8c91; font-size:12.5px; margin-top:4px;">' +
+              (c.contato ? escapeHtml(c.contato) : '<span style="color:#4a4a4e;">sem contato</span>') +
+              (c.documento ? ' · <span class="mono">' + escapeHtml(c.documento) + '</span>' : '') +
+            '</div>' +
+            (c.endereco ? '<div style="color:#6e6e73; font-size:11.5px; margin-top:3px;">' + escapeHtml(c.endereco) + '</div>' : '') +
+            (c.observacoes ? '<div style="color:#6e6e73; font-size:11.5px; margin-top:3px; font-style:italic;">' + escapeHtml(c.observacoes) + '</div>' : '') +
+          '</div>' +
+          '<div style="display:flex; align-items:center; gap:16px; flex-shrink:0;">' +
+            (qtdOrcamentos ? '<span class="mono" style="font-size:10.5px; color:#7fa8c9;">' + qtdOrcamentos + ' orçamento' + (qtdOrcamentos === 1 ? '' : 's') + '</span>' : '') +
+            '<span class="icone-acao" data-editar="' + c.id + '">editar</span>' +
+            '<span class="icone-acao" data-remover="' + c.id + '">remover</span>' +
+          '</div>' +
+        '</div>' +
+        '<div class="bloco-edicao" id="edicao-' + c.id + '" style="display:none; margin-top:14px; padding:14px; background:#131315; border:1px solid #1c1c1f; border-radius:8px;"></div>';
+      wrap.appendChild(card);
+
+      card.querySelector('[data-remover]').addEventListener('click', async function () {
+        if (!confirm('Remover "' + c.nome + '"? Orçamentos já criados continuam com os dados preenchidos, só deixam de estar vinculados ao cadastro.')) return;
+        var { error } = await EF.client.from('clientes').delete().eq('id', c.id);
+        if (error) { alert('Erro ao remover: ' + error.message); return; }
+        CLIENTES = CLIENTES.filter(function (x) { return x.id !== c.id; });
+        renderizarClientes();
+      });
+
+      card.querySelector('[data-editar]').addEventListener('click', function () {
+        abrirEdicao(card, c);
+      });
+    });
+  }
+
+  function abrirEdicao(card, c) {
+    var bloco = document.getElementById('edicao-' + c.id);
+    if (bloco.style.display !== 'none') { bloco.style.display = 'none'; bloco.innerHTML = ''; return; }
+
+    bloco.style.display = '';
+    bloco.innerHTML =
+      '<div style="display:grid; grid-template-columns:1.3fr 1fr 1fr; gap:16px; margin-bottom:14px;">' +
+        '<div><div class="rotulo-mini">Nome</div><input class="campo-mini" id="ed-nome-' + c.id + '" value="' + escapeHtml(c.nome) + '"></div>' +
+        '<div><div class="rotulo-mini">Contato</div><input class="campo-mini" id="ed-contato-' + c.id + '" value="' + escapeHtml(c.contato) + '"></div>' +
+        '<div><div class="rotulo-mini">CPF/CNPJ</div><input class="campo-mini" id="ed-documento-' + c.id + '" value="' + escapeHtml(c.documento) + '"></div>' +
+      '</div>' +
+      '<div style="margin-bottom:14px;"><div class="rotulo-mini">Endereço</div><input class="campo-mini" id="ed-endereco-' + c.id + '" value="' + escapeHtml(c.endereco) + '"></div>' +
+      '<div style="margin-bottom:14px;"><div class="rotulo-mini">Observações</div><textarea class="campo-mini" id="ed-obs-' + c.id + '" rows="2" style="border:1px solid #29292d; border-radius:6px; padding:8px; resize:vertical;">' + escapeHtml(c.observacoes) + '</textarea></div>' +
+      '<div style="display:flex; gap:16px;"><span class="icone-acao" id="ed-salvar-' + c.id + '" style="color:#7fa8c9;">salvar</span><span class="icone-acao" id="ed-cancelar-' + c.id + '">cancelar</span></div>' +
+      '<div id="ed-msg-' + c.id + '" style="font-size:12px; margin-top:8px; min-height:14px;"></div>';
+
+    document.getElementById('ed-cancelar-' + c.id).addEventListener('click', function () {
+      bloco.style.display = 'none';
+      bloco.innerHTML = '';
+    });
+
+    document.getElementById('ed-salvar-' + c.id).addEventListener('click', async function () {
+      var msg = document.getElementById('ed-msg-' + c.id);
+      var campos = {
+        nome: document.getElementById('ed-nome-' + c.id).value.trim(),
+        contato: document.getElementById('ed-contato-' + c.id).value.trim(),
+        documento: document.getElementById('ed-documento-' + c.id).value.trim(),
+        endereco: document.getElementById('ed-endereco-' + c.id).value.trim(),
+        observacoes: document.getElementById('ed-obs-' + c.id).value.trim()
+      };
+      msg.style.color = '#8c8c91';
+      msg.textContent = 'Salvando...';
+      var { error } = await EF.client.from('clientes').update(campos).eq('id', c.id);
+      if (error) { msg.style.color = '#c9695c'; msg.textContent = error.message; return; }
+      Object.assign(c, campos);
+      bloco.style.display = 'none';
+      bloco.innerHTML = '';
+      renderizarClientes();
+    });
+  }
+})();
+</script>
+
+<script src="ef-ui.js"></script>
+</body>
+</html>

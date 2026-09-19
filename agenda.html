@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Agenda — EventFlow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="ef-config.js"></script>
+<script src="ef-auth.js"></script>
+<style>
+  body{margin:0;background:#0a0a0b;font-family:'Inter',sans-serif;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  .disp{font-family:'Space Grotesk',sans-serif;}
+  select{font-family:'IBM Plex Mono',monospace;background:transparent;border:none;color:inherit;font-size:12.5px;cursor:pointer;color-scheme:dark;}
+  select option{background:#0d0d0f;color:#f3f1ec;}
+  select:focus{outline:none;}
+  input,textarea{font-family:'Inter',sans-serif;}
+  input::placeholder,textarea::placeholder{color:#4a4a4e;}
+  input:focus,textarea:focus{outline:none;border-color:#3b82c9 !important;}
+  body [data-financeiro]{display:none !important;}
+  html[data-financeiro="true"] body [data-financeiro]{display:block !important;}
+  body [data-areas]{display:none !important;}
+  html[data-areas="true"] body [data-areas]{display:block !important;}
+  body [data-usuarios]{display:none !important;}
+  html[data-usuarios="true"] body [data-usuarios]{display:block !important;}
+  .icone-acao{cursor:pointer;color:#6e6e73;font-size:11px;}
+  .icone-acao:hover{color:#c9695c;}
+  .icone-acao.editar:hover{color:#7fa8c9;}
+  .badge{display:inline-block;padding:3px 9px;border-radius:20px;font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.03em;white-space:nowrap;}
+  .add-form-card{background:#131315;border:1px solid #1c1c1f;border-radius:8px;padding:14px 16px;}
+  .add-form-titulo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:#6e6e73;margin-bottom:12px;}
+  .add-form-label{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.05em;text-transform:uppercase;color:#6e6e73;margin-bottom:6px;}
+  .add-form-input{width:100%;background:transparent;border:none;border-bottom:1px solid #29292d;color:#f3f1ec;font-size:13px;padding-bottom:8px;box-sizing:border-box;}
+  .add-form-link{background:none;border:none;padding:0 0 8px;font-size:13px;color:#7fa8c9;cursor:pointer;border-bottom:1px solid #2a3d4d;white-space:nowrap;}
+</style>
+<link rel="stylesheet" href="ef-ui.css">
+</head>
+<body>
+
+<div style="width: 100%; min-height: 100vh; box-sizing: border-box; display: flex; background: #0a0a0b; color: #f3f1ec;">
+
+  <!-- ============ SIDEBAR ============ -->
+  <div style="width: 220px; flex-shrink: 0; display: flex; flex-direction: column; padding: 36px 24px; box-sizing: border-box;">
+
+    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 40px;">
+      <a href="dashboard.html" style="text-decoration: none; display: flex; align-items: center; gap: 10px;">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" style="flex-shrink: 0;"><path d="M2 12c2 0 2-6.5 4-6.5S8 12 10 12s2-6.5 4-6.5" stroke="#7fa8c9" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div style="font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 13.5px; letter-spacing: -.01em; color: #f3f1ec;">EventFlow</div>
+      </a>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 32px;">
+      <a href="dashboard.html" style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Dashboard</span></a>
+      <div style="display: flex; align-items: center; gap: 9px;">
+        <span style="width: 4px; height: 4px; border-radius: 50%; background: #7fa8c9; flex-shrink: 0;"></span>
+        <span style="font-size: 13px; font-weight: 600; color: #f3f1ec;">Agenda</span>
+      </div>
+      <a href="estoque.html" style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Estoque</span></a>
+      <a href="clientes.html" data-financeiro style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Clientes</span></a>
+      <a href="vendas.html" data-financeiro style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Vendas</span></a>
+      <a href="chat.html" style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Chat</span></a>
+      <a href="notas.html" style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Notas</span></a>
+    </div>
+
+    <div data-areas>
+      <div class="mono" style="font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: #4a4a4e; margin-bottom: 12px;">Áreas do projeto</div>
+      <div style="display: flex; flex-direction: column; gap: 13px; margin-bottom: 32px;">
+        <a href="calculadora-som.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Som</span></a>
+        <a href="calculadora-luz.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Luz</span></a>
+        <a href="painel-de-led.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Painel de LED</span></a>
+        <a href="video.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Vídeo</span></a>
+        <a href="cenografia.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Cenografia</span></a>
+        <a href="servicos.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Serviços</span></a>
+        <a href="logistica.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Logística</span></a>
+        <a href="descritivo-geral.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Descritivo Geral</span></a>
+        <a href="ordem-servico.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Ordem de Serviço</span></a>
+      </div>
+    </div>
+
+    <div data-areas>
+      <div class="mono" style="font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: #4a4a4e; margin-bottom: 12px;">Sistema</div>
+      <div style="display: flex; flex-direction: column; gap: 13px;">
+        <a href="especificacoes-equipamento.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Especificações de equipamentos</span></a>
+        <a data-usuarios href="usuarios-permissoes.html" style="text-decoration: none; display: block;"><span style="font-size: 12.5px; color: #6e6e73;">Usuários e permissões</span></a>
+      </div>
+    </div>
+
+    <div style="margin-top: auto; padding-top: 18px; border-top: 1px solid #1c1c1f; display: flex; align-items: center; gap: 10px;">
+      <div id="user-initials" style="width: 26px; height: 26px; border-radius: 50%; background: #1a1a1d; display: flex; align-items: center; justify-content: center; font-family: 'Space Grotesk', sans-serif; font-size: 10.5px; font-weight: 600; color: #b8b8bc; flex-shrink: 0;">··</div>
+      <div style="flex-grow: 1; min-width: 0;">
+        <div id="user-name" style="font-size: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Carregando…</div>
+        <div id="user-role" class="mono" style="font-size: 9px; color: #6e6e73; margin-top: 1px;">—</div>
+      </div>
+      <span id="logout" title="Sair" style="cursor: pointer; color: #6e6e73; font-size: 11px; flex-shrink: 0;">sair</span>
+    </div>
+  </div>
+
+  <!-- ============ MAIN ============ -->
+  <div style="flex-grow: 1; padding: 36px 48px 36px 0; box-sizing: border-box; min-width: 0;">
+
+    <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 30px;">
+      <div>
+        <div class="mono" style="color: #6e6e73; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 10px;" id="hoje"></div>
+        <h1 style="font-family: 'Space Grotesk', sans-serif; font-size: 24px; font-weight: 600; margin: 0 0 6px; letter-spacing: -.01em;">Agenda</h1>
+        <div style="color: #8c8c91; font-size: 13px;" id="resumo">Carregando…</div>
+      </div>
+      <span id="btn-toggle-form" style="font-size: 12.5px; color: #7fa8c9; cursor: pointer;">+ Cadastrar evento</span>
+    </div>
+
+    <!-- KPI row -->
+    <div style="display: flex; padding: 20px 0; border-top: 1px solid #1c1c1f; border-bottom: 1px solid #1c1c1f; margin-bottom: 30px;">
+      <div style="flex: 1; padding-right: 26px; border-right: 1px solid #1c1c1f;">
+        <div class="mono" style="font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: #6e6e73; margin-bottom: 10px;">Eventos cadastrados</div>
+        <div id="kpi-total" style="font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 600;">—</div>
+      </div>
+      <div style="flex: 1; padding: 0 26px; border-right: 1px solid #1c1c1f;">
+        <div class="mono" style="font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: #6e6e73; margin-bottom: 10px;">Próximos 7 dias</div>
+        <div id="kpi-proximos" style="font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 600; color: #7fa8c9;">—</div>
+      </div>
+      <div style="flex: 1; padding-left: 26px;">
+        <div class="mono" style="font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: #6e6e73; margin-bottom: 10px;">Este mês</div>
+        <div id="kpi-mes" style="font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 600;">—</div>
+      </div>
+    </div>
+
+    <!-- form cadastrar evento -->
+    <div id="bloco-form" class="add-form-card" style="display:none; margin-bottom: 30px;">
+      <div class="add-form-titulo">Cadastrar evento</div>
+      <form id="form-evento">
+        <div style="display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 20px; align-items: end; margin-bottom: 18px;">
+          <div>
+            <div class="add-form-label">Nome do evento</div>
+            <input id="novo-nome" required type="text" placeholder="Ex: Casamento Silva &amp; Costa" class="add-form-input">
+          </div>
+          <div>
+            <div class="add-form-label">Cliente</div>
+            <input id="novo-cliente" type="text" placeholder="Ex: Família Silva" class="add-form-input">
+          </div>
+          <div>
+            <div class="add-form-label">Local</div>
+            <input id="novo-local" type="text" placeholder="Ex: Espaço Villa Verde" class="add-form-input">
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 150px 1fr; gap: 20px; align-items: end;">
+          <div>
+            <div class="add-form-label">Início</div>
+            <input id="novo-inicio" required type="datetime-local" class="add-form-input">
+          </div>
+          <div>
+            <div class="add-form-label">Fim</div>
+            <input id="novo-fim" required type="datetime-local" class="add-form-input">
+          </div>
+          <div>
+            <div class="add-form-label">Status</div>
+            <select id="novo-status" class="add-form-input">
+              <option value="a_confirmar">A confirmar</option>
+              <option value="confirmado">Confirmado</option>
+              <option value="em_andamento">Em andamento</option>
+              <option value="concluido">Concluído</option>
+              <option value="cancelado">Cancelado</option>
+            </select>
+          </div>
+          <div>
+            <button id="btn-evento" type="submit" class="add-form-link">+ Adicionar</button>
+          </div>
+        </div>
+        <div style="margin-top: 18px;">
+          <div class="add-form-label">Observações</div>
+          <textarea id="novo-observacoes" rows="2" placeholder="Detalhes, restrições, combinados com o cliente..."
+            style="width: 100%; background: transparent; border: 1px solid #29292d; border-radius: 6px; color: #f3f1ec; font-size: 13px; padding: 8px 10px; box-sizing: border-box; resize: vertical;"></textarea>
+        </div>
+      </form>
+      <div id="evento-msg" style="margin-top: 10px; font-size: 12.5px; min-height: 16px;"></div>
+    </div>
+
+    <!-- eventos agrupados por mês -->
+    <div id="lista-meses"></div>
+    <div id="vazio" style="display:none; color: #4a4a4e; font-size: 13px;">Nenhum evento cadastrado ainda. Clique em "+ Cadastrar evento" pra começar.</div>
+
+  </div>
+</div>
+
+<script>
+(function () {
+  var ROLE_LABEL = { gerencia: 'Gerência', producao: 'Produção', estoque: 'Estoque' };
+  var STATUS_LABEL = { a_confirmar: 'A confirmar', confirmado: 'Confirmado', em_andamento: 'Em andamento', concluido: 'Concluído', cancelado: 'Cancelado' };
+  var STATUS_COLOR = { a_confirmar: '#a68a52', confirmado: '#3b82c9', em_andamento: '#9b7bd1', concluido: '#7cae83', cancelado: '#6e6e73' };
+  var MESES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+  var EVENTOS = [];
+
+  document.addEventListener('DOMContentLoaded', async function () {
+    if (!window.EF || !EF.ready) return;
+    var ok = await EF.init({});
+    if (!ok) return;
+
+    document.getElementById('hoje').textContent = new Date().toLocaleDateString('pt-BR', {
+      weekday: 'long', day: '2-digit', month: 'long'
+    });
+
+    var p = EF.profile;
+    var nome = p.nome || p.email || 'Usuário';
+    var iniciais = nome.split(' ').filter(Boolean).slice(0, 2).map(function (s) { return s[0].toUpperCase(); }).join('');
+    document.getElementById('user-name').textContent = nome;
+    document.getElementById('user-role').textContent = ROLE_LABEL[p.role] || p.role;
+    document.getElementById('user-initials').textContent = iniciais || '··';
+    document.getElementById('logout').onclick = function () { EF.logout(); };
+
+    document.getElementById('btn-toggle-form').addEventListener('click', function () {
+      var bloco = document.getElementById('bloco-form');
+      bloco.style.display = bloco.style.display === 'none' ? '' : 'none';
+    });
+
+    document.getElementById('form-evento').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var btn = document.getElementById('btn-evento');
+      var msg = document.getElementById('evento-msg');
+      var nomeVal = document.getElementById('novo-nome').value.trim();
+      var clienteVal = document.getElementById('novo-cliente').value.trim();
+      var localVal = document.getElementById('novo-local').value.trim();
+      var inicioVal = document.getElementById('novo-inicio').value;
+      var fimVal = document.getElementById('novo-fim').value;
+      var statusVal = document.getElementById('novo-status').value;
+      var obsVal = document.getElementById('novo-observacoes').value.trim();
+
+      if (!inicioVal || !fimVal) {
+        msg.style.color = '#c9695c';
+        msg.textContent = 'Preencha início e fim do evento.';
+        return;
+      }
+      if (new Date(fimVal) < new Date(inicioVal)) {
+        msg.style.color = '#c9695c';
+        msg.textContent = 'O fim não pode ser antes do início.';
+        return;
+      }
+
+      btn.disabled = true;
+      msg.style.color = '#8c8c91';
+      msg.textContent = 'Salvando...';
+
+      var { error } = await EF.client.from('eventos').insert({
+        empresa_id: p.empresa_id,
+        nome: nomeVal,
+        cliente: clienteVal,
+        local: localVal,
+        data_inicio: new Date(inicioVal).toISOString(),
+        data_fim: new Date(fimVal).toISOString(),
+        status: statusVal,
+        observacoes: obsVal
+      });
+
+      btn.disabled = false;
+      if (error) {
+        msg.style.color = '#c9695c';
+        msg.textContent = error.message;
+        return;
+      }
+      msg.style.color = '#7cae83';
+      msg.textContent = 'Evento cadastrado!';
+      document.getElementById('form-evento').reset();
+      await carregarEventos();
+    });
+
+    await carregarEventos();
+  });
+
+  async function carregarEventos() {
+    var { data, error } = await EF.client.from('eventos').select('*').eq('empresa_id', EF.profile.empresa_id).order('data_inicio', { ascending: true });
+    if (error) {
+      document.getElementById('resumo').textContent = 'Erro ao carregar: ' + error.message;
+      return;
+    }
+    EVENTOS = data || [];
+    renderizar();
+  }
+
+  function inicioDoDia(d) { var x = new Date(d); x.setHours(0, 0, 0, 0); return x; }
+
+  function renderizar() {
+    var agora = new Date();
+    var hoje0 = inicioDoDia(agora);
+    var em7dias = new Date(hoje0.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+    var proximos7 = EVENTOS.filter(function (ev) {
+      var d = new Date(ev.data_inicio);
+      return d >= hoje0 && d < em7dias;
+    }).length;
+
+    var esteMes = EVENTOS.filter(function (ev) {
+      var d = new Date(ev.data_inicio);
+      return d.getFullYear() === agora.getFullYear() && d.getMonth() === agora.getMonth();
+    }).length;
+
+    document.getElementById('resumo').textContent = EVENTOS.length + (EVENTOS.length === 1 ? ' evento cadastrado' : ' eventos cadastrados') + ' · ' + proximos7 + ' nos próximos 7 dias.';
+    document.getElementById('kpi-total').textContent = EVENTOS.length;
+    document.getElementById('kpi-proximos').textContent = proximos7;
+    document.getElementById('kpi-mes').textContent = esteMes;
+
+    var wrap = document.getElementById('lista-meses');
+    wrap.innerHTML = '';
+    document.getElementById('vazio').style.display = EVENTOS.length ? 'none' : '';
+
+    var grupos = {};
+    var ordemGrupos = [];
+    EVENTOS.forEach(function (ev) {
+      var d = new Date(ev.data_inicio);
+      var chave = d.getFullYear() + '-' + d.getMonth();
+      if (!grupos[chave]) { grupos[chave] = []; ordemGrupos.push(chave); }
+      grupos[chave].push(ev);
+    });
+
+    ordemGrupos.forEach(function (chave) {
+      var partes = chave.split('-');
+      var ano = parseInt(partes[0], 10), mes = parseInt(partes[1], 10);
+
+      var secao = document.createElement('div');
+      secao.style.cssText = 'margin-bottom: 30px;';
+
+      var header = document.createElement('div');
+      header.className = 'mono';
+      header.style.cssText = 'font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: #6e6e73; padding-bottom: 10px; border-bottom: 1px solid #1c1c1f; margin-bottom: 4px;';
+      header.textContent = MESES[mes] + ' de ' + ano;
+      secao.appendChild(header);
+
+      grupos[chave].forEach(function (ev) { secao.appendChild(linhaEvento(ev)); });
+      wrap.appendChild(secao);
+    });
+  }
+
+  function formatarHora(iso) {
+    var d = new Date(iso);
+    return d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  function linhaEvento(ev) {
+    var container = document.createElement('div');
+    container.className = 'linha-evento';
+    container.dataset.eventoId = ev.id;
+    container.style.cssText = 'border-bottom: 1px solid #1c1c1f;';
+
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex; align-items:center; padding:14px 0; gap:16px;';
+
+    var d = new Date(ev.data_inicio);
+    var dataBlock = document.createElement('div');
+    dataBlock.style.cssText = 'width:44px; flex-shrink:0; text-align:center;';
+    dataBlock.innerHTML =
+      '<div style="font-family:\'Space Grotesk\',sans-serif; font-size:18px; font-weight:600; line-height:1;">' + d.getDate() + '</div>' +
+      '<div class="mono" style="font-size:9px; color:#6e6e73; text-transform:uppercase; margin-top:2px;">' + d.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '') + '</div>';
+    row.appendChild(dataBlock);
+
+    var meio = document.createElement('div');
+    meio.style.cssText = 'flex:1; min-width:0;';
+    var nomeLinha = document.createElement('div');
+    nomeLinha.style.cssText = 'font-size:13px; font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;';
+    nomeLinha.textContent = ev.nome;
+    meio.appendChild(nomeLinha);
+    var metaBits = [formatarHora(ev.data_inicio) + '–' + formatarHora(ev.data_fim)];
+    if (ev.cliente) metaBits.push(ev.cliente);
+    if (ev.local) metaBits.push(ev.local);
+    var metaLinha = document.createElement('div');
+    metaLinha.className = 'mono';
+    metaLinha.style.cssText = 'font-size:10.5px; color:#6e6e73; margin-top:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;';
+    metaLinha.textContent = metaBits.join(' · ');
+    meio.appendChild(metaLinha);
+    row.appendChild(meio);
+
+    var badge = document.createElement('span');
+    badge.className = 'badge';
+    badge.style.cssText = 'color:' + STATUS_COLOR[ev.status] + '; border:1px solid ' + STATUS_COLOR[ev.status] + '55; background:' + STATUS_COLOR[ev.status] + '18; flex-shrink:0;';
+    badge.textContent = STATUS_LABEL[ev.status] || ev.status;
+    row.appendChild(badge);
+
+    var editar = document.createElement('span');
+    editar.className = 'icone-acao editar';
+    editar.textContent = 'editar';
+    editar.style.cssText += 'flex-shrink:0; margin-left:14px;';
+    editar.addEventListener('click', function () { toggleEdicao(container, ev); });
+    row.appendChild(editar);
+
+    var del = document.createElement('span');
+    del.className = 'icone-acao';
+    del.textContent = '✕';
+    del.title = 'Remover evento';
+    del.style.cssText += 'flex-shrink:0; margin-left:12px;';
+    del.addEventListener('click', async function () {
+      if (!confirm('Remover o evento "' + ev.nome + '"?')) return;
+      var { error } = await EF.client.from('eventos').delete().eq('id', ev.id);
+      if (error) { alert('Erro ao remover: ' + error.message); return; }
+      await carregarEventos();
+    });
+    row.appendChild(del);
+
+    container.appendChild(row);
+    return container;
+  }
+
+  function toDatetimeLocalValue(iso) {
+    var d = new Date(iso);
+    var pad = function (n) { return String(n).padStart(2, '0'); };
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+  }
+
+  function toggleEdicao(container, ev) {
+    var existente = container.querySelector('.bloco-edicao');
+    if (existente) { existente.remove(); return; }
+
+    var bloco = document.createElement('div');
+    bloco.className = 'bloco-edicao';
+    bloco.style.cssText = 'padding: 4px 0 18px 60px; display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 16px;';
+
+    function campo(label, inputHtml) {
+      var d = document.createElement('div');
+      d.innerHTML = '<div class="mono" style="font-size:9px; text-transform:uppercase; color:#6e6e73; margin-bottom:6px;">' + label + '</div>' + inputHtml;
+      return d;
+    }
+
+    var inpNome = document.createElement('input');
+    inpNome.className = 'edit-nome';
+    inpNome.type = 'text'; inpNome.value = ev.nome;
+    inpNome.style.cssText = 'width:100%; background:transparent; border:none; border-bottom:1px solid #29292d; color:#f3f1ec; font-size:13px; padding-bottom:6px; box-sizing:border-box;';
+    var c1 = document.createElement('div'); c1.innerHTML = '<div class="mono" style="font-size:9px; text-transform:uppercase; color:#6e6e73; margin-bottom:6px;">Nome</div>'; c1.appendChild(inpNome);
+
+    var inpCliente = document.createElement('input');
+    inpCliente.className = 'edit-cliente';
+    inpCliente.type = 'text'; inpCliente.value = ev.cliente || '';
+    inpCliente.style.cssText = 'width:100%; background:transparent; border:none; border-bottom:1px solid #29292d; color:#f3f1ec; font-size:13px; padding-bottom:6px; box-sizing:border-box;';
+    var c2 = document.createElement('div'); c2.innerHTML = '<div class="mono" style="font-size:9px; text-transform:uppercase; color:#6e6e73; margin-bottom:6px;">Cliente</div>'; c2.appendChild(inpCliente);
+
+    var inpLocal = document.createElement('input');
+    inpLocal.className = 'edit-local';
+    inpLocal.type = 'text'; inpLocal.value = ev.local || '';
+    inpLocal.style.cssText = 'width:100%; background:transparent; border:none; border-bottom:1px solid #29292d; color:#f3f1ec; font-size:13px; padding-bottom:6px; box-sizing:border-box;';
+    var c3 = document.createElement('div'); c3.innerHTML = '<div class="mono" style="font-size:9px; text-transform:uppercase; color:#6e6e73; margin-bottom:6px;">Local</div>'; c3.appendChild(inpLocal);
+
+    var inpInicio = document.createElement('input');
+    inpInicio.className = 'edit-inicio';
+    inpInicio.type = 'datetime-local'; inpInicio.value = toDatetimeLocalValue(ev.data_inicio);
+    inpInicio.style.cssText = 'width:100%; background:transparent; border:none; border-bottom:1px solid #29292d; color:#f3f1ec; font-size:12.5px; padding-bottom:6px; box-sizing:border-box;';
+    var c4 = document.createElement('div'); c4.innerHTML = '<div class="mono" style="font-size:9px; text-transform:uppercase; color:#6e6e73; margin-bottom:6px;">Início</div>'; c4.appendChild(inpInicio);
+
+    var inpFim = document.createElement('input');
+    inpFim.className = 'edit-fim';
+    inpFim.type = 'datetime-local'; inpFim.value = toDatetimeLocalValue(ev.data_fim);
+    inpFim.style.cssText = 'width:100%; background:transparent; border:none; border-bottom:1px solid #29292d; color:#f3f1ec; font-size:12.5px; padding-bottom:6px; box-sizing:border-box;';
+    var c5 = document.createElement('div'); c5.innerHTML = '<div class="mono" style="font-size:9px; text-transform:uppercase; color:#6e6e73; margin-bottom:6px;">Fim</div>'; c5.appendChild(inpFim);
+
+    var selStatus = document.createElement('select');
+    selStatus.className = 'edit-status';
+    selStatus.style.cssText = 'width:100%; border-bottom:1px solid #29292d; padding-bottom:6px; color:#f3f1ec; font-size:13px;';
+    Object.keys(STATUS_LABEL).forEach(function (k) {
+      var opt = document.createElement('option');
+      opt.value = k; opt.textContent = STATUS_LABEL[k];
+      if (k === ev.status) opt.selected = true;
+      selStatus.appendChild(opt);
+    });
+    var c6 = document.createElement('div'); c6.innerHTML = '<div class="mono" style="font-size:9px; text-transform:uppercase; color:#6e6e73; margin-bottom:6px;">Status</div>'; c6.appendChild(selStatus);
+
+    var inpObs = document.createElement('textarea');
+    inpObs.className = 'edit-obs';
+    inpObs.rows = 2; inpObs.value = ev.observacoes || '';
+    inpObs.style.cssText = 'width:100%; background:transparent; border:1px solid #29292d; border-radius:6px; color:#f3f1ec; font-size:12.5px; padding:6px 8px; box-sizing:border-box; resize:vertical;';
+    var c7 = document.createElement('div'); c7.style.cssText = 'grid-column: 1 / -1;'; c7.innerHTML = '<div class="mono" style="font-size:9px; text-transform:uppercase; color:#6e6e73; margin-bottom:6px;">Observações</div>'; c7.appendChild(inpObs);
+
+    var msg = document.createElement('div');
+    msg.className = 'edit-msg';
+    msg.style.cssText = 'grid-column: 1 / -1; font-size:12px; min-height:16px;';
+
+    var acoes = document.createElement('div');
+    acoes.style.cssText = 'grid-column: 1 / -1; display:flex; gap:16px;';
+    var btnSalvar = document.createElement('span');
+    btnSalvar.textContent = 'salvar';
+    btnSalvar.style.cssText = 'cursor:pointer; color:#7fa8c9; font-size:12.5px;';
+    var btnCancelar = document.createElement('span');
+    btnCancelar.textContent = 'cancelar';
+    btnCancelar.style.cssText = 'cursor:pointer; color:#6e6e73; font-size:12.5px;';
+    btnCancelar.addEventListener('click', function () { bloco.remove(); });
+    btnSalvar.addEventListener('click', async function () {
+      var novoInicio = inpInicio.value, novoFim = inpFim.value;
+      if (!novoInicio || !novoFim) { msg.style.color = '#c9695c'; msg.textContent = 'Preencha início e fim.'; return; }
+      if (new Date(novoFim) < new Date(novoInicio)) { msg.style.color = '#c9695c'; msg.textContent = 'O fim não pode ser antes do início.'; return; }
+      msg.style.color = '#8c8c91'; msg.textContent = 'Salvando...';
+      var { error } = await EF.client.from('eventos').update({
+        nome: inpNome.value.trim(),
+        cliente: inpCliente.value.trim(),
+        local: inpLocal.value.trim(),
+        data_inicio: new Date(novoInicio).toISOString(),
+        data_fim: new Date(novoFim).toISOString(),
+        status: selStatus.value,
+        observacoes: inpObs.value.trim()
+      }).eq('id', ev.id);
+      if (error) { msg.style.color = '#c9695c'; msg.textContent = error.message; return; }
+      await carregarEventos();
+    });
+    acoes.appendChild(btnSalvar);
+    acoes.appendChild(btnCancelar);
+
+    bloco.appendChild(c1); bloco.appendChild(c2); bloco.appendChild(c3);
+    bloco.appendChild(c4); bloco.appendChild(c5); bloco.appendChild(c6);
+    bloco.appendChild(c7);
+    bloco.appendChild(msg);
+    bloco.appendChild(acoes);
+
+    container.appendChild(bloco);
+  }
+})();
+</script>
+
+<script src="ef-ui.js"></script>
+</body>
+</html>

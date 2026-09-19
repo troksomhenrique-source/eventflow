@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Login — EventFlow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="ef-config.js"></script>
+<script src="ef-auth.js"></script>
+<style>
+  body{margin:0;background:#0a0a0b;font-family:'Inter',sans-serif;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  .disp{font-family:'Space Grotesk',sans-serif;}
+  input{font-family:'Inter',sans-serif;}
+  input::placeholder{color:#4a4a4e;}
+  input:focus{outline:none;border-color:#3b82c9 !important;}
+</style>
+<link rel="stylesheet" href="ef-ui.css">
+</head>
+<body class="ef-public ef-login">
+
+<div style="width: 100%; min-height: 100vh; box-sizing: border-box; display: flex; align-items: center; justify-content: center; background: #0a0a0b; color: #f3f1ec; background-image: radial-gradient(ellipse 900px 480px at 50% 0%, rgba(59,130,201,0.10), transparent 70%);">
+
+  <div class="ef-login-card" style="width: 100%; max-width: 380px; padding: 24px; box-sizing: border-box;">
+
+    <!-- brand -->
+    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 44px; justify-content: center;">
+      <svg width="20" height="20" viewBox="0 0 18 18" fill="none" style="flex-shrink: 0;"><path d="M2 12c2 0 2-6.5 4-6.5S8 12 10 12s2-6.5 4-6.5" stroke="#7fa8c9" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div class="disp" style="font-weight: 600; font-size: 15px; letter-spacing: -.01em;">EventFlow</div>
+    </div>
+
+    <!-- heading -->
+    <div style="text-align: center; margin-bottom: 34px;">
+      <div class="mono" style="color: #7fa8c9; font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; margin-bottom: 12px;">Pré-produção de eventos</div>
+      <h1 class="disp" style="font-size: 24px; font-weight: 600; margin: 0 0 8px; letter-spacing: -.01em;">Acesso ao sistema</h1>
+      <div style="color: #8c8c91; font-size: 13px;">Entre com a conta que o administrador criou pra você.</div>
+    </div>
+
+    <!-- form -->
+    <form id="f" style="display: flex; flex-direction: column; gap: 20px;">
+      <div>
+        <label class="mono" style="display: block; font-size: 10px; letter-spacing: .05em; text-transform: uppercase; color: #6e6e73; margin-bottom: 9px;">E-mail</label>
+        <input id="email" type="email" required placeholder="voce@empresa.com" autocomplete="username"
+          style="width: 100%; background: transparent; border: none; border-bottom: 1px solid #29292d; color: #f3f1ec; font-size: 14px; padding: 10px 0; outline: none; box-sizing: border-box;">
+      </div>
+
+      <div>
+        <label class="mono" style="display: block; font-size: 10px; letter-spacing: .05em; text-transform: uppercase; color: #6e6e73; margin-bottom: 9px;">Senha</label>
+        <div class="ef-password-wrap">
+          <input id="senha" type="password" required placeholder="••••••••" autocomplete="current-password"
+            style="width: 100%; background: transparent; border: none; border-bottom: 1px solid #29292d; color: #f3f1ec; font-size: 14px; padding: 10px 42px 10px 0; outline: none; box-sizing: border-box;">
+          <button id="toggle-senha" type="button" class="ef-password-toggle" aria-label="Mostrar senha">Mostrar</button>
+        </div>
+      </div>
+
+      <button id="btn" type="submit"
+        style="margin-top: 10px; width: 100%; border: none; border-radius: 6px; padding: 13px; background: #3b82c9; color: #f3f1ec; font-family: 'Inter', sans-serif; font-size: 13.5px; font-weight: 600; cursor: pointer;">
+        Entrar
+      </button>
+
+      <div id="msg" style="min-height: 16px; text-align: center; font-size: 12px; color: #c9695c;"></div>
+    </form>
+
+    <div style="margin-top: 30px; padding-top: 18px; border-top: 1px solid #1c1c1f; text-align: center;">
+      <span class="mono" style="font-size: 10px; color: #4a4a4e; letter-spacing: .04em;">acesso só por convite · autenticação Supabase</span>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function () {
+  var msg = document.getElementById('msg');
+  var btn = document.getElementById('btn');
+  var form = document.getElementById('f');
+  var toggle = document.getElementById('toggle-senha');
+  var senhaInput = document.getElementById('senha');
+  toggle.addEventListener('click', function(){
+    var show = senhaInput.type === 'password';
+    senhaInput.type = show ? 'text' : 'password';
+    toggle.textContent = show ? 'Ocultar' : 'Mostrar';
+    toggle.setAttribute('aria-label', show ? 'Ocultar senha' : 'Mostrar senha');
+  });
+
+  document.addEventListener('DOMContentLoaded', async function () {
+    if (!window.EF || !EF.ready) return; // ef-auth.js já mostra o aviso de config
+    var q = new URLSearchParams(location.search);
+    if (q.get('bloqueado')) msg.textContent = 'Este usuário está bloqueado. Fale com o administrador.';
+
+    // já logado? manda pro dashboard
+    var r = await EF.client.auth.getUser();
+    if (r.data && r.data.user) { location.href = 'dashboard.html'; return; }
+  });
+
+  form.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    if (!window.EF || !EF.ready) { msg.textContent = 'Configure ef-config.js primeiro.'; return; }
+
+    btn.disabled = true;
+    msg.style.color = '#8c8c91'; msg.textContent = 'Entrando...';
+
+    var email = document.getElementById('email').value.trim();
+    var senha = document.getElementById('senha').value;
+    var res = await EF.client.auth.signInWithPassword({ email: email, password: senha });
+
+    if (res.error) {
+      msg.style.color = '#c9695c'; msg.textContent = 'E-mail ou senha inválidos.';
+      btn.disabled = false; return;
+    }
+    location.href = 'dashboard.html';
+  });
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1005 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Vendas — EventFlow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="ef-config.js"></script>
+<script src="ef-auth.js"></script>
+<style>
+  body{margin:0;background:#0a0a0b;font-family:'Inter',sans-serif;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  .disp{font-family:'Space Grotesk',sans-serif;}
+  select{font-family:'IBM Plex Mono',monospace;background:transparent;border:none;color:inherit;font-size:12.5px;cursor:pointer;color-scheme:dark;}
+  select option{background:#0d0d0f;color:#f3f1ec;}
+  select:focus{outline:none;}
+  input,textarea{font-family:'Inter',sans-serif;}
+  input::placeholder,textarea::placeholder{color:#4a4a4e;}
+  input:focus,textarea:focus{outline:none;border-color:#3b82c9 !important;}
+  body [data-financeiro]{display:none !important;}
+  html[data-financeiro="true"] body [data-financeiro]{display:block !important;}
+  body [data-areas]{display:none !important;}
+  html[data-areas="true"] body [data-areas]{display:block !important;}
+  body [data-usuarios]{display:none !important;}
+  html[data-usuarios="true"] body [data-usuarios]{display:block !important;}
+  .icone-acao{cursor:pointer;color:#6e6e73;font-size:11px;}
+  .icone-acao:hover{color:#c9695c;}
+  .icone-acao.neutro:hover{color:#7fa8c9;}
+  .badge{display:inline-block;padding:3px 9px;border-radius:20px;font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.03em;white-space:nowrap;}
+</style>
+<link rel="stylesheet" href="ef-ui.css">
+</head>
+<body>
+
+<div style="width: 100%; min-height: 100vh; box-sizing: border-box; display: flex; background: #0a0a0b; color: #f3f1ec;">
+
+  <!-- ============ SIDEBAR ============ -->
+  <div style="width: 220px; flex-shrink: 0; display: flex; flex-direction: column; padding: 36px 24px; box-sizing: border-box;">
+
+    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 40px;">
+      <a href="dashboard.html" style="text-decoration: none; display: flex; align-items: center; gap: 10px;">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" style="flex-shrink: 0;"><path d="M2 12c2 0 2-6.5 4-6.5S8 12 10 12s2-6.5 4-6.5" stroke="#7fa8c9" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div style="font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 13.5px; letter-spacing: -.01em; color: #f3f1ec;">EventFlow</div>
+      </a>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 32px;">
+      <a href="dashboard.html" style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Dashboard</span></a>
+      <a href="agenda.html" style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Agenda</span></a>
+      <a href="estoque.html" style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Estoque</span></a>
+      <a href="clientes.html" data-financeiro style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Clientes</span></a>
+      <div data-financeiro style="display: flex; align-items: center; gap: 9px;">
+        <span style="width: 4px; height: 4px; border-radius: 50%; background: #7fa8c9; flex-shrink: 0;"></span>
+        <span style="font-size: 13px; font-weight: 600; color: #f3f1ec;">Vendas</span>
+      </div>
+      <a href="chat.html" style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Chat</span></a>
+      <a href="notas.html" style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Notas</span></a>
+    </div>
+
+    <div data-areas>
+      <div class="mono" style="font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: #4a4a4e; margin-bottom: 12px;">Áreas do projeto</div>
+      <div style="display: flex; flex-direction: column; gap: 13px; margin-bottom: 32px;">
+        <a href="calculadora-som.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Som</span></a>
+        <a href="calculadora-luz.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Luz</span></a>
+        <a href="painel-de-led.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Painel de LED</span></a>
+        <a href="video.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Vídeo</span></a>
+        <a href="cenografia.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Cenografia</span></a>
+        <a href="servicos.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Serviços</span></a>
+        <a href="logistica.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Logística</span></a>
+        <a href="descritivo-geral.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Descritivo Geral</span></a>
+        <a href="ordem-servico.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Ordem de Serviço</span></a>
+      </div>
+    </div>
+
+    <div data-areas>
+      <div class="mono" style="font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: #4a4a4e; margin-bottom: 12px;">Sistema</div>
+      <div style="display: flex; flex-direction: column; gap: 13px;">
+        <a href="especificacoes-equipamento.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Especificações de equipamentos</span></a>
+        <a data-usuarios href="usuarios-permissoes.html" style="text-decoration: none; display: block;"><span style="font-size: 12.5px; color: #6e6e73;">Usuários e permissões</span></a>
+      </div>
+    </div>
+
+    <div style="margin-top: auto; padding-top: 18px; border-top: 1px solid #1c1c1f; display: flex; align-items: center; gap: 10px;">
+      <div id="user-initials" style="width: 26px; height: 26px; border-radius: 50%; background: #1a1a1d; display: flex; align-items: center; justify-content: center; font-family: 'Space Grotesk', sans-serif; font-size: 10.5px; font-weight: 600; color: #b8b8bc; flex-shrink: 0;">··</div>
+      <div style="flex-grow: 1; min-width: 0;">
+        <div id="user-name" style="font-size: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Carregando…</div>
+        <div id="user-role" class="mono" style="font-size: 9px; color: #6e6e73; margin-top: 1px;">—</div>
+      </div>
+      <span id="logout" title="Sair" style="cursor: pointer; color: #6e6e73; font-size: 11px; flex-shrink: 0;">sair</span>
+    </div>
+  </div>
+
+  <!-- ============ MAIN ============ -->
+  <div style="flex-grow: 1; padding: 36px 48px 36px 0; box-sizing: border-box; min-width: 0;">
+
+    <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 30px;">
+      <div>
+        <div class="mono" style="color: #6e6e73; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 10px;" id="hoje"></div>
+        <h1 style="font-family: 'Space Grotesk', sans-serif; font-size: 24px; font-weight: 600; margin: 0 0 6px; letter-spacing: -.01em;">Vendas</h1>
+        <div style="color: #8c8c91; font-size: 13px;" id="resumo">Carregando…</div>
+      </div>
+      <div style="display:flex; gap:20px; align-items:flex-start; flex-shrink:0;">
+        <span id="btn-toggle-empresa-form" style="font-size: 12.5px; color: #6e6e73; cursor: pointer;">dados da empresa</span>
+        <span id="btn-toggle-form" style="font-size: 12.5px; color: #7fa8c9; cursor: pointer;">+ Novo orçamento</span>
+      </div>
+    </div>
+
+    <!-- dados da empresa (aparecem no cabeçalho do PDF) -->
+    <div id="bloco-form-empresa" style="display:none; padding-bottom: 26px; border-bottom: 1px solid #1c1c1f; margin-bottom: 30px;">
+      <div class="mono" style="font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: #6e6e73; margin-bottom: 14px;">Dados da empresa contratada — aparecem no cabeçalho do PDF</div>
+      <form id="form-empresa-dados" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; align-items: end;">
+        <div>
+          <div class="mono" style="font-size: 9.5px; letter-spacing: .05em; text-transform: uppercase; color: #6e6e73; margin-bottom: 7px;">Telefone</div>
+          <input id="empresa-telefone" type="text" placeholder="(11) 99999-0000"
+            style="width: 100%; background: transparent; border: none; border-bottom: 1px solid #29292d; color: #f3f1ec; font-size: 13.5px; padding-bottom: 8px; box-sizing: border-box;">
+        </div>
+        <div>
+          <div class="mono" style="font-size: 9.5px; letter-spacing: .05em; text-transform: uppercase; color: #6e6e73; margin-bottom: 7px;">E-mail</div>
+          <input id="empresa-email" type="text" placeholder="contato@empresa.com"
+            style="width: 100%; background: transparent; border: none; border-bottom: 1px solid #29292d; color: #f3f1ec; font-size: 13.5px; padding-bottom: 8px; box-sizing: border-box;">
+        </div>
+        <div>
+          <div class="mono" style="font-size: 9.5px; letter-spacing: .05em; text-transform: uppercase; color: #6e6e73; margin-bottom: 7px;">Endereço</div>
+          <input id="empresa-endereco" type="text" placeholder="Rua, número, cidade-UF"
+            style="width: 100%; background: transparent; border: none; border-bottom: 1px solid #29292d; color: #f3f1ec; font-size: 13.5px; padding-bottom: 8px; box-sizing: border-box;">
+        </div>
+      </form>
+      <div style="margin-top: 14px;">
+        <button id="btn-salvar-empresa" type="button" style="background: none; border: none; padding: 0; font-size: 13px; color: #7fa8c9; cursor: pointer; border-bottom: 1px solid #2a3d4d;">Salvar</button>
+        <span id="empresa-msg" style="margin-left: 14px; font-size: 12.5px;"></span>
+      </div>
+    </div>
+
+    <!-- KPI row -->
+    <div style="display: flex; padding: 20px 0; border-top: 1px solid #1c1c1f; border-bottom: 1px solid #1c1c1f; margin-bottom: 30px;">
+      <div style="flex: 1; padding-right: 26px; border-right: 1px solid #1c1c1f;">
+        <div class="mono" style="font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: #6e6e73; margin-bottom: 10px;">Faturamento do mês</div>
+        <div id="kpi-faturamento" style="font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 600; color: #7cae83;">—</div>
+      </div>
+      <div style="flex: 1; padding: 0 26px; border-right: 1px solid #1c1c1f;">
+        <div class="mono" style="font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: #6e6e73; margin-bottom: 10px;">Orçamentos em aberto</div>
+        <div id="kpi-abertos" style="font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 600; color: #a68a52;">—</div>
+      </div>
+      <div style="flex: 1; padding-left: 26px;">
+        <div class="mono" style="font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: #6e6e73; margin-bottom: 10px;">Total orçado no mês</div>
+        <div id="kpi-orcado" style="font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 600;">—</div>
+      </div>
+    </div>
+
+    <!-- form novo orçamento -->
+    <div id="bloco-form" style="display:none; padding-bottom: 26px; border-bottom: 1px solid #1c1c1f; margin-bottom: 30px;">
+      <form id="form-orcamento">
+        <div style="display: grid; grid-template-columns: 1.3fr 1fr 1fr 130px; gap: 20px; align-items: end; margin-bottom: 18px;">
+          <div>
+            <div class="mono" style="font-size: 9.5px; letter-spacing: .05em; text-transform: uppercase; color: #6e6e73; margin-bottom: 7px;">Cliente</div>
+            <select id="novo-cliente-select" style="width: 100%; border-bottom: 1px solid #29292d; padding-bottom: 8px; color: #f3f1ec; font-size: 13.5px;">
+              <option value="_avulso">— cliente avulso (digitar nome) —</option>
+            </select>
+            <input id="novo-cliente" required type="text" placeholder="Ex: Família Silva" style="display:none;
+              width: 100%; background: transparent; border: none; border-bottom: 1px solid #29292d; color: #f3f1ec; font-size: 13.5px; padding-bottom: 8px; box-sizing: border-box; margin-top: 8px;">
+          </div>
+          <div>
+            <div class="mono" style="font-size: 9.5px; letter-spacing: .05em; text-transform: uppercase; color: #6e6e73; margin-bottom: 7px;">Contato</div>
+            <input id="novo-contato" type="text" placeholder="Telefone ou e-mail"
+              style="width: 100%; background: transparent; border: none; border-bottom: 1px solid #29292d; color: #f3f1ec; font-size: 13.5px; padding-bottom: 8px; box-sizing: border-box;">
+          </div>
+          <div>
+            <div class="mono" style="font-size: 9.5px; letter-spacing: .05em; text-transform: uppercase; color: #6e6e73; margin-bottom: 7px;">Evento vinculado</div>
+            <select id="novo-evento" style="width: 100%; border-bottom: 1px solid #29292d; padding-bottom: 8px; color: #f3f1ec; font-size: 13.5px;">
+              <option value="">Nenhum</option>
+            </select>
+          </div>
+          <div>
+            <div class="mono" style="font-size: 9.5px; letter-spacing: .05em; text-transform: uppercase; color: #6e6e73; margin-bottom: 7px;">Data</div>
+            <input id="novo-data" type="date"
+              style="width: 100%; background: transparent; border: none; border-bottom: 1px solid #29292d; color: #f3f1ec; font-size: 13px; padding-bottom: 8px; box-sizing: border-box;">
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: end; margin-bottom: 18px;">
+          <div>
+            <div class="mono" style="font-size: 9.5px; letter-spacing: .05em; text-transform: uppercase; color: #6e6e73; margin-bottom: 7px;">Endereço do contratante</div>
+            <input id="novo-endereco-cliente" type="text" placeholder="Rua, número, cidade-UF (opcional)"
+              style="width: 100%; background: transparent; border: none; border-bottom: 1px solid #29292d; color: #f3f1ec; font-size: 13.5px; padding-bottom: 8px; box-sizing: border-box;">
+          </div>
+          <div>
+            <div class="mono" style="font-size: 9.5px; letter-spacing: .05em; text-transform: uppercase; color: #6e6e73; margin-bottom: 7px;">Vendedor</div>
+            <input id="novo-vendedor" type="text" placeholder="Nome de quem está vendendo"
+              style="width: 100%; background: transparent; border: none; border-bottom: 1px solid #29292d; color: #f3f1ec; font-size: 13.5px; padding-bottom: 8px; box-sizing: border-box;">
+          </div>
+        </div>
+        <div>
+          <div class="mono" style="font-size: 9.5px; letter-spacing: .05em; text-transform: uppercase; color: #6e6e73; margin-bottom: 7px;">Observações</div>
+          <textarea id="novo-observacoes" rows="2" placeholder="Condições, forma de pagamento combinada..."
+            style="width: 100%; background: transparent; border: 1px solid #29292d; border-radius: 6px; color: #f3f1ec; font-size: 13px; padding: 8px 10px; box-sizing: border-box; resize: vertical; margin-bottom: 14px;"></textarea>
+          <button id="btn-orcamento" type="submit" style="background: none; border: none; padding: 0; font-size: 13px; color: #7fa8c9; cursor: pointer; border-bottom: 1px solid #2a3d4d;">+ Criar orçamento</button>
+          <span id="marca-versao-orcamento" class="mono" style="margin-left: 14px; font-size: 9.5px; color: #3a3a3e;" title="Se esse texto não aparecer na sua tela, o navegador ainda está usando um arquivo antigo em cache.">build: correção-cliente-v2</span>
+        </div>
+      </form>
+      <div id="orcamento-msg" style="margin-top: 10px; font-size: 12.5px; min-height: 16px;"></div>
+    </div>
+
+    <div id="lista-orcamentos" style="display: flex; flex-direction: column; gap: 22px;"></div>
+    <div id="vazio" style="display:none; color: #4a4a4e; font-size: 13px;">Nenhum orçamento cadastrado ainda. Clique em "+ Novo orçamento" pra começar.</div>
+
+  </div>
+</div>
+
+<script>
+(function () {
+  // rede de segurança: qualquer erro de JavaScript na página (mesmo fora do
+  // botão de criar orçamento) aparece num alerta, em vez de simplesmente
+  // "não acontecer nada" sem explicação nenhuma.
+  window.addEventListener('error', function (ev) {
+    console.error('Erro na página:', ev.error || ev.message);
+    alert('Erro inesperado na página de Vendas:\n\n' + (ev.message || (ev.error && ev.error.message) || 'erro desconhecido') + '\n\nTira um print dessa mensagem e manda que eu resolvo.');
+  });
+  window.addEventListener('unhandledrejection', function (ev) {
+    var motivo = ev.reason;
+    console.error('Promessa não tratada:', motivo);
+    alert('Erro inesperado na página de Vendas:\n\n' + (motivo && motivo.message ? motivo.message : String(motivo)) + '\n\nTira um print dessa mensagem e manda que eu resolvo.');
+  });
+
+  var ROLE_LABEL = { gerencia: 'Gerência', producao: 'Produção', estoque: 'Estoque' };
+  var STATUS_LABEL = { orcamento: 'Orçamento', aprovado: 'Aprovado', pago_parcial: 'Pago parcial', pago: 'Pago', cancelado: 'Cancelado' };
+  var STATUS_COLOR = { orcamento: '#a68a52', aprovado: '#3b82c9', pago_parcial: '#9b7bd1', pago: '#7cae83', cancelado: '#6e6e73' };
+  var ORCAMENTOS = [];
+  var ITENS = [];
+  var EVENTOS = [];
+  var CLIENTES = [];
+  var ESTOQUE_ITENS = [];
+  var EMPRESA = null;
+  var CATEGORIAS = ['Som', 'Luz', 'Painel de LED', 'Vídeo', 'Cenografia', 'Serviços', 'Geral'];
+
+  function fmtMoeda(v) {
+    return (v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  }
+
+  document.addEventListener('DOMContentLoaded', async function () {
+    if (!window.EF || !EF.ready) return;
+    var ok = await EF.init({ gerenciaOnly: true });
+    if (!ok) return;
+
+    document.getElementById('hoje').textContent = new Date().toLocaleDateString('pt-BR', {
+      weekday: 'long', day: '2-digit', month: 'long'
+    });
+
+    var p = EF.profile;
+    var nome = p.nome || p.email || 'Usuário';
+    var iniciais = nome.split(' ').filter(Boolean).slice(0, 2).map(function (s) { return s[0].toUpperCase(); }).join('');
+    document.getElementById('user-name').textContent = nome;
+    document.getElementById('user-role').textContent = ROLE_LABEL[p.role] || p.role;
+    document.getElementById('user-initials').textContent = iniciais || '··';
+    document.getElementById('logout').onclick = function () { EF.logout(); };
+    document.getElementById('novo-data').value = new Date().toISOString().slice(0, 10);
+    document.getElementById('novo-vendedor').value = nome;
+
+    document.getElementById('btn-toggle-form').addEventListener('click', function () {
+      var bloco = document.getElementById('bloco-form');
+      bloco.style.display = bloco.style.display === 'none' ? '' : 'none';
+    });
+
+    document.getElementById('btn-toggle-empresa-form').addEventListener('click', function () {
+      var bloco = document.getElementById('bloco-form-empresa');
+      bloco.style.display = bloco.style.display === 'none' ? '' : 'none';
+    });
+
+    document.getElementById('btn-salvar-empresa').addEventListener('click', async function () {
+      var msg = document.getElementById('empresa-msg');
+      var telefoneVal = document.getElementById('empresa-telefone').value.trim();
+      var emailVal = document.getElementById('empresa-email').value.trim();
+      var enderecoVal = document.getElementById('empresa-endereco').value.trim();
+      msg.style.color = '#8c8c91';
+      msg.textContent = 'Salvando...';
+      var { error } = await EF.client.from('empresas').update({ telefone: telefoneVal, email: emailVal, endereco: enderecoVal }).eq('id', p.empresa_id);
+      if (error) { msg.style.color = '#c9695c'; msg.textContent = error.message; return; }
+      msg.style.color = '#7cae83';
+      msg.textContent = 'Salvo!';
+      await carregarEmpresa();
+    });
+
+    document.getElementById('novo-cliente-select').addEventListener('change', function () {
+      var inputAvulso = document.getElementById('novo-cliente');
+      if (this.value === '_avulso') {
+        inputAvulso.style.display = '';
+        inputAvulso.required = true;
+        inputAvulso.value = '';
+        inputAvulso.focus();
+        return;
+      }
+      // tira o "required" enquanto o campo avulso está escondido — assim,
+      // em qualquer navegador, ele nunca pode travar o envio do formulário
+      // silenciosamente por causa de um campo invisível não preenchido.
+      inputAvulso.style.display = 'none';
+      inputAvulso.required = false;
+      var c = CLIENTES.find(function (x) { return x.id === this.value; }.bind(this));
+      if (!c) return;
+      document.getElementById('novo-contato').value = c.contato || '';
+      document.getElementById('novo-endereco-cliente').value = c.endereco || '';
+    });
+
+    // diagnóstico: confirma se o clique no botão está chegando no JavaScript
+    // de fato, mesmo antes do evento "submit" do formulário rodar.
+    document.getElementById('btn-orcamento').addEventListener('click', function () {
+      console.log('[vendas] botão "Criar orçamento" clicado.');
+    });
+
+    document.getElementById('form-orcamento').addEventListener('submit', async function (e) {
+      console.log('[vendas] evento submit do formulário disparou.');
+      e.preventDefault();
+      var btn = document.getElementById('btn-orcamento');
+      var msg = document.getElementById('orcamento-msg');
+      var selectCliente = document.getElementById('novo-cliente-select');
+      var ehAvulso = selectCliente.value === '_avulso';
+      var clienteSelecionado = ehAvulso ? null : CLIENTES.find(function (x) { return x.id === selectCliente.value; });
+      var clienteVal = ehAvulso ? document.getElementById('novo-cliente').value.trim() : (clienteSelecionado ? clienteSelecionado.nome : '');
+      if (!clienteVal) {
+        msg.style.color = '#c9695c';
+        var textoAviso = ehAvulso ? 'Digite o nome do cliente.' : 'Escolha um cliente da lista.';
+        msg.textContent = textoAviso;
+        alert(textoAviso);
+        return;
+      }
+      var contatoVal = document.getElementById('novo-contato').value.trim();
+      var eventoVal = document.getElementById('novo-evento').value || null;
+      var dataVal = document.getElementById('novo-data').value;
+      var obsVal = document.getElementById('novo-observacoes').value.trim();
+      var enderecoClienteVal = document.getElementById('novo-endereco-cliente').value.trim();
+      var vendedorVal = document.getElementById('novo-vendedor').value.trim();
+
+      btn.disabled = true;
+      msg.style.color = '#8c8c91';
+      msg.textContent = 'Salvando...';
+
+      var payload = {
+        empresa_id: p.empresa_id, cliente: clienteVal, contato: contatoVal, observacoes: obsVal,
+        endereco_cliente: enderecoClienteVal, vendedor: vendedorVal,
+        cliente_id: ehAvulso ? null : selectCliente.value
+      };
+      if (eventoVal) payload.evento_id = eventoVal;
+      if (dataVal) payload.data = dataVal;
+
+      // tudo dentro de try/catch/finally: se QUALQUER coisa der exceção (não só
+      // um erro "normal" do Supabase), o botão nunca fica travado em "Salvando..."
+      // sem explicação — sempre mostra algo pro usuário, mesmo num erro inesperado.
+      try {
+        var resp = await EF.client.from('orcamentos').insert(payload).select().single();
+        var novoOrc = resp.data, error = resp.error;
+
+        if (error) {
+          msg.style.color = '#c9695c';
+          msg.textContent = [error.message, error.details, error.hint].filter(Boolean).join(' — ') || 'Erro desconhecido ao criar o orçamento.';
+          console.error('Erro ao criar orçamento:', error);
+          return;
+        }
+        if (!novoOrc) {
+          msg.style.color = '#c9695c';
+          msg.textContent = 'O orçamento não voltou confirmado pelo servidor — tente novamente.';
+          return;
+        }
+
+        msg.style.color = '#7cae83';
+        msg.textContent = 'Orçamento criado! Adicione os itens no card abaixo.';
+        document.getElementById('form-orcamento').reset();
+        document.getElementById('novo-cliente-select').value = '_avulso';
+        document.getElementById('novo-cliente').style.display = '';
+        document.getElementById('novo-data').value = new Date().toISOString().slice(0, 10);
+        document.getElementById('novo-vendedor').value = nome;
+
+        // não depende de um re-fetch pra aparecer: insere localmente e renderiza já
+        ORCAMENTOS.unshift(novoOrc);
+        renderizar();
+        var novoCard = document.querySelector('[data-orcamento-id="' + novoOrc.id + '"]');
+        if (novoCard) novoCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        // reconciliação em segundo plano com o servidor (não bloqueia a UI)
+        carregarOrcamentos();
+      } catch (ex) {
+        msg.style.color = '#c9695c';
+        msg.textContent = 'Erro inesperado: ' + (ex && ex.message ? ex.message : String(ex));
+        console.error('Exceção ao criar orçamento:', ex);
+        alert('Não deu pra criar o orçamento (erro inesperado). Detalhe: ' + (ex && ex.message ? ex.message : String(ex)) + '\n\nSe isso continuar acontecendo, avise com esse texto.');
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    await carregarEmpresa();
+    await carregarEventos();
+    await carregarClientes();
+    await carregarEstoqueItens();
+    await carregarOrcamentos();
+  });
+
+  async function carregarClientes() {
+    var res = await EF.client.from('clientes').select('id, nome, contato, endereco').eq('empresa_id', EF.profile.empresa_id).eq('ativo', true).order('nome', { ascending: true });
+    CLIENTES = res.data || [];
+    var select = document.getElementById('novo-cliente-select');
+    CLIENTES.forEach(function (c) {
+      var opt = document.createElement('option');
+      opt.value = c.id;
+      opt.textContent = c.nome;
+      select.appendChild(opt);
+    });
+  }
+
+  async function carregarEmpresa() {
+    var { data } = await EF.client.from('empresas').select('*').eq('id', EF.profile.empresa_id).maybeSingle();
+    EMPRESA = data || null;
+    if (EMPRESA) {
+      document.getElementById('empresa-telefone').value = EMPRESA.telefone || '';
+      document.getElementById('empresa-email').value = EMPRESA.email || '';
+      document.getElementById('empresa-endereco').value = EMPRESA.endereco || '';
+    }
+  }
+
+  async function carregarEventos() {
+    var res = await EF.client.from('eventos').select('id, nome, data_inicio').eq('empresa_id', EF.profile.empresa_id).order('data_inicio', { ascending: false });
+    if (res.error) { EVENTOS = []; return; }
+    EVENTOS = res.data || [];
+    var select = document.getElementById('novo-evento');
+    EVENTOS.forEach(function (ev) {
+      var opt = document.createElement('option');
+      opt.value = ev.id;
+      opt.textContent = ev.nome;
+      select.appendChild(opt);
+    });
+  }
+
+  async function carregarEstoqueItens() {
+    var res = await EF.client.from('estoque_itens').select('id, nome, categoria, preco_unitario').eq('empresa_id', EF.profile.empresa_id).order('categoria', { ascending: true }).order('nome', { ascending: true });
+    if (res.error) { ESTOQUE_ITENS = []; return; }
+    ESTOQUE_ITENS = res.data || [];
+  }
+
+  async function carregarOrcamentos() {
+    var { data, error } = await EF.client.from('orcamentos').select('*').eq('empresa_id', EF.profile.empresa_id).order('data', { ascending: false }).order('created_at', { ascending: false });
+    if (error) {
+      document.getElementById('resumo').textContent = 'Erro ao carregar: ' + error.message;
+      return;
+    }
+    ORCAMENTOS = data || [];
+    var { data: itens } = await EF.client.from('orcamento_itens').select('*');
+    ITENS = itens || [];
+    renderizar();
+  }
+
+  function totalOrcamento(orcId) {
+    return ITENS.filter(function (it) { return it.orcamento_id === orcId; })
+      .reduce(function (acc, it) { return acc + (it.quantidade * it.valor_unitario); }, 0);
+  }
+
+  function renderizar() {
+    var agora = new Date();
+    var mesAtual = agora.getMonth(), anoAtual = agora.getFullYear();
+
+    var faturamentoMes = 0, orcadoMes = 0, abertos = 0;
+    ORCAMENTOS.forEach(function (o) {
+      var d = new Date(o.data + 'T00:00:00');
+      var doMes = d.getFullYear() === anoAtual && d.getMonth() === mesAtual;
+      if (o.status === 'orcamento' || o.status === 'aprovado' || o.status === 'pago_parcial') abertos++;
+      if (doMes) {
+        orcadoMes += totalOrcamento(o.id);
+        faturamentoMes += (o.status === 'pago' || o.status === 'pago_parcial') ? o.valor_pago : 0;
+      }
+    });
+
+    document.getElementById('resumo').textContent = ORCAMENTOS.length + (ORCAMENTOS.length === 1 ? ' orçamento cadastrado' : ' orçamentos cadastrados') + ' · ' + abertos + ' em aberto.';
+    document.getElementById('kpi-faturamento').textContent = fmtMoeda(faturamentoMes);
+    document.getElementById('kpi-abertos').textContent = abertos;
+    document.getElementById('kpi-orcado').textContent = fmtMoeda(orcadoMes);
+
+    var wrap = document.getElementById('lista-orcamentos');
+    wrap.innerHTML = '';
+    document.getElementById('vazio').style.display = ORCAMENTOS.length ? 'none' : '';
+    ORCAMENTOS.forEach(function (o) { wrap.appendChild(cartaoOrcamento(o)); });
+  }
+
+  function cartaoOrcamento(o) {
+    var itensDoOrcamento = ITENS.filter(function (it) { return it.orcamento_id === o.id; }).sort(function (a, b) { return a.ordem - b.ordem; });
+    var total = itensDoOrcamento.reduce(function (acc, it) { return acc + (it.quantidade * it.valor_unitario); }, 0);
+    var evento = o.evento_id ? EVENTOS.find(function (ev) { return ev.id === o.evento_id; }) : null;
+
+    var card = document.createElement('div');
+    card.className = 'card-orcamento';
+    card.dataset.orcamentoId = o.id;
+    card.style.cssText = 'border:1px solid #1c1c1f; border-radius: 8px; padding: 18px 20px;';
+
+    var header = document.createElement('div');
+    header.style.cssText = 'display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:4px;';
+    var headerEsq = document.createElement('div');
+    headerEsq.innerHTML =
+      '<div style="font-family:\'Space Grotesk\',sans-serif; font-size:14px; font-weight:600;">' + escapeHtml(o.cliente) + '</div>' +
+      '<span class="mono" style="font-size:9.5px; color:#6e6e73;">' +
+        new Date(o.data + 'T00:00:00').toLocaleDateString('pt-BR') +
+        (o.contato ? ' · ' + escapeHtml(o.contato) : '') +
+        (o.vendedor ? ' · vendedor: ' + escapeHtml(o.vendedor) : '') +
+        (evento ? ' · vinculado a "' + escapeHtml(evento.nome) + '"' : '') +
+      '</span>';
+    header.appendChild(headerEsq);
+
+    var headerDir = document.createElement('div');
+    headerDir.style.cssText = 'display:flex; align-items:center; gap:14px; flex-shrink:0;';
+
+    var badge = document.createElement('span');
+    badge.className = 'badge';
+    badge.style.cssText = 'color:' + STATUS_COLOR[o.status] + '; border:1px solid ' + STATUS_COLOR[o.status] + '55; background:' + STATUS_COLOR[o.status] + '18;';
+    badge.textContent = STATUS_LABEL[o.status] || o.status;
+    headerDir.appendChild(badge);
+
+    var btnPdf = document.createElement('span');
+    btnPdf.className = 'icone-acao neutro';
+    btnPdf.textContent = 'exportar PDF';
+    btnPdf.addEventListener('click', function () { exportarPDF(o, itensDoOrcamento, total, evento); });
+    headerDir.appendChild(btnPdf);
+
+    var delOrc = document.createElement('span');
+    delOrc.className = 'icone-acao';
+    delOrc.textContent = '✕ remover';
+    delOrc.addEventListener('click', async function () {
+      if (!confirm('Remover o orçamento de "' + o.cliente + '"?')) return;
+      var { error } = await EF.client.from('orcamentos').delete().eq('id', o.id);
+      if (error) { alert('Erro ao remover: ' + error.message); return; }
+      await carregarOrcamentos();
+    });
+    headerDir.appendChild(delOrc);
+
+    header.appendChild(headerDir);
+    card.appendChild(header);
+
+    // itens — layout em tabela: Item / Qtd / Valor unit. / Observações / Subtotal / remover
+    var GRID_ITEM = 'minmax(0,2.3fr) 56px 92px minmax(0,1.6fr) 92px 18px';
+    var lista = document.createElement('div');
+    lista.style.cssText = 'margin: 14px 0 10px;';
+
+    if (!itensDoOrcamento.length) {
+      var vazioMsg = document.createElement('div');
+      vazioMsg.style.cssText = 'color:#4a4a4e; font-size:12px; padding: 4px 0 10px;';
+      vazioMsg.textContent = 'Nenhum item adicionado ainda.';
+      lista.appendChild(vazioMsg);
+    } else {
+      var cabecalho = document.createElement('div');
+      cabecalho.className = 'mono';
+      cabecalho.style.cssText = 'display:grid; grid-template-columns:' + GRID_ITEM + '; gap:12px; padding:0 0 7px; font-size:9px; letter-spacing:.06em; text-transform:uppercase; color:#4a4a4e; border-bottom:1px solid #1c1c1f;';
+      ['Item', 'Qtd', 'Valor unit.', 'Observações', 'Subtotal', ''].forEach(function (label, i) {
+        var celula = document.createElement('div');
+        if (i === 1 || i === 2 || i === 4) celula.style.textAlign = 'right';
+        celula.textContent = label;
+        cabecalho.appendChild(celula);
+      });
+      lista.appendChild(cabecalho);
+    }
+
+    itensDoOrcamento.forEach(function (it) {
+      var linha = document.createElement('div');
+      linha.className = 'linha-item-orcamento';
+      linha.style.cssText = 'display:grid; grid-template-columns:' + GRID_ITEM + '; gap:12px; align-items:center; padding:10px 0; border-bottom:1px solid #1c1c1f; font-size:13px;';
+
+      var descEl = document.createElement('div');
+      descEl.style.cssText = 'min-width:0;';
+      descEl.innerHTML =
+        '<span class="mono" style="display:inline-block; color:#7fa8c9; font-size:9px; letter-spacing:.03em; padding:2px 6px; border:1px solid #2a3d4d; border-radius:4px; margin-bottom:3px;">' + escapeHtml(it.categoria || 'Geral') + '</span>' +
+        '<div style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + escapeHtml(it.descricao) + '</div>';
+
+      var qtdEl = document.createElement('div');
+      qtdEl.className = 'mono';
+      qtdEl.style.cssText = 'text-align:right; color:#8c8c91;';
+      qtdEl.textContent = it.quantidade;
+
+      var valorEl = document.createElement('div');
+      valorEl.className = 'mono';
+      valorEl.style.cssText = 'text-align:right; color:#8c8c91;';
+      valorEl.textContent = fmtMoeda(it.valor_unitario);
+
+      var obsEl = document.createElement('input');
+      obsEl.type = 'text';
+      obsEl.value = it.observacoes || '';
+      obsEl.placeholder = '+ observação';
+      obsEl.style.cssText = 'width:100%; min-width:0; background:transparent; border:none; color:#8c8c91; font-size:12px; font-style:italic; box-sizing:border-box; padding:2px 0;';
+      obsEl.addEventListener('change', async function () {
+        var novoValor = obsEl.value.trim();
+        it.observacoes = novoValor;
+        var { error } = await EF.client.from('orcamento_itens').update({ observacoes: novoValor }).eq('id', it.id);
+        if (error) alert('Erro ao salvar observação: ' + error.message);
+      });
+
+      var subtotalEl = document.createElement('div');
+      subtotalEl.className = 'disp';
+      subtotalEl.style.cssText = 'text-align:right; color:#f3f1ec; font-weight:600;';
+      subtotalEl.textContent = fmtMoeda(it.quantidade * it.valor_unitario);
+
+      var delEl = document.createElement('span');
+      delEl.className = 'icone-acao del-item-orcamento';
+      delEl.style.textAlign = 'right';
+      delEl.textContent = '✕';
+      delEl.addEventListener('click', async function () {
+        var { error } = await EF.client.from('orcamento_itens').delete().eq('id', it.id);
+        if (error) { alert('Erro ao remover: ' + error.message); return; }
+        await carregarOrcamentos();
+      });
+
+      linha.appendChild(descEl);
+      linha.appendChild(qtdEl);
+      linha.appendChild(valorEl);
+      linha.appendChild(obsEl);
+      linha.appendChild(subtotalEl);
+      linha.appendChild(delEl);
+      lista.appendChild(linha);
+    });
+    card.appendChild(lista);
+
+    // form add item — um bloco só, com rótulos, em vez de campos soltos.
+    // alterna claramente entre "item do estoque" (preço sugerido, editável)
+    // e "item avulso" (descrição + categoria digitadas).
+    function campoComLabel(rotulo, campoEl) {
+      var wrap = document.createElement('div');
+      wrap.style.cssText = 'min-width:0;';
+      var lbl = document.createElement('div');
+      lbl.className = 'mono';
+      lbl.style.cssText = 'font-size:9px; letter-spacing:.05em; text-transform:uppercase; color:#6e6e73; margin-bottom:6px;';
+      lbl.textContent = rotulo;
+      wrap.appendChild(lbl);
+      wrap.appendChild(campoEl);
+      return wrap;
+    }
+
+    var addForm = document.createElement('div');
+    addForm.className = 'add-item-orcamento-form';
+    addForm.style.cssText = 'margin-bottom:16px; padding:14px 16px; background:#131315; border:1px solid #1c1c1f; border-radius:8px;';
+
+    var addTitulo = document.createElement('div');
+    addTitulo.className = 'mono';
+    addTitulo.style.cssText = 'font-size:9.5px; letter-spacing:.06em; text-transform:uppercase; color:#6e6e73; margin-bottom:12px;';
+    addTitulo.textContent = 'Adicionar item';
+    addForm.appendChild(addTitulo);
+
+    // toggle estoque / avulso
+    var toggleWrap = document.createElement('div');
+    toggleWrap.style.cssText = 'display:inline-flex; border:1px solid #29292d; border-radius:6px; overflow:hidden; margin-bottom:12px;';
+    var btnModoEstoque = document.createElement('span');
+    var btnModoAvulso = document.createElement('span');
+    [btnModoEstoque, btnModoAvulso].forEach(function (b) {
+      b.className = 'mono';
+      b.style.cssText = 'padding:6px 14px; font-size:10.5px; letter-spacing:.03em; text-transform:uppercase; cursor:pointer; user-select:none;';
+    });
+    btnModoEstoque.textContent = 'Do estoque';
+    btnModoAvulso.textContent = 'Item avulso';
+    toggleWrap.appendChild(btnModoEstoque);
+    toggleWrap.appendChild(btnModoAvulso);
+    addForm.appendChild(toggleWrap);
+
+    var linhaCampos1 = document.createElement('div');
+    linhaCampos1.style.cssText = 'display:grid; grid-template-columns:1fr; gap:14px; margin-bottom:14px;';
+
+    var selEstoque = document.createElement('select');
+    selEstoque.className = 'select-item-estoque-orcamento';
+    selEstoque.style.cssText = 'width:100%; border-bottom:1px solid #29292d; padding-bottom:8px; color:#f3f1ec; font-size:13px; box-sizing:border-box;';
+    var optAvulso = document.createElement('option');
+    optAvulso.value = '';
+    optAvulso.textContent = '— escolha um item —';
+    selEstoque.appendChild(optAvulso);
+    ESTOQUE_ITENS.forEach(function (it) {
+      var opt = document.createElement('option');
+      opt.value = it.id;
+      opt.textContent = it.nome + ' (' + it.categoria + ')';
+      selEstoque.appendChild(opt);
+    });
+    var campoEstoque = campoComLabel('Item do estoque', selEstoque);
+
+    var camposAvulso = document.createElement('div');
+    camposAvulso.style.cssText = 'display:grid; grid-template-columns:1fr 170px; gap:14px;';
+
+    var inpDesc = document.createElement('input');
+    inpDesc.className = 'item-desc-input';
+    inpDesc.type = 'text'; inpDesc.placeholder = 'Ex: Estrutura de treliça Q30';
+    inpDesc.style.cssText = 'width:100%; background:transparent; border:none; border-bottom:1px solid #29292d; color:#f3f1ec; font-size:13px; padding-bottom:8px; box-sizing:border-box;';
+
+    var selCategoria = document.createElement('select');
+    selCategoria.className = 'item-categoria-select';
+    selCategoria.style.cssText = 'width:100%; border-bottom:1px solid #29292d; padding-bottom:8px; color:#f3f1ec; font-size:13px; box-sizing:border-box;';
+    CATEGORIAS.forEach(function (cat) {
+      var opt = document.createElement('option');
+      opt.value = cat; opt.textContent = cat;
+      selCategoria.appendChild(opt);
+    });
+
+    camposAvulso.appendChild(campoComLabel('Descrição', inpDesc));
+    camposAvulso.appendChild(campoComLabel('Categoria', selCategoria));
+
+    linhaCampos1.appendChild(campoEstoque);
+    linhaCampos1.appendChild(camposAvulso);
+    addForm.appendChild(linhaCampos1);
+
+    var linhaCampos2 = document.createElement('div');
+    linhaCampos2.style.cssText = 'display:grid; grid-template-columns:80px 130px 1fr auto; gap:14px; align-items:end;';
+
+    var inpQtd = document.createElement('input');
+    inpQtd.className = 'item-qtd-input';
+    inpQtd.type = 'number'; inpQtd.min = '0.01'; inpQtd.step = '0.01'; inpQtd.value = '1';
+    inpQtd.style.cssText = 'width:100%; background:transparent; border:none; border-bottom:1px solid #29292d; color:#f3f1ec; font-size:13px; padding-bottom:8px; box-sizing:border-box;';
+
+    var inpValor = document.createElement('input');
+    inpValor.className = 'item-valor-input';
+    inpValor.type = 'number'; inpValor.min = '0'; inpValor.step = '0.01'; inpValor.placeholder = '0,00';
+    inpValor.style.cssText = 'width:100%; background:transparent; border:none; border-bottom:1px solid #29292d; color:#f3f1ec; font-size:13px; padding-bottom:8px; box-sizing:border-box;';
+
+    var inpObsNovoItem = document.createElement('input');
+    inpObsNovoItem.className = 'item-obs-input';
+    inpObsNovoItem.type = 'text'; inpObsNovoItem.placeholder = 'Opcional';
+    inpObsNovoItem.style.cssText = 'width:100%; background:transparent; border:none; border-bottom:1px solid #29292d; color:#f3f1ec; font-size:13px; padding-bottom:8px; box-sizing:border-box;';
+
+    var addBtn = document.createElement('button');
+    addBtn.className = 'add-item-orcamento-btn';
+    addBtn.type = 'button';
+    addBtn.textContent = '+ Adicionar';
+    addBtn.style.cssText = 'background:none; border:none; padding:0 0 8px; font-size:13px; color:#7fa8c9; cursor:pointer; border-bottom:1px solid #2a3d4d; white-space:nowrap;';
+
+    linhaCampos2.appendChild(campoComLabel('Qtd', inpQtd));
+    linhaCampos2.appendChild(campoComLabel('Valor unit.', inpValor));
+    linhaCampos2.appendChild(campoComLabel('Observações', inpObsNovoItem));
+    linhaCampos2.appendChild(addBtn);
+    addForm.appendChild(linhaCampos2);
+
+    function aplicarModo(avulso) {
+      campoEstoque.style.display = avulso ? 'none' : '';
+      camposAvulso.style.display = avulso ? 'grid' : 'none';
+      btnModoEstoque.style.background = avulso ? 'transparent' : '#1c2a35';
+      btnModoEstoque.style.color = avulso ? '#6e6e73' : '#7fa8c9';
+      btnModoAvulso.style.background = avulso ? '#1c1c1f' : 'transparent';
+      btnModoAvulso.style.color = avulso ? '#f3f1ec' : '#6e6e73';
+      if (!avulso) { selEstoque.value = ''; inpValor.value = ''; }
+    }
+    btnModoEstoque.addEventListener('click', function () { aplicarModo(false); selEstoque.focus(); });
+    btnModoAvulso.addEventListener('click', function () { aplicarModo(true); inpDesc.focus(); });
+    aplicarModo(true); // começa em modo "item avulso"
+
+    selEstoque.addEventListener('change', function () {
+      var item = ESTOQUE_ITENS.find(function (it) { return it.id === selEstoque.value; });
+      if (item) inpValor.value = item.preco_unitario || 0;
+    });
+
+    addBtn.addEventListener('click', async function () {
+      var itemId = campoEstoque.style.display !== 'none' ? selEstoque.value : '';
+      var qtd = parseFloat(inpQtd.value) || 0;
+      var valor = parseFloat(inpValor.value) || 0;
+      var payload = {
+        orcamento_id: o.id, quantidade: qtd, valor_unitario: valor, ordem: itensDoOrcamento.length,
+        observacoes: inpObsNovoItem.value.trim()
+      };
+
+      if (itemId) {
+        var item = ESTOQUE_ITENS.find(function (it) { return it.id === itemId; });
+        if (!item) { alert('Item do estoque não encontrado.'); return; }
+        payload.estoque_item_id = item.id;
+        payload.descricao = item.nome;
+        payload.categoria = item.categoria;
+      } else {
+        var desc = inpDesc.value.trim();
+        if (!desc) { alert('Preencha a descrição do item avulso.'); return; }
+        payload.descricao = desc;
+        payload.categoria = selCategoria.value;
+      }
+      if (qtd <= 0) { alert('Preencha uma quantidade válida.'); return; }
+
+      var { error } = await EF.client.from('orcamento_itens').insert(payload);
+      if (error) { alert('Erro ao adicionar: ' + error.message); return; }
+      await carregarOrcamentos();
+    });
+
+    card.appendChild(addForm);
+
+    // rodapé: total, status, valor pago
+    var rodape = document.createElement('div');
+    rodape.style.cssText = 'display:flex; align-items:center; justify-content:space-between; padding-top:14px; border-top:1px solid #1c1c1f; gap:20px; flex-wrap:wrap;';
+
+    var totalEl = document.createElement('div');
+    totalEl.className = 'disp total-orcamento';
+    totalEl.style.cssText = 'font-size:16px; font-weight:600;';
+    totalEl.textContent = 'Total: ' + fmtMoeda(total);
+    rodape.appendChild(totalEl);
+
+    var controles = document.createElement('div');
+    controles.style.cssText = 'display:flex; align-items:center; gap:18px;';
+
+    var statusWrap = document.createElement('div');
+    statusWrap.innerHTML = '<span class="mono" style="font-size:9.5px; color:#6e6e73; margin-right:6px;">Status:</span>';
+    var selStatus = document.createElement('select');
+    selStatus.className = 'select-status-orcamento';
+    selStatus.style.cssText = 'border-bottom:1px solid #29292d; padding-bottom:4px; color:#f3f1ec;';
+    Object.keys(STATUS_LABEL).forEach(function (k) {
+      var opt = document.createElement('option');
+      opt.value = k; opt.textContent = STATUS_LABEL[k];
+      if (k === o.status) opt.selected = true;
+      selStatus.appendChild(opt);
+    });
+    selStatus.addEventListener('change', async function () {
+      var { error } = await EF.client.from('orcamentos').update({ status: selStatus.value }).eq('id', o.id);
+      if (error) { alert('Erro ao salvar: ' + error.message); return; }
+      await carregarOrcamentos();
+    });
+    statusWrap.appendChild(selStatus);
+    controles.appendChild(statusWrap);
+
+    var pagoWrap = document.createElement('div');
+    pagoWrap.innerHTML = '<span class="mono" style="font-size:9.5px; color:#6e6e73; margin-right:6px;">Valor pago:</span>';
+    var inpPago = document.createElement('input');
+    inpPago.className = 'input-valor-pago';
+    inpPago.type = 'number'; inpPago.min = '0'; inpPago.step = '0.01'; inpPago.value = o.valor_pago;
+    inpPago.style.cssText = 'width:90px; background:transparent; border:none; border-bottom:1px solid #29292d; color:#f3f1ec; font-size:12.5px; padding-bottom:4px; box-sizing:border-box;';
+    inpPago.addEventListener('change', async function () {
+      var val = parseFloat(inpPago.value) || 0;
+      var { error } = await EF.client.from('orcamentos').update({ valor_pago: val }).eq('id', o.id);
+      if (error) { alert('Erro ao salvar: ' + error.message); return; }
+      await carregarOrcamentos();
+    });
+    pagoWrap.appendChild(inpPago);
+    controles.appendChild(pagoWrap);
+
+    rodape.appendChild(controles);
+    card.appendChild(rodape);
+
+    return card;
+  }
+
+  function exportarPDF(o, itens, total, evento) {
+    if (!window.jspdf) { alert('Biblioteca de PDF não carregou. Verifique sua conexão.'); return; }
+    var doc = new window.jspdf.jsPDF();
+
+    var MARGEM = 14;
+    var LARGURA = 210;
+    var DIREITA = LARGURA - MARGEM; // 196
+    var y = 20;
+
+    function checarQuebraPagina(alturaNecessaria) {
+      if (y + alturaNecessaria > 285) { doc.addPage(); y = 20; }
+    }
+
+    function barraPreta(texto, valor, alturaBarra) {
+      alturaBarra = alturaBarra || 8;
+      checarQuebraPagina(alturaBarra + 4);
+      doc.setFillColor(15, 15, 15);
+      doc.rect(MARGEM, y, DIREITA - MARGEM, alturaBarra, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10);
+      doc.text(texto, MARGEM + 4, y + alturaBarra / 2 + 3);
+      if (valor !== undefined) {
+        doc.text(valor, DIREITA - 4, y + alturaBarra / 2 + 3, { align: 'right' });
+      }
+      doc.setTextColor(20, 20, 20);
+      y += alturaBarra + 6;
+    }
+
+    // ---- cabeçalho: empresa contratada em cima, data/vendedor ao lado ----
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(26);
+    doc.setTextColor(15, 15, 15);
+    doc.text('Orçamento', MARGEM, y);
+
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    var yDireita = y - 12;
+    var dataFormatada = new Date(o.data + 'T00:00:00').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+    dataFormatada = dataFormatada.charAt(0).toUpperCase() + dataFormatada.slice(1);
+    doc.text(dataFormatada, DIREITA, yDireita, { align: 'right' });
+    if (o.vendedor) {
+      doc.setFont('helvetica', 'normal');
+      doc.text('Vendedor: ' + o.vendedor, DIREITA, yDireita + 6, { align: 'right' });
+    }
+    if (o.endereco_cliente) {
+      doc.text(o.endereco_cliente, DIREITA, yDireita + 12, { align: 'right' });
+    }
+
+    y += 7;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9.5);
+    var empresaNome = (EMPRESA && EMPRESA.nome) || '';
+    if (empresaNome) {
+      doc.setFont('helvetica', 'bold');
+      doc.text(empresaNome, MARGEM, y);
+      y += 5;
+      doc.setFont('helvetica', 'normal');
+    }
+    var contatoLinhas = [];
+    if (EMPRESA && EMPRESA.email) contatoLinhas.push(EMPRESA.email);
+    if (EMPRESA && EMPRESA.telefone) contatoLinhas.push(EMPRESA.telefone);
+    contatoLinhas.forEach(function (linha) { doc.text(linha, MARGEM, y); y += 5; });
+    if (EMPRESA && EMPRESA.endereco) { doc.text(EMPRESA.endereco, MARGEM, y); y += 5; }
+
+    y += 6;
+
+    // ---- dados do contratante ----
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10.5);
+    doc.text('Contratante', MARGEM, y);
+    y += 6;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9.5);
+    doc.text(o.cliente, MARGEM, y);
+    y += 5;
+    if (o.contato) { doc.text(o.contato, MARGEM, y); y += 5; }
+    if (evento) { doc.text('Evento: ' + evento.nome, MARGEM, y); y += 5; }
+
+    y += 8;
+
+    // ---- itens agrupados por categoria ----
+    var categoriasOrdem = [];
+    var porCategoria = {};
+    itens.forEach(function (it) {
+      var cat = it.categoria || 'Geral';
+      if (!porCategoria[cat]) { porCategoria[cat] = []; categoriasOrdem.push(cat); }
+      porCategoria[cat].push(it);
+    });
+
+    var numero = 1;
+    var colNum = MARGEM + 3, colProd = MARGEM + 14, colPreco = 138, colQt = 162, colTotal = DIREITA - 3;
+
+    categoriasOrdem.forEach(function (cat) {
+      checarQuebraPagina(20);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(24);
+      doc.setTextColor(15, 15, 15);
+      doc.text(cat.toUpperCase(), MARGEM, y + 6);
+      y += 14;
+
+      // cabeçalho da tabela (barra preta)
+      checarQuebraPagina(9);
+      doc.setFillColor(15, 15, 15);
+      doc.rect(MARGEM, y, DIREITA - MARGEM, 8, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      doc.text('Nº', colNum, y + 5.5);
+      doc.text('PRODUTO', colProd, y + 5.5);
+      doc.text('PREÇO', colPreco, y + 5.5, { align: 'right' });
+      doc.text('QT', colQt, y + 5.5, { align: 'right' });
+      doc.text('TOTAL', colTotal, y + 5.5, { align: 'right' });
+      doc.setTextColor(20, 20, 20);
+      y += 8;
+
+      var subtotalCategoria = 0;
+      porCategoria[cat].forEach(function (it) {
+        checarQuebraPagina(9);
+        var subtotalItem = it.quantidade * it.valor_unitario;
+        subtotalCategoria += subtotalItem;
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9.5);
+        doc.text(String(numero), colNum, y + 6);
+        doc.setFont('helvetica', 'bold');
+        doc.text(String(it.descricao).slice(0, 48), colProd, y + 6);
+        doc.setFont('helvetica', 'bold');
+        doc.text(fmtMoeda(it.valor_unitario), colPreco, y + 6, { align: 'right' });
+        doc.text(String(it.quantidade), colQt, y + 6, { align: 'right' });
+        doc.text(fmtMoeda(subtotalItem), colTotal, y + 6, { align: 'right' });
+
+        doc.setDrawColor(225, 225, 225);
+        doc.setLineWidth(0.15);
+        doc.line(MARGEM, y + 9, DIREITA, y + 9);
+
+        y += 10;
+        numero++;
+      });
+
+      barraPreta('TOTAL', fmtMoeda(subtotalCategoria));
+    });
+
+    // ---- total geral (quando há mais de uma categoria) ----
+    if (categoriasOrdem.length > 1) {
+      barraPreta('TOTAL GERAL', fmtMoeda(total), 10);
+    }
+
+    // ---- observações ----
+    if (o.observacoes) {
+      checarQuebraPagina(20);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9.5);
+      doc.text('Observações', MARGEM, y);
+      y += 5;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      var linhasObs = doc.splitTextToSize(o.observacoes, DIREITA - MARGEM);
+      doc.text(linhasObs, MARGEM, y);
+    }
+
+    var clienteSlug = o.cliente
+      .normalize('NFD').replace(/[̀-ͯ]/g, '') // remove acentos
+      .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    var nomeArquivo = 'orcamento-' + clienteSlug + '.pdf';
+    doc.save(nomeArquivo);
+  }
+
+  function escapeHtml(s) {
+    var d = document.createElement('div');
+    d.textContent = s == null ? '' : s;
+    return d.innerHTML;
+  }
+})();
+</script>
+
+<script src="ef-ui.js"></script>
+</body>
+</html>

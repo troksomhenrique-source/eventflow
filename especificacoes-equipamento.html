@@ -1,0 +1,558 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Especificações de equipamentos — EventFlow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="ef-config.js"></script>
+<script src="ef-auth.js"></script>
+<style>
+  body{margin:0;background:#0a0a0b;font-family:'Inter',sans-serif;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  .disp{font-family:'Space Grotesk',sans-serif;}
+  select{font-family:'IBM Plex Mono',monospace;background:transparent;border:none;color:inherit;font-size:12.5px;cursor:pointer;color-scheme:dark;}
+  select option{background:#0d0d0f;color:#f3f1ec;}
+  select:focus{outline:none;}
+  input{font-family:'Inter',sans-serif;}
+  input::placeholder{color:#4a4a4e;}
+  input:focus{outline:none;border-color:#3b82c9 !important;}
+  body [data-financeiro]{display:none !important;}
+  html[data-financeiro="true"] body [data-financeiro]{display:block !important;}
+  body [data-areas]{display:none !important;}
+  html[data-areas="true"] body [data-areas]{display:block !important;}
+  body [data-usuarios]{display:none !important;}
+  html[data-usuarios="true"] body [data-usuarios]{display:block !important;}
+  .icone-acao{cursor:pointer;color:#6e6e73;font-size:11px;}
+  .icone-acao:hover{color:#c9695c;}
+  .icone-acao.neutro:hover{color:#7fa8c9;}
+  .linha-item-spec{border-bottom:1px solid #1c1c1f;padding:14px 0;}
+  .linha-item-spec:last-child{border-bottom:none;}
+  .campo-mini{background:transparent;border:none;border-bottom:1px solid #29292d;color:#f3f1ec;font-size:12.5px;padding-bottom:5px;box-sizing:border-box;width:100%;}
+  .rotulo-mini{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.05em;text-transform:uppercase;color:#6e6e73;margin-bottom:6px;}
+</style>
+<link rel="stylesheet" href="ef-ui.css">
+</head>
+<body>
+
+<div style="width: 100%; min-height: 100vh; box-sizing: border-box; display: flex; background: #0a0a0b; color: #f3f1ec;">
+
+  <!-- ============ SIDEBAR ============ -->
+  <div style="width: 220px; flex-shrink: 0; display: flex; flex-direction: column; padding: 36px 24px; box-sizing: border-box;">
+
+    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 40px;">
+      <a href="dashboard.html" style="text-decoration: none; display: flex; align-items: center; gap: 10px;">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" style="flex-shrink: 0;"><path d="M2 12c2 0 2-6.5 4-6.5S8 12 10 12s2-6.5 4-6.5" stroke="#7fa8c9" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div style="font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 13.5px; letter-spacing: -.01em; color: #f3f1ec;">EventFlow</div>
+      </a>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 32px;">
+      <a href="dashboard.html" style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Dashboard</span></a>
+      <a href="agenda.html" style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Agenda</span></a>
+      <a href="estoque.html" style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Estoque</span></a>
+      <a href="clientes.html" data-financeiro style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Clientes</span></a>
+      <a href="vendas.html" data-financeiro style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Vendas</span></a>
+      <a href="chat.html" style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Chat</span></a>
+      <a href="notas.html" style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Notas</span></a>
+    </div>
+
+    <div data-areas>
+      <div class="mono" style="font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: #4a4a4e; margin-bottom: 12px;">Áreas do projeto</div>
+      <div style="display: flex; flex-direction: column; gap: 13px; margin-bottom: 32px;">
+        <a href="calculadora-som.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Som</span></a>
+        <a href="calculadora-luz.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Luz</span></a>
+        <a href="video.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Vídeo</span></a>
+        <a href="estrutura.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Estrutura</span></a>
+        <a href="internet.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Internet</span></a>
+        <a href="cenografia.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Cenografia</span></a>
+        <a href="extras.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Extras</span></a>
+        <a href="servicos.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Serviços</span></a>
+        <a href="logistica.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Logística</span></a>
+        <a href="descritivo-geral.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Descritivo Geral</span></a>
+        <a href="ordem-servico.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Ordem de Serviço</span></a>
+      </div>
+    </div>
+
+    <div data-areas>
+      <div class="mono" style="font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: #4a4a4e; margin-bottom: 12px;">Sistema</div>
+      <div style="display: flex; flex-direction: column; gap: 13px;">
+        <div style="display: flex; align-items: center; gap: 9px;">
+          <span style="width: 4px; height: 4px; border-radius: 50%; background: #7fa8c9; flex-shrink: 0;"></span>
+          <span style="font-size: 12.5px; color: #f3f1ec; font-weight: 600;">Especificações de equipamentos</span>
+        </div>
+        <a data-usuarios href="usuarios-permissoes.html" style="text-decoration: none; display: block;"><span style="font-size: 12.5px; color: #6e6e73;">Usuários e permissões</span></a>
+      </div>
+    </div>
+
+    <div style="margin-top: auto; padding-top: 18px; border-top: 1px solid #1c1c1f; display: flex; align-items: center; gap: 10px;">
+      <div id="user-initials" style="width: 26px; height: 26px; border-radius: 50%; background: #1a1a1d; display: flex; align-items: center; justify-content: center; font-family: 'Space Grotesk', sans-serif; font-size: 10.5px; font-weight: 600; color: #b8b8bc; flex-shrink: 0;">··</div>
+      <div style="flex-grow: 1; min-width: 0;">
+        <div id="user-name" style="font-size: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Carregando…</div>
+        <div id="user-role" class="mono" style="font-size: 9px; color: #6e6e73; margin-top: 1px;">—</div>
+      </div>
+      <span id="logout" title="Sair" style="cursor: pointer; color: #6e6e73; font-size: 11px; flex-shrink: 0;">sair</span>
+    </div>
+  </div>
+
+  <!-- ============ MAIN ============ -->
+  <div style="flex-grow: 1; padding: 36px 48px 36px 0; box-sizing: border-box; min-width: 0;">
+
+    <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 22px;">
+      <div>
+        <div class="mono" style="color: #6e6e73; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 10px;" id="hoje"></div>
+        <h1 style="font-family: 'Space Grotesk', sans-serif; font-size: 24px; font-weight: 600; margin: 0 0 6px; letter-spacing: -.01em;">Especificações de equipamentos</h1>
+        <div style="color: #8c8c91; font-size: 13px;" id="resumo">Carregando…</div>
+      </div>
+      <select id="filtro-categoria" style="border: 1px solid #29292d; border-radius: 5px; padding: 6px 10px;">
+        <option value="">Todas as categorias</option>
+      </select>
+    </div>
+
+    <div style="color: #6e6e73; font-size: 12.5px; margin-bottom: 26px; max-width: 620px; line-height: 1.5;">
+      Aqui você cadastra o peso, o consumo em Watts e quantas unidades cabem
+      em um case de cada item do Estoque — usados no memorial de cálculo das
+      calculadoras de área — além de especificações técnicas livres (canais
+      de uma mesa de som, portas e resolução de uma processadora, etc). Tudo
+      opcional: deixe em branco o que não fizer sentido pro item.
+    </div>
+
+    <div id="lista-itens"></div>
+    <div id="vazio" style="display:none; color: #4a4a4e; font-size: 13px;">Nenhum item cadastrado no Estoque ainda.</div>
+
+  </div>
+</div>
+
+<script>
+(function () {
+  var ROLE_LABEL = { gerencia: 'Gerência', producao: 'Produção', estoque: 'Estoque' };
+  var CATEGORIAS = ['Som', 'Luz', 'Painel de LED', 'Vídeo', 'Projeção', 'Cenografia', 'Serviços', 'Gerenciamento de áudio', 'Gerenciamento de Luz', 'Gerenciamento de Vídeo', 'Sustentação de LED', 'Geral'];
+  var ITENS = [];
+  var filtroCategoria = '';
+
+  document.addEventListener('DOMContentLoaded', async function () {
+    if (!window.EF || !EF.ready) return;
+    var ok = await EF.init({});
+    if (!ok) return;
+
+    document.getElementById('hoje').textContent = new Date().toLocaleDateString('pt-BR', {
+      weekday: 'long', day: '2-digit', month: 'long'
+    });
+
+    var p = EF.profile;
+    var nome = p.nome || p.email || 'Usuário';
+    var iniciais = nome.split(' ').filter(Boolean).slice(0, 2).map(function (s) { return s[0].toUpperCase(); }).join('');
+    document.getElementById('user-name').textContent = nome;
+    document.getElementById('user-role').textContent = ROLE_LABEL[p.role] || p.role;
+    document.getElementById('user-initials').textContent = iniciais || '··';
+    document.getElementById('logout').onclick = function () { EF.logout(); };
+
+    var selCat = document.getElementById('filtro-categoria');
+    CATEGORIAS.forEach(function (c) {
+      var opt = document.createElement('option');
+      opt.value = c; opt.textContent = c;
+      selCat.appendChild(opt);
+    });
+    selCat.addEventListener('change', function () {
+      filtroCategoria = selCat.value;
+      renderizar();
+    });
+
+    await carregarItens();
+  });
+
+  async function carregarItens() {
+    var { data, error } = await EF.client.from('estoque_itens').select('*').eq('empresa_id', EF.profile.empresa_id).order('categoria', { ascending: true }).order('nome', { ascending: true });
+    if (error) {
+      document.getElementById('resumo').textContent = 'Erro ao carregar: ' + error.message;
+      return;
+    }
+    ITENS = data || [];
+    renderizar();
+  }
+
+  function renderizar() {
+    var visiveis = filtroCategoria ? ITENS.filter(function (it) { return it.categoria === filtroCategoria; }) : ITENS;
+    var comSpec = ITENS.filter(function (it) { return it.peso_kg != null || it.consumo_w != null || it.unidades_por_case != null || (it.especificacoes && Object.keys(it.especificacoes).length); }).length;
+
+    document.getElementById('resumo').textContent = ITENS.length + (ITENS.length === 1 ? ' item no estoque' : ' itens no estoque') + ' · ' + comSpec + ' com especificações preenchidas';
+
+    var wrap = document.getElementById('lista-itens');
+    wrap.innerHTML = '';
+    document.getElementById('vazio').style.display = ITENS.length ? 'none' : '';
+
+    visiveis.forEach(function (it) { wrap.appendChild(linhaItem(it)); });
+  }
+
+  function resumoSpecTexto(it) {
+    var partes = [];
+    if (it.peso_kg != null) partes.push(it.peso_kg + ' kg');
+    if (it.consumo_w != null) partes.push(it.consumo_w + ' W');
+    if (it.unidades_por_case != null) partes.push(it.unidades_por_case + ' / case');
+    var specs = it.especificacoes || {};
+    Object.keys(specs).forEach(function (k) {
+      if (specs[k] === '' || specs[k] == null) return;
+      partes.push(k + ': ' + specs[k]);
+    });
+    return partes.length ? partes.join(' · ') : 'Sem especificações cadastradas';
+  }
+
+  function linhaItem(it) {
+    var wrap = document.createElement('div');
+    wrap.className = 'linha-item-spec';
+
+    var topo = document.createElement('div');
+    topo.style.cssText = 'display:flex; align-items:flex-start; justify-content:space-between; gap:14px;';
+
+    var infoEl = document.createElement('div');
+    infoEl.style.cssText = 'min-width:0; flex:1;';
+    var nomeEl = document.createElement('div');
+    nomeEl.style.cssText = 'font-size:13.5px; font-weight:500;';
+    nomeEl.textContent = it.nome;
+    var catEl = document.createElement('span');
+    catEl.className = 'mono';
+    catEl.style.cssText = 'font-size:9.5px; color:#6e6e73; margin-left:8px;';
+    catEl.textContent = it.categoria;
+    nomeEl.appendChild(catEl);
+    infoEl.appendChild(nomeEl);
+
+    var specEl = document.createElement('div');
+    specEl.className = 'mono';
+    specEl.style.cssText = 'font-size:10.5px; color:#6e6e73; margin-top:5px;';
+    specEl.textContent = resumoSpecTexto(it);
+    infoEl.appendChild(specEl);
+
+    topo.appendChild(infoEl);
+
+    var editarEl = document.createElement('span');
+    editarEl.className = 'icone-acao neutro';
+    editarEl.textContent = 'editar especificações';
+    editarEl.style.flexShrink = '0';
+    editarEl.addEventListener('click', function () { alternarEdicao(wrap, it); });
+    topo.appendChild(editarEl);
+
+    wrap.appendChild(topo);
+    return wrap;
+  }
+
+  // chaves que ganham campo próprio (em vez de "campo livre") pra Painel de
+  // LED e Gerenciamento de Vídeo — ficam de fora da lista livre pra não
+  // aparecer duplicado
+  var CHAVES_DEDICADAS_LED = ['pixel_pitch', 'modulo_largura_m', 'modulo_altura_m', 'consumo_maximo_wm2', 'pixels_largura_modulo', 'pixels_altura_modulo'];
+  var CHAVES_DEDICADAS_PROC = ['saidas', 'pixels_max_saida', 'resolucao_entrada'];
+  var CHAVES_DEDICADAS_PROJETOR = ['lente', 'throw_ratio_min', 'throw_ratio_max', 'resolucao_max', 'lumens'];
+  var CHAVES_DEDICADAS_RIGGING = ['capacidade_kg', 'fator_seguranca'];
+
+  function alternarEdicao(wrap, it) {
+    var existente = wrap.querySelector('.bloco-edicao-spec');
+    if (existente) { existente.remove(); return; }
+
+    var especs = it.especificacoes || {};
+    var chavesOcultas = it.categoria === 'Painel de LED' ? CHAVES_DEDICADAS_LED
+      : it.categoria === 'Gerenciamento de Vídeo' ? CHAVES_DEDICADAS_PROC
+      : it.categoria === 'Projeção' ? CHAVES_DEDICADAS_PROJETOR
+      : (it.categoria === 'Talha' || it.categoria === 'Box') ? CHAVES_DEDICADAS_RIGGING : [];
+    var specsAtuais = Object.keys(especs).filter(function (k) { return chavesOcultas.indexOf(k) === -1; }).map(function (k) {
+      return { chave: k, valor: especs[k] };
+    });
+
+    var bloco = document.createElement('div');
+    bloco.className = 'bloco-edicao-spec';
+    bloco.style.cssText = 'margin-top:16px; padding:16px; background:#131315; border:1px solid #1c1c1f; border-radius:8px;';
+
+    var linhaUniversal = document.createElement('div');
+    linhaUniversal.style.cssText = 'display:grid; grid-template-columns:1fr 1fr 1fr 1fr 1fr; gap:20px; margin-bottom:16px;';
+
+    var campoCategoria = campoSelect('Categoria', it.categoria, ['Som', 'Luz', 'Vídeo', 'Estrutura', 'Internet', 'Cenografia', 'Extras', 'Serviços']);
+    var campoMarca = campoTexto('Marca', it.marca, 'Ex: RCF, GrandMA');
+    var ehPainelLed = it.categoria === 'Painel de LED';
+    var campoPeso = campoNumerico(ehPainelLed ? 'Peso (kg/m²)' : 'Peso (kg)', it.peso_kg);
+    var campoConsumo = campoNumerico(ehPainelLed ? 'Consumo médio (W/m²)' : 'Consumo (W)', it.consumo_w);
+    var campoCase = campoNumerico('Unidades por case', it.unidades_por_case);
+    linhaUniversal.appendChild(campoCategoria.wrap);
+    linhaUniversal.appendChild(campoMarca.wrap);
+    linhaUniversal.appendChild(campoPeso.wrap);
+    linhaUniversal.appendChild(campoConsumo.wrap);
+    linhaUniversal.appendChild(campoCase.wrap);
+    bloco.appendChild(linhaUniversal);
+
+    // -------- Painel de LED: campos próprios (em vez de digitar a chave livre) --------
+    var rotuloLed = document.createElement('div');
+    rotuloLed.className = 'rotulo-mini';
+    rotuloLed.textContent = 'Painel de LED — pixel pitch e módulo (do datasheet)';
+    bloco.appendChild(rotuloLed);
+
+    var dicaLed = document.createElement('div');
+    dicaLed.style.cssText = 'font-size:10.5px; color:#6e6e73; margin:-2px 0 12px; line-height:1.5;';
+    dicaLed.textContent = 'Como o comercial vende por m², cadastre "Quantidade total/disponível" acima (no Estoque) em m², e "Peso" e "Consumo médio" também por m² (não por placa) — é o que o datasheet costuma trazer, e é o que a Calculadora de Painel de LED usa direto no cálculo, sem precisar converter.';
+    bloco.appendChild(dicaLed);
+
+    var blocoLed = document.createElement('div');
+    blocoLed.style.cssText = 'display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:16px; margin-bottom:16px; padding:14px; background:#111113; border-radius:6px;';
+    var campoPitch = campoTexto('Pixel pitch (mm)', especs.pixel_pitch, 'Ex: 3.9');
+    var campoModL = campoNumerico('Módulo — largura (m)', especs.modulo_largura_m != null ? parseFloat(especs.modulo_largura_m) : null);
+    var campoModA = campoNumerico('Módulo — altura (m)', especs.modulo_altura_m != null ? parseFloat(especs.modulo_altura_m) : null);
+    var campoConsMax = campoNumerico('Consumo máximo (W/m²)', especs.consumo_maximo_wm2 != null ? parseFloat(especs.consumo_maximo_wm2) : null);
+    var campoPxL = campoNumerico('Pixels/módulo — largura', especs.pixels_largura_modulo != null ? parseFloat(especs.pixels_largura_modulo) : null);
+    var campoPxA = campoNumerico('Pixels/módulo — altura', especs.pixels_altura_modulo != null ? parseFloat(especs.pixels_altura_modulo) : null);
+    [campoPitch, campoModL, campoModA, campoConsMax, campoPxL, campoPxA].forEach(function (c) { blocoLed.appendChild(c.wrap); });
+    bloco.appendChild(blocoLed);
+
+    // -------- Gerenciamento de Vídeo: campos próprios da processadora --------
+    var rotuloProc = document.createElement('div');
+    rotuloProc.className = 'rotulo-mini';
+    rotuloProc.textContent = 'Processadora — saídas de sinal';
+    bloco.appendChild(rotuloProc);
+
+    var blocoProc = document.createElement('div');
+    blocoProc.style.cssText = 'display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:16px; margin-bottom:16px; padding:14px; background:#111113; border-radius:6px;';
+    var campoSaidas = campoNumerico('Saídas de sinal', especs.saidas != null ? parseFloat(especs.saidas) : null);
+    var campoPxMaxSaida = campoNumerico('Pixels máx. por saída', especs.pixels_max_saida != null ? parseFloat(especs.pixels_max_saida) : null);
+    var campoResEntrada = campoTexto('Resolução de entrada', especs.resolucao_entrada, 'Ex: 1920x1080');
+    [campoSaidas, campoPxMaxSaida, campoResEntrada].forEach(function (c) { blocoProc.appendChild(c.wrap); });
+    bloco.appendChild(blocoProc);
+
+    // -------- Projeção: lente e ângulo de abertura --------
+    var rotuloProjetor = document.createElement('div');
+    rotuloProjetor.className = 'rotulo-mini';
+    rotuloProjetor.textContent = 'Projetor — lente (throw ratio do datasheet)';
+    bloco.appendChild(rotuloProjetor);
+
+    var dicaProjetor = document.createElement('div');
+    dicaProjetor.style.cssText = 'font-size:10.5px; color:#6e6e73; margin:-2px 0 12px; line-height:1.5;';
+    dicaProjetor.textContent = 'Throw ratio = distância de projeção ÷ largura da imagem. Lente fixa: preencha só o mínimo (fica igual ao máximo). Lente zoom: preencha os dois. A Calculadora de Vídeo usa isso pra calcular o ângulo de abertura e a distância de projeção sozinha.';
+    bloco.appendChild(dicaProjetor);
+
+    var blocoProjetor = document.createElement('div');
+    blocoProjetor.style.cssText = 'display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:16px; margin-bottom:16px; padding:14px; background:#111113; border-radius:6px;';
+    var campoLente = campoTexto('Lente', especs.lente, 'Ex: padrão, longa, curta');
+    var campoTrMin = campoNumerico('Throw ratio mínimo', especs.throw_ratio_min != null ? parseFloat(especs.throw_ratio_min) : null);
+    var campoTrMax = campoNumerico('Throw ratio máximo', especs.throw_ratio_max != null ? parseFloat(especs.throw_ratio_max) : null);
+    var campoResProjetor = campoTexto('Resolução máxima', especs.resolucao_max, 'Ex: 1920x1200');
+    var campoLumens = campoNumerico('Lumens', especs.lumens != null ? parseFloat(especs.lumens) : null);
+    [campoLente, campoTrMin, campoTrMax, campoResProjetor, campoLumens].forEach(function (c) { blocoProjetor.appendChild(c.wrap); });
+    bloco.appendChild(blocoProjetor);
+
+    // -------- Talha/Box: capacidade de carga (usada no Descritivo Geral pra
+    // checar sobrecarga por ponto de içamento — memória de cálculo aéreo) --------
+    var rotuloRigging = document.createElement('div');
+    rotuloRigging.className = 'rotulo-mini';
+    rotuloRigging.textContent = 'Talha/Box — capacidade de carga (usada na memória de cálculo)';
+    bloco.appendChild(rotuloRigging);
+
+    var dicaRigging = document.createElement('div');
+    dicaRigging.style.cssText = 'font-size:10.5px; color:#6e6e73; margin:-2px 0 12px; line-height:1.5;';
+    dicaRigging.textContent = 'Capacidade nominal do fabricante (WLL — working load limit) por unidade. O fator de segurança reduz a capacidade considerada no cálculo (ex: 0.8 = usa só 80% da capacidade nominal como limite seguro). Sem esses dois campos preenchidos, o Descritivo Geral não consegue checar sobrecarga por ponto.';
+    bloco.appendChild(dicaRigging);
+
+    var blocoRigging = document.createElement('div');
+    blocoRigging.style.cssText = 'display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:16px; margin-bottom:16px; padding:14px; background:#111113; border-radius:6px;';
+    var campoCapacidade = campoNumerico('Capacidade nominal (kg)', especs.capacidade_kg != null ? parseFloat(especs.capacidade_kg) : null);
+    var campoFatorSeg = campoNumerico('Fator de segurança (0–1)', especs.fator_seguranca != null ? parseFloat(especs.fator_seguranca) : null);
+    campoFatorSeg.input.step = '0.05'; campoFatorSeg.input.max = '1';
+    campoFatorSeg.input.placeholder = 'padrão: 0.8';
+    [campoCapacidade, campoFatorSeg].forEach(function (c) { blocoRigging.appendChild(c.wrap); });
+    bloco.appendChild(blocoRigging);
+
+    function atualizarVisibilidadeBlocosEspeciais() {
+      var cat = campoCategoria.input.value;
+      var ehLed = cat === 'Painel de LED';
+      blocoLed.style.display = rotuloLed.style.display = dicaLed.style.display = ehLed ? '' : 'none';
+      blocoProc.style.display = rotuloProc.style.display = cat === 'Gerenciamento de Vídeo' ? '' : 'none';
+      var ehProjetor = cat === 'Projeção';
+      blocoProjetor.style.display = rotuloProjetor.style.display = dicaProjetor.style.display = ehProjetor ? '' : 'none';
+      var ehRigging = cat === 'Talha' || cat === 'Box';
+      blocoRigging.style.display = rotuloRigging.style.display = dicaRigging.style.display = ehRigging ? '' : 'none';
+      campoPeso.wrap.querySelector('.rotulo-mini').textContent = ehLed ? 'Peso (kg/m²)' : (cat === 'Box' ? 'Peso (kg/m)' : 'Peso (kg)');
+      campoConsumo.wrap.querySelector('.rotulo-mini').textContent = ehLed ? 'Consumo médio (W/m²)' : 'Consumo (W)';
+    }
+    campoCategoria.input.addEventListener('change', atualizarVisibilidadeBlocosEspeciais);
+    atualizarVisibilidadeBlocosEspeciais();
+
+    var rotuloSpecs = document.createElement('div');
+    rotuloSpecs.className = 'rotulo-mini';
+    rotuloSpecs.textContent = 'Outras especificações (livre — ex: canais, portas)';
+    bloco.appendChild(rotuloSpecs);
+
+    var listaSpecs = document.createElement('div');
+    listaSpecs.style.cssText = 'display:flex; flex-direction:column; gap:10px; margin-bottom:10px;';
+    bloco.appendChild(listaSpecs);
+
+    function linhaSpec(chave, valor) {
+      var linha = document.createElement('div');
+      linha.style.cssText = 'display:flex; gap:12px; align-items:center;';
+      var inpChave = document.createElement('input');
+      inpChave.type = 'text'; inpChave.value = chave || ''; inpChave.placeholder = 'campo (ex: canais)';
+      inpChave.className = 'campo-mini spec-chave'; inpChave.style.flex = '1';
+      var inpValor = document.createElement('input');
+      inpValor.type = 'text'; inpValor.value = valor == null ? '' : valor; inpValor.placeholder = 'valor (ex: 32)';
+      inpValor.className = 'campo-mini spec-valor'; inpValor.style.flex = '1';
+      var delEl = document.createElement('span');
+      delEl.className = 'icone-acao';
+      delEl.textContent = '✕';
+      delEl.addEventListener('click', function () { linha.remove(); });
+      linha.appendChild(inpChave);
+      linha.appendChild(inpValor);
+      linha.appendChild(delEl);
+      listaSpecs.appendChild(linha);
+    }
+
+    if (specsAtuais.length) {
+      specsAtuais.forEach(function (s) { linhaSpec(s.chave, s.valor); });
+    } else {
+      linhaSpec('', '');
+    }
+
+    var addSpecBtn = document.createElement('span');
+    addSpecBtn.className = 'icone-acao neutro';
+    addSpecBtn.textContent = '+ adicionar campo';
+    addSpecBtn.style.display = 'inline-block';
+    addSpecBtn.style.marginBottom = '16px';
+    addSpecBtn.addEventListener('click', function () { linhaSpec('', ''); });
+    bloco.appendChild(addSpecBtn);
+
+    var msg = document.createElement('div');
+    msg.style.cssText = 'font-size:12px; min-height:14px; margin-bottom:8px;';
+    bloco.appendChild(msg);
+
+    var acoes = document.createElement('div');
+    acoes.style.cssText = 'display:flex; gap:16px;';
+    var btnSalvar = document.createElement('span');
+    btnSalvar.textContent = 'salvar';
+    btnSalvar.style.cssText = 'cursor:pointer; color:#7fa8c9; font-size:12.5px;';
+    var btnCancelar = document.createElement('span');
+    btnCancelar.textContent = 'cancelar';
+    btnCancelar.style.cssText = 'cursor:pointer; color:#6e6e73; font-size:12.5px;';
+    btnCancelar.addEventListener('click', function () { bloco.remove(); });
+
+    btnSalvar.addEventListener('click', async function () {
+      var pesoVal = campoPeso.input.value.trim();
+      var consumoVal = campoConsumo.input.value.trim();
+      var caseVal = campoCase.input.value.trim();
+
+      var novoEspecificacoes = {};
+      Array.prototype.forEach.call(listaSpecs.children, function (linha) {
+        var chave = linha.querySelector('.spec-chave').value.trim();
+        var valor = linha.querySelector('.spec-valor').value.trim();
+        if (chave) novoEspecificacoes[chave] = valor;
+      });
+
+      if (campoCategoria.input.value === 'Painel de LED') {
+        var dedicadosLed = {
+          pixel_pitch: campoPitch.input.value.trim(),
+          modulo_largura_m: campoModL.input.value.trim(),
+          modulo_altura_m: campoModA.input.value.trim(),
+          consumo_maximo_wm2: campoConsMax.input.value.trim(),
+          pixels_largura_modulo: campoPxL.input.value.trim(),
+          pixels_altura_modulo: campoPxA.input.value.trim()
+        };
+        Object.keys(dedicadosLed).forEach(function (k) { if (dedicadosLed[k] !== '') novoEspecificacoes[k] = dedicadosLed[k]; });
+      }
+      if (campoCategoria.input.value === 'Gerenciamento de Vídeo') {
+        var dedicadosProc = {
+          saidas: campoSaidas.input.value.trim(),
+          pixels_max_saida: campoPxMaxSaida.input.value.trim(),
+          resolucao_entrada: campoResEntrada.input.value.trim()
+        };
+        Object.keys(dedicadosProc).forEach(function (k) { if (dedicadosProc[k] !== '') novoEspecificacoes[k] = dedicadosProc[k]; });
+      }
+      if (campoCategoria.input.value === 'Projeção') {
+        var dedicadosProjetor = {
+          lente: campoLente.input.value.trim(),
+          throw_ratio_min: campoTrMin.input.value.trim(),
+          throw_ratio_max: campoTrMax.input.value.trim() || campoTrMin.input.value.trim(),
+          resolucao_max: campoResProjetor.input.value.trim(),
+          lumens: campoLumens.input.value.trim()
+        };
+        Object.keys(dedicadosProjetor).forEach(function (k) { if (dedicadosProjetor[k] !== '') novoEspecificacoes[k] = dedicadosProjetor[k]; });
+      }
+      if (campoCategoria.input.value === 'Talha' || campoCategoria.input.value === 'Box') {
+        var dedicadosRigging = {
+          capacidade_kg: campoCapacidade.input.value.trim(),
+          fator_seguranca: campoFatorSeg.input.value.trim()
+        };
+        Object.keys(dedicadosRigging).forEach(function (k) { if (dedicadosRigging[k] !== '') novoEspecificacoes[k] = dedicadosRigging[k]; });
+      }
+
+      msg.style.color = '#8c8c91';
+      msg.textContent = 'Salvando...';
+
+      var { error } = await EF.client.from('estoque_itens').update({
+        categoria: campoCategoria.input.value,
+        marca: campoMarca.input.value.trim(),
+        peso_kg: pesoVal === '' ? null : parseFloat(pesoVal),
+        consumo_w: consumoVal === '' ? null : parseFloat(consumoVal),
+        unidades_por_case: caseVal === '' ? null : parseInt(caseVal, 10),
+        especificacoes: novoEspecificacoes
+      }).eq('id', it.id);
+
+      if (error) {
+        msg.style.color = '#c9695c';
+        msg.textContent = error.message;
+        return;
+      }
+      await carregarItens();
+    });
+
+    acoes.appendChild(btnSalvar);
+    acoes.appendChild(btnCancelar);
+    bloco.appendChild(acoes);
+
+    wrap.appendChild(bloco);
+  }
+
+  function campoNumerico(rotulo, valorAtual) {
+    var w = document.createElement('div');
+    var r = document.createElement('div');
+    r.className = 'rotulo-mini';
+    r.textContent = rotulo;
+    w.appendChild(r);
+    var i = document.createElement('input');
+    i.type = 'number'; i.step = '0.01'; i.min = '0';
+    i.className = 'campo-mini';
+    i.placeholder = '—';
+    if (valorAtual != null) i.value = valorAtual;
+    w.appendChild(i);
+    return { wrap: w, input: i };
+  }
+
+  function campoSelect(rotulo, valorAtual, opcoes) {
+    var w = document.createElement('div');
+    var r = document.createElement('div');
+    r.className = 'rotulo-mini';
+    r.textContent = rotulo;
+    w.appendChild(r);
+    var i = document.createElement('select');
+    i.className = 'campo-mini';
+    opcoes.forEach(function (op) {
+      var o = document.createElement('option');
+      o.value = op; o.textContent = op;
+      if (op === valorAtual) o.selected = true;
+      i.appendChild(o);
+    });
+    w.appendChild(i);
+    return { wrap: w, input: i };
+  }
+
+  function campoTexto(rotulo, valorAtual, placeholder) {
+    var w = document.createElement('div');
+    var r = document.createElement('div');
+    r.className = 'rotulo-mini';
+    r.textContent = rotulo;
+    w.appendChild(r);
+    var i = document.createElement('input');
+    i.type = 'text';
+    i.className = 'campo-mini';
+    i.placeholder = placeholder || '—';
+    if (valorAtual) i.value = valorAtual;
+    w.appendChild(i);
+    return { wrap: w, input: i };
+  }
+})();
+</script>
+
+<script src="ef-ui.js"></script>
+</body>
+</html>

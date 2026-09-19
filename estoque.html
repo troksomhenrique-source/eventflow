@@ -1,0 +1,696 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Estoque — EventFlow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="ef-config.js"></script>
+<script src="ef-auth.js"></script>
+<style>
+  body{margin:0;background:#0a0a0b;font-family:'Inter',sans-serif;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  .disp{font-family:'Space Grotesk',sans-serif;}
+  select{font-family:'IBM Plex Mono',monospace;background:transparent;border:none;color:inherit;font-size:12.5px;cursor:pointer;color-scheme:dark;}
+  select option{background:#0d0d0f;color:#f3f1ec;}
+  select:focus{outline:none;}
+  input{font-family:'Inter',sans-serif;}
+  input::placeholder{color:#4a4a4e;}
+  input:focus{outline:none;border-color:#3b82c9 !important;}
+  body [data-financeiro]{display:none !important;}
+  html[data-financeiro="true"] body [data-financeiro]{display:block !important;}
+  body [data-areas]{display:none !important;}
+  html[data-areas="true"] body [data-areas]{display:block !important;}
+  body [data-usuarios]{display:none !important;}
+  html[data-usuarios="true"] body [data-usuarios]{display:block !important;}
+  .item-nome:focus, .item-qtd:focus{outline:none;border-bottom-color:#3b82c9;}
+  .icone-acao{cursor:pointer;color:#6e6e73;font-size:11px;}
+  .icone-acao:hover{color:#c9695c;}
+  .add-form-card{background:#131315;border:1px solid #1c1c1f;border-radius:8px;padding:14px 16px;}
+  .add-form-titulo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:#6e6e73;margin-bottom:12px;}
+  .add-form-label{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.05em;text-transform:uppercase;color:#6e6e73;margin-bottom:6px;}
+  .add-form-input{width:100%;background:transparent;border:none;border-bottom:1px solid #29292d;color:#f3f1ec;font-size:13px;padding-bottom:8px;box-sizing:border-box;}
+  .add-form-link{background:none;border:none;padding:0 0 8px;font-size:13px;color:#7fa8c9;cursor:pointer;border-bottom:1px solid #2a3d4d;white-space:nowrap;}
+</style>
+<link rel="stylesheet" href="ef-ui.css">
+</head>
+<body>
+
+<div style="width: 100%; min-height: 100vh; box-sizing: border-box; display: flex; background: #0a0a0b; color: #f3f1ec;">
+
+  <!-- ============ SIDEBAR ============ -->
+  <div style="width: 220px; flex-shrink: 0; display: flex; flex-direction: column; padding: 36px 24px; box-sizing: border-box;">
+
+    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 40px;">
+      <a href="dashboard.html" style="text-decoration: none; display: flex; align-items: center; gap: 10px;">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" style="flex-shrink: 0;"><path d="M2 12c2 0 2-6.5 4-6.5S8 12 10 12s2-6.5 4-6.5" stroke="#7fa8c9" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div style="font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 13.5px; letter-spacing: -.01em; color: #f3f1ec;">EventFlow</div>
+      </a>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 32px;">
+      <a href="dashboard.html" style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Dashboard</span></a>
+      <a href="agenda.html" style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Agenda</span></a>
+      <div style="display: flex; align-items: center; gap: 9px;">
+        <span style="width: 4px; height: 4px; border-radius: 50%; background: #7fa8c9; flex-shrink: 0;"></span>
+        <span style="font-size: 13px; font-weight: 600; color: #f3f1ec;">Estoque</span>
+      </div>
+      <a href="clientes.html" data-financeiro style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Clientes</span></a>
+      <a href="vendas.html" data-financeiro style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Vendas</span></a>
+      <a href="chat.html" style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Chat</span></a>
+      <a href="notas.html" style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Notas</span></a>
+    </div>
+
+    <div data-areas>
+      <div class="mono" style="font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: #4a4a4e; margin-bottom: 12px;">Áreas do projeto</div>
+      <div style="display: flex; flex-direction: column; gap: 13px; margin-bottom: 32px;">
+        <a href="calculadora-som.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Som</span></a>
+        <a href="calculadora-luz.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Luz</span></a>
+        <a href="video.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Vídeo</span></a>
+        <a href="estrutura.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Estrutura</span></a>
+        <a href="internet.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Internet</span></a>
+        <a href="cenografia.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Cenografia</span></a>
+        <a href="extras.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Extras</span></a>
+        <a href="servicos.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Serviços</span></a>
+        <a href="logistica.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Logística</span></a>
+        <a href="descritivo-geral.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Descritivo Geral</span></a>
+        <a href="ordem-servico.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Ordem de Serviço</span></a>
+      </div>
+    </div>
+
+    <div data-areas>
+      <div class="mono" style="font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: #4a4a4e; margin-bottom: 12px;">Sistema</div>
+      <div style="display: flex; flex-direction: column; gap: 13px;">
+        <a href="especificacoes-equipamento.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Especificações de equipamentos</span></a>
+        <a data-usuarios href="usuarios-permissoes.html" style="text-decoration: none; display: block;"><span style="font-size: 12.5px; color: #6e6e73;">Usuários e permissões</span></a>
+      </div>
+    </div>
+
+    <div style="margin-top: auto; padding-top: 18px; border-top: 1px solid #1c1c1f; display: flex; align-items: center; gap: 10px;">
+      <div id="user-initials" style="width: 26px; height: 26px; border-radius: 50%; background: #1a1a1d; display: flex; align-items: center; justify-content: center; font-family: 'Space Grotesk', sans-serif; font-size: 10.5px; font-weight: 600; color: #b8b8bc; flex-shrink: 0;">··</div>
+      <div style="flex-grow: 1; min-width: 0;">
+        <div id="user-name" style="font-size: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Carregando…</div>
+        <div id="user-role" class="mono" style="font-size: 9px; color: #6e6e73; margin-top: 1px;">—</div>
+      </div>
+      <span id="logout" title="Sair" style="cursor: pointer; color: #6e6e73; font-size: 11px; flex-shrink: 0;">sair</span>
+    </div>
+  </div>
+
+  <!-- ============ MAIN ============ -->
+  <div style="flex-grow: 1; padding: 36px 48px 36px 0; box-sizing: border-box; min-width: 0;">
+
+    <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 30px;">
+      <div>
+        <div class="mono" style="color: #6e6e73; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 10px;" id="hoje"></div>
+        <h1 style="font-family: 'Space Grotesk', sans-serif; font-size: 24px; font-weight: 600; margin: 0 0 6px; letter-spacing: -.01em;">Estoque</h1>
+        <div style="color: #8c8c91; font-size: 13px;" id="resumo">Carregando…</div>
+      </div>
+      <span id="btn-toggle-form" style="font-size: 12.5px; color: #7fa8c9; cursor: pointer;">+ Cadastrar item</span>
+    </div>
+
+    <!-- KPI row -->
+    <div style="display: flex; padding: 20px 0; border-top: 1px solid #1c1c1f; border-bottom: 1px solid #1c1c1f; margin-bottom: 30px;">
+      <div style="flex: 1; padding-right: 26px; border-right: 1px solid #1c1c1f;">
+        <div class="mono" style="font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: #6e6e73; margin-bottom: 10px;">Itens cadastrados</div>
+        <div id="kpi-total" style="font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 600;">—</div>
+      </div>
+      <div style="flex: 1; padding: 0 26px; border-right: 1px solid #1c1c1f;">
+        <div class="mono" style="font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: #6e6e73; margin-bottom: 10px;">Abaixo do ideal</div>
+        <div id="kpi-baixo" style="font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 600; color: #c9695c;">—</div>
+      </div>
+      <div style="flex: 1; padding-left: 26px;">
+        <div class="mono" style="font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: #6e6e73; margin-bottom: 10px;">Categorias</div>
+        <div id="kpi-categorias" style="font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 600;">—</div>
+      </div>
+    </div>
+
+    <!-- form cadastrar item -->
+    <div id="bloco-form" class="add-form-card" style="display:none; margin-bottom: 30px;">
+      <div class="add-form-titulo">Cadastrar item</div>
+      <form id="form-item">
+        <div style="display: grid; grid-template-columns: 1.6fr 1fr 90px 90px; gap: 20px; align-items: end; margin-bottom: 18px;">
+          <div>
+            <div class="add-form-label">Nome do item</div>
+            <input id="novo-nome" required type="text" placeholder="Ex: Line Array 12&quot;" class="add-form-input">
+          </div>
+          <div>
+            <div class="add-form-label">Categoria</div>
+            <select id="novo-categoria" class="add-form-input">
+              <option>Som</option>
+              <option>Luz</option>
+              <option>Painel de LED</option>
+              <option>Vídeo</option>
+              <option>Projeção</option>
+              <option>Cenografia</option>
+              <option>Serviços</option>
+              <option>Gerenciamento de áudio</option>
+              <option>Gerenciamento de Luz</option>
+              <option>Gerenciamento de Vídeo</option>
+              <option>Sustentação de LED</option>
+              <option>Talha</option>
+              <option>Box</option>
+              <option>Geral</option>
+            </select>
+          </div>
+          <div>
+            <div class="add-form-label" id="rotulo-total">Total</div>
+            <input id="novo-total" required type="number" min="0" step="1" value="1" class="add-form-input">
+          </div>
+          <div>
+            <div class="add-form-label" id="rotulo-disponivel">Disponível</div>
+            <input id="novo-disponivel" required type="number" min="0" step="1" value="1" class="add-form-input">
+          </div>
+        </div>
+        <div id="dica-led-m2" style="display:none; color:#c9a15c; font-size:11px; margin-top:10px; line-height:1.5;">
+          Painel de LED — cadastre Total/Disponível em <strong>m²</strong> (é como o comercial vende), e o Peso e o Consumo (na tela de Especificações) também por m² — a Calculadora de Painel de LED usa direto, sem converter.
+        </div>
+        <div style="margin-top: 18px;">
+          <div class="add-form-label">Descrição (opcional)</div>
+          <textarea id="novo-descricao" rows="2" placeholder="Ex: Rack com 2 amplificadores X5, 1 processador 360 e cabeamento — descreva o que compõe o item, se fizer sentido" class="add-form-input" style="border:1px solid #29292d; border-radius:6px; padding:8px 10px; resize:vertical; box-sizing:border-box;"></textarea>
+        </div>
+        <div style="display: grid; grid-template-columns: 160px 1fr auto; gap: 20px; align-items: end; margin-top: 18px;">
+          <div>
+            <div class="add-form-label">Preço unit. (R$)</div>
+            <input id="novo-preco" type="number" min="0" step="0.01" placeholder="0,00" class="add-form-input">
+          </div>
+          <div>
+            <div class="add-form-label">Marca (opcional)</div>
+            <input id="novo-marca" type="text" placeholder="Ex: RCF, GrandMA, Yamaha" class="add-form-input">
+          </div>
+          <div>
+            <button id="btn-item" type="submit" class="add-form-link">+ Adicionar</button>
+          </div>
+        </div>
+      </form>
+      <div id="item-msg" style="margin-top: 10px; font-size: 12.5px; min-height: 16px;"></div>
+    </div>
+
+    <!-- itens agrupados por categoria -->
+    <div id="lista-categorias" style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 32px;"></div>
+    <div id="vazio" style="display:none; color: #4a4a4e; font-size: 13px;">Nenhum item cadastrado ainda. Clique em "+ Cadastrar item" pra começar.</div>
+
+    <!-- ============ VEÍCULOS DA EMPRESA ============ -->
+    <div style="margin-top: 44px; padding-top: 30px; border-top: 1px solid #1c1c1f;">
+      <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 8px;">
+        <div>
+          <h2 style="font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 600; margin: 0 0 6px; letter-spacing: -.01em;">Veículos</h2>
+          <div style="color: #8c8c91; font-size: 12.5px;">Frota da empresa — escalada por dia na tela de Logística. Um veículo usado num evento num dia só fica ocupado naquele dia; nos outros, aparece livre pra qualquer evento.</div>
+        </div>
+        <span id="btn-toggle-veiculo-form" style="font-size: 12.5px; color: #7fa8c9; cursor: pointer; flex-shrink: 0;">+ Cadastrar veículo</span>
+      </div>
+
+      <div id="bloco-form-veiculo" class="add-form-card" style="display:none; margin-top: 20px;">
+        <div class="add-form-titulo">Cadastrar veículo</div>
+        <form id="form-veiculo" style="display: grid; grid-template-columns: 1.4fr 1fr 1fr 1.4fr 110px; gap: 20px; align-items: end;">
+          <div>
+            <div class="add-form-label">Nome/tipo</div>
+            <input id="novo-veiculo-nome" required type="text" placeholder="Ex: Van 1, Caminhão baú" class="add-form-input">
+          </div>
+          <div>
+            <div class="add-form-label">Placa</div>
+            <input id="novo-veiculo-placa" type="text" placeholder="Opcional" class="add-form-input">
+          </div>
+          <div>
+            <div class="add-form-label">Tipo</div>
+            <input id="novo-veiculo-tipo" type="text" placeholder="Ex: utilitário" class="add-form-input">
+          </div>
+          <div>
+            <div class="add-form-label">Observações</div>
+            <input id="novo-veiculo-obs" type="text" placeholder="Opcional" class="add-form-input">
+          </div>
+          <div>
+            <button id="btn-veiculo" type="submit" class="add-form-link">+ Cadastrar</button>
+          </div>
+        </form>
+        <div id="veiculo-msg" style="margin-top: 10px; font-size: 12.5px; min-height: 16px;"></div>
+      </div>
+
+      <div id="lista-veiculos" style="margin-top: 24px; display: flex; flex-direction: column;"></div>
+      <div id="veiculos-vazio" style="display:none; color: #4a4a4e; font-size: 13px; margin-top: 20px;">Nenhum veículo cadastrado ainda.</div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function () {
+  var ROLE_LABEL = { gerencia: 'Gerência', producao: 'Produção', estoque: 'Estoque' };
+  var CATEGORIAS_ESTOQUE = ['Som', 'Luz', 'Vídeo', 'Estrutura', 'Internet', 'Cenografia', 'Extras', 'Serviços'];
+  var COR_CATEGORIA = { 'Som': '#ff8a3d', 'Luz': '#ffd60a', 'Vídeo': '#b073ff', 'Estrutura': '#3ba7ff', 'Internet': '#1fe0c4', 'Cenografia': '#ff5fa8', 'Extras': '#4ade80', 'Serviços': '#9a9aa0' };
+  function corCategoria(cat) { return COR_CATEGORIA[cat] || '#6e6e73'; }
+  var ITENS = [];
+  var VEICULOS = [];
+  var VEICULOS_USO_HOJE = {}; // veiculo_id -> { evento_nome } — quem está usando cada veículo hoje, em qualquer evento da empresa
+
+  function fmtMoeda(v) {
+    return (v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  }
+
+  document.addEventListener('DOMContentLoaded', async function () {
+    if (!window.EF || !EF.ready) return;
+    var ok = await EF.init({});
+    if (!ok) return;
+
+    document.getElementById('hoje').textContent = new Date().toLocaleDateString('pt-BR', {
+      weekday: 'long', day: '2-digit', month: 'long'
+    });
+
+    var p = EF.profile;
+    var nome = p.nome || p.email || 'Usuário';
+    var iniciais = nome.split(' ').filter(Boolean).slice(0, 2).map(function (s) { return s[0].toUpperCase(); }).join('');
+    document.getElementById('user-name').textContent = nome;
+    document.getElementById('user-role').textContent = ROLE_LABEL[p.role] || p.role;
+    document.getElementById('user-initials').textContent = iniciais || '··';
+    document.getElementById('logout').onclick = function () { EF.logout(); };
+
+    document.getElementById('novo-categoria').addEventListener('change', function () {
+      var ehLed = this.value === 'Painel de LED';
+      document.getElementById('dica-led-m2').style.display = ehLed ? '' : 'none';
+      document.getElementById('rotulo-total').textContent = ehLed ? 'Total (m²)' : 'Total';
+      document.getElementById('rotulo-disponivel').textContent = ehLed ? 'Disponível (m²)' : 'Disponível';
+    });
+
+    document.getElementById('btn-toggle-form').addEventListener('click', function () {
+      var bloco = document.getElementById('bloco-form');
+      bloco.style.display = bloco.style.display === 'none' ? '' : 'none';
+    });
+
+    document.getElementById('form-item').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var btn = document.getElementById('btn-item');
+      var msg = document.getElementById('item-msg');
+      var nomeVal = document.getElementById('novo-nome').value.trim();
+      var categoriaVal = document.getElementById('novo-categoria').value;
+      var totalVal = parseInt(document.getElementById('novo-total').value, 10) || 0;
+      var dispVal = parseInt(document.getElementById('novo-disponivel').value, 10) || 0;
+      var precoVal = parseFloat(document.getElementById('novo-preco').value) || 0;
+      var marcaVal = document.getElementById('novo-marca').value.trim();
+      var descricaoVal = document.getElementById('novo-descricao').value.trim();
+
+      if (dispVal > totalVal) {
+        msg.style.color = '#c9695c';
+        msg.textContent = 'A quantidade disponível não pode ser maior que o total.';
+        return;
+      }
+
+      btn.disabled = true;
+      msg.style.color = '#8c8c91';
+      msg.textContent = 'Salvando...';
+
+      var { error } = await EF.client.from('estoque_itens').insert({
+        empresa_id: p.empresa_id,
+        nome: nomeVal,
+        categoria: categoriaVal,
+        marca: marcaVal,
+        descricao: descricaoVal,
+        quantidade_total: totalVal,
+        quantidade_disponivel: dispVal,
+        preco_unitario: precoVal
+      });
+
+      btn.disabled = false;
+      if (error) {
+        msg.style.color = '#c9695c';
+        msg.textContent = error.message;
+        return;
+      }
+      msg.style.color = '#7cae83';
+      msg.textContent = 'Item cadastrado!';
+      document.getElementById('form-item').reset();
+      document.getElementById('novo-total').value = 1;
+      document.getElementById('novo-disponivel').value = 1;
+      await carregarEstoque();
+    });
+
+    document.getElementById('btn-toggle-veiculo-form').addEventListener('click', function () {
+      var bloco = document.getElementById('bloco-form-veiculo');
+      bloco.style.display = bloco.style.display === 'none' ? '' : 'none';
+    });
+
+    document.getElementById('form-veiculo').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var btn = document.getElementById('btn-veiculo');
+      var msg = document.getElementById('veiculo-msg');
+      var nomeVal = document.getElementById('novo-veiculo-nome').value.trim();
+      var placaVal = document.getElementById('novo-veiculo-placa').value.trim();
+      var tipoVal = document.getElementById('novo-veiculo-tipo').value.trim();
+      var obsVal = document.getElementById('novo-veiculo-obs').value.trim();
+
+      btn.disabled = true;
+      msg.style.color = '#8c8c91';
+      msg.textContent = 'Salvando...';
+
+      var { error } = await EF.client.from('estoque_veiculos').insert({
+        empresa_id: p.empresa_id,
+        nome: nomeVal,
+        placa: placaVal,
+        tipo: tipoVal,
+        observacoes: obsVal
+      });
+
+      btn.disabled = false;
+      if (error) {
+        msg.style.color = '#c9695c';
+        msg.textContent = error.message;
+        return;
+      }
+      msg.style.color = '#7cae83';
+      msg.textContent = 'Veículo cadastrado!';
+      document.getElementById('form-veiculo').reset();
+      await carregarVeiculos();
+    });
+
+    await carregarEstoque();
+    await carregarVeiculos();
+  });
+
+  async function carregarEstoque() {
+    var { data, error } = await EF.client.from('estoque_itens').select('*').eq('empresa_id', EF.profile.empresa_id).order('categoria', { ascending: true }).order('nome', { ascending: true });
+    if (error) {
+      document.getElementById('resumo').textContent = 'Erro ao carregar: ' + error.message;
+      return;
+    }
+    ITENS = data || [];
+    renderizar();
+  }
+
+  // ---------------- VEÍCULOS ----------------
+  // cadastro único, reaproveitado em qualquer evento na tela de Logística —
+  // aqui só mostramos se cada um está em uso HOJE (em qualquer evento da
+  // empresa), pra dar uma noção rápida de disponibilidade; a escala
+  // dia-a-dia completa fica na própria tela de Logística.
+
+  async function carregarVeiculos() {
+    var { data, error } = await EF.client.from('estoque_veiculos').select('*').eq('empresa_id', EF.profile.empresa_id).order('created_at', { ascending: true });
+    if (error) { return; }
+    VEICULOS = data || [];
+
+    var hojeISO = new Date();
+    hojeISO.setMinutes(hojeISO.getMinutes() - hojeISO.getTimezoneOffset());
+    hojeISO = hojeISO.toISOString().slice(0, 10);
+
+    VEICULOS_USO_HOJE = {};
+    if (VEICULOS.length) {
+      var resUso = await EF.client.from('evento_logistica_veiculos')
+        .select('veiculo_id, dia, evento_id, eventos(nome)')
+        .eq('dia', hojeISO)
+        .not('veiculo_id', 'is', null);
+      (resUso.data || []).forEach(function (row) {
+        VEICULOS_USO_HOJE[row.veiculo_id] = { eventoNome: row.eventos ? row.eventos.nome : 'outro evento' };
+      });
+    }
+
+    renderizarVeiculos();
+  }
+
+  function renderizarVeiculos() {
+    var wrap = document.getElementById('lista-veiculos');
+    document.getElementById('veiculos-vazio').style.display = VEICULOS.length ? 'none' : '';
+    wrap.innerHTML = '';
+    VEICULOS.forEach(function (v) {
+      var uso = VEICULOS_USO_HOJE[v.id];
+      var linha = document.createElement('div');
+      linha.style.cssText = 'display:flex; align-items:center; padding:12px 0; border-bottom:1px solid #1c1c1f; font-size:13px;';
+      var statusHtml = uso
+        ? '<span style="font-size:10.5px; padding:3px 8px; border-radius:5px; background:#22151a; color:#c9695c;">em uso hoje — ' + escapeHtml(uso.eventoNome) + '</span>'
+        : '<span style="font-size:10.5px; padding:3px 8px; border-radius:5px; background:#132018; color:#7cae83;">livre hoje</span>';
+      linha.innerHTML =
+        '<div style="flex:1;">' + escapeHtml(v.nome) +
+          (v.placa ? '<span class="mono" style="color:#6e6e73; font-size:11px; margin-left:8px;">' + escapeHtml(v.placa) + '</span>' : '') +
+          (v.tipo ? '<span style="color:#6e6e73; font-size:11.5px; margin-left:8px;">' + escapeHtml(v.tipo) + '</span>' : '') +
+          (v.observacoes ? '<div style="color:#6e6e73; font-size:11px; margin-top:3px;">' + escapeHtml(v.observacoes) + '</div>' : '') +
+        '</div>' +
+        '<div style="margin-right:16px;">' + statusHtml + '</div>' +
+        '<span class="icone-acao" data-rm-veiculo="' + v.id + '">remover</span>';
+      wrap.appendChild(linha);
+      linha.querySelector('[data-rm-veiculo]').addEventListener('click', async function () {
+        if (!confirm('Remover "' + v.nome + '" da frota?')) return;
+        var { error } = await EF.client.from('estoque_veiculos').delete().eq('id', v.id);
+        if (error) { alert('Erro ao remover: ' + error.message); return; }
+        VEICULOS = VEICULOS.filter(function (x) { return x.id !== v.id; });
+        renderizarVeiculos();
+      });
+    });
+  }
+
+  function renderizar() {
+    var categorias = {};
+    ITENS.forEach(function (it) {
+      if (!categorias[it.categoria]) categorias[it.categoria] = [];
+      categorias[it.categoria].push(it);
+    });
+    var nomesCategorias = Object.keys(categorias).sort();
+
+    var abaixoDoIdeal = ITENS.filter(function (it) {
+      return it.quantidade_total > 0 && (it.quantidade_disponivel / it.quantidade_total) < 0.3;
+    }).length;
+
+    document.getElementById('resumo').textContent = ITENS.length + (ITENS.length === 1 ? ' item cadastrado' : ' itens cadastrados') + ' · ' + abaixoDoIdeal + ' abaixo do ideal.';
+    document.getElementById('kpi-total').textContent = ITENS.length;
+    document.getElementById('kpi-baixo').textContent = abaixoDoIdeal;
+    document.getElementById('kpi-categorias').textContent = nomesCategorias.length;
+
+    var wrap = document.getElementById('lista-categorias');
+    wrap.innerHTML = '';
+    document.getElementById('vazio').style.display = ITENS.length ? 'none' : '';
+
+    nomesCategorias.forEach(function (cat) {
+      var cor = corCategoria(cat);
+      var col = document.createElement('div');
+      col.style.cssText = 'min-width:0; border-left:2px solid ' + cor + '33; padding-left:14px;';
+
+      var header = document.createElement('div');
+      header.style.cssText = 'display:flex; align-items:center; justify-content:space-between; padding-bottom:12px; border-bottom:2px solid ' + cor + '55; margin-bottom:4px;';
+      header.innerHTML =
+        '<div style="display:flex; align-items:center; gap:8px;">' +
+        '<span style="width:8px; height:8px; border-radius:50%; background:' + cor + '; flex-shrink:0;"></span>' +
+        '<span style="font-family:\'Space Grotesk\',sans-serif; font-size:13.5px; font-weight:600; color:' + cor + ';">' + escapeHtml(cat) + '</span>' +
+        '</div>' +
+        '<span class="mono" style="font-size:9.5px; color:#6e6e73;">' + categorias[cat].length + (categorias[cat].length === 1 ? ' item' : ' itens') + '</span>';
+      col.appendChild(header);
+
+      categorias[cat].forEach(function (it) { col.appendChild(linhaItem(it)); });
+      wrap.appendChild(col);
+    });
+  }
+
+  function corPorRatio(ratio) {
+    if (ratio < 0.3) return '#c9695c';
+    if (ratio < 0.6) return '#a68a52';
+    return '#3b82c9';
+  }
+
+  function linhaItem(it) {
+    var wrapper = document.createElement('div');
+
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex; align-items:center; padding:13px 0; border-bottom:1px solid #1c1c1f; gap:12px;';
+
+    var nomeSpan = document.createElement('div');
+    nomeSpan.style.cssText = 'flex:1; min-width:0;';
+    var nomeLinha = document.createElement('div');
+    nomeLinha.style.cssText = 'font-size:12.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;';
+    nomeLinha.textContent = it.nome;
+    nomeLinha.title = it.descricao ? (it.nome + ' — ' + it.descricao) : it.nome;
+    nomeSpan.appendChild(nomeLinha);
+    if (it.descricao) {
+      var descLinha = document.createElement('div');
+      descLinha.style.cssText = 'font-size:10.5px; color:#6e6e73; margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;';
+      descLinha.textContent = it.descricao;
+      descLinha.title = it.descricao;
+      nomeSpan.appendChild(descLinha);
+    }
+    if (it.preco_unitario) {
+      var metaLinha = document.createElement('div');
+      metaLinha.className = 'mono';
+      metaLinha.style.cssText = 'font-size:10px; color:#6e6e73; margin-top:2px;';
+      metaLinha.textContent = fmtMoeda(it.preco_unitario) + ' / un';
+      nomeSpan.appendChild(metaLinha);
+    }
+
+    var ratio = it.quantidade_total > 0 ? (it.quantidade_disponivel / it.quantidade_total) : 0;
+    var cor = corPorRatio(ratio);
+
+    var barWrap = document.createElement('div');
+    barWrap.style.cssText = 'width:80px; flex-shrink:0;';
+    var barBg = document.createElement('div');
+    barBg.style.cssText = 'height:2px; background:#1c1c1f;';
+    var barFill = document.createElement('div');
+    barFill.style.cssText = 'height:100%; background:' + cor + '; width:' + Math.round(ratio * 100) + '%;';
+    barBg.appendChild(barFill);
+    barWrap.appendChild(barBg);
+
+    var qtd = document.createElement('div');
+    qtd.className = 'mono';
+    qtd.style.cssText = 'width:52px; text-align:right; font-size:11px; color:' + cor + '; flex-shrink:0;';
+    qtd.textContent = it.quantidade_disponivel + '/' + it.quantidade_total;
+
+    var editar = document.createElement('span');
+    editar.className = 'icone-acao';
+    editar.textContent = 'editar';
+    editar.title = 'Editar item';
+    editar.style.flexShrink = '0';
+
+    var del = document.createElement('span');
+    del.className = 'icone-acao';
+    del.textContent = '✕';
+    del.title = 'Remover item';
+    del.addEventListener('click', async function () {
+      if (!confirm('Remover "' + it.nome + '" do estoque?')) return;
+      var { error } = await EF.client.from('estoque_itens').delete().eq('id', it.id);
+      if (error) { alert('Erro ao remover: ' + error.message); return; }
+      await carregarEstoque();
+    });
+
+    row.appendChild(nomeSpan);
+    row.appendChild(barWrap);
+    row.appendChild(qtd);
+    row.appendChild(editar);
+    row.appendChild(del);
+    wrapper.appendChild(row);
+
+    var painel = null;
+    editar.addEventListener('click', function () {
+      if (painel) { painel.remove(); painel = null; return; }
+      painel = montarPainelEdicaoItem(it, function () { if (painel) { painel.remove(); painel = null; } });
+      wrapper.appendChild(painel);
+    });
+
+    return wrapper;
+  }
+
+  function montarPainelEdicaoItem(it, fechar) {
+    var painel = document.createElement('div');
+    painel.className = 'add-form-card';
+    painel.style.cssText = 'margin:10px 0 14px;';
+
+    var titulo = document.createElement('div');
+    titulo.className = 'add-form-titulo';
+    titulo.textContent = 'Editar item';
+    painel.appendChild(titulo);
+
+    function campo(rotulo, el) {
+      var w = document.createElement('div');
+      var l = document.createElement('div');
+      l.className = 'add-form-label';
+      l.textContent = rotulo;
+      w.appendChild(l);
+      w.appendChild(el);
+      return w;
+    }
+
+    var linha1 = document.createElement('div');
+    linha1.style.cssText = 'display:grid; grid-template-columns:1.6fr 1fr; gap:20px; margin-bottom:16px;';
+
+    var inpNome = document.createElement('input');
+    inpNome.type = 'text'; inpNome.className = 'add-form-input'; inpNome.value = it.nome;
+
+    var selCat = document.createElement('select');
+    selCat.className = 'add-form-input';
+    CATEGORIAS_ESTOQUE.forEach(function (cat) {
+      var opt = document.createElement('option');
+      opt.value = cat; opt.textContent = cat;
+      if (cat === it.categoria) opt.selected = true;
+      selCat.appendChild(opt);
+    });
+
+    linha1.appendChild(campo('Nome do item', inpNome));
+    linha1.appendChild(campo('Categoria', selCat));
+    painel.appendChild(linha1);
+
+    var linha2 = document.createElement('div');
+    linha2.style.cssText = 'display:grid; grid-template-columns:90px 90px 140px 1fr; gap:20px; align-items:end; margin-bottom:6px;';
+
+    var inpTotal = document.createElement('input');
+    inpTotal.type = 'number'; inpTotal.min = '0'; inpTotal.step = '1'; inpTotal.className = 'add-form-input';
+    inpTotal.value = it.quantidade_total;
+
+    var inpDisp = document.createElement('input');
+    inpDisp.type = 'number'; inpDisp.min = '0'; inpDisp.step = '1'; inpDisp.className = 'add-form-input';
+    inpDisp.value = it.quantidade_disponivel;
+
+    var inpPreco = document.createElement('input');
+    inpPreco.type = 'number'; inpPreco.min = '0'; inpPreco.step = '0.01'; inpPreco.className = 'add-form-input';
+    inpPreco.value = it.preco_unitario || 0;
+
+    var inpMarca = document.createElement('input');
+    inpMarca.type = 'text'; inpMarca.className = 'add-form-input'; inpMarca.value = it.marca || '';
+
+    linha2.appendChild(campo(it.categoria === 'Painel de LED' ? 'Total (m²)' : 'Total', inpTotal));
+    linha2.appendChild(campo(it.categoria === 'Painel de LED' ? 'Disponível (m²)' : 'Disponível', inpDisp));
+    linha2.appendChild(campo('Preço unit. (R$)', inpPreco));
+    linha2.appendChild(campo('Marca (opcional)', inpMarca));
+    painel.appendChild(linha2);
+
+    var inpDescricao = document.createElement('textarea');
+    inpDescricao.rows = 2;
+    inpDescricao.className = 'add-form-input';
+    inpDescricao.style.cssText = 'border:1px solid #29292d; border-radius:6px; padding:8px 10px; resize:vertical; box-sizing:border-box; width:100%;';
+    inpDescricao.placeholder = 'Ex: Rack com 2 amplificadores X5, 1 processador 360 e cabeamento';
+    inpDescricao.value = it.descricao || '';
+    var linhaDescricao = document.createElement('div');
+    linhaDescricao.style.cssText = 'margin:6px 0 16px;';
+    linhaDescricao.appendChild(campo('Descrição (opcional)', inpDescricao));
+    painel.appendChild(linhaDescricao);
+
+    var msg = document.createElement('div');
+    msg.style.cssText = 'font-size:12px; min-height:16px; margin:8px 0 10px;';
+    painel.appendChild(msg);
+
+    var acoes = document.createElement('div');
+    acoes.style.cssText = 'display:flex; gap:18px; align-items:center;';
+
+    var btnSalvar = document.createElement('button');
+    btnSalvar.type = 'button'; btnSalvar.className = 'add-form-link';
+    btnSalvar.textContent = 'Salvar alterações';
+
+    var btnCancelar = document.createElement('span');
+    btnCancelar.className = 'icone-acao';
+    btnCancelar.textContent = 'cancelar';
+    btnCancelar.addEventListener('click', fechar);
+
+    acoes.appendChild(btnSalvar);
+    acoes.appendChild(btnCancelar);
+    painel.appendChild(acoes);
+
+    btnSalvar.addEventListener('click', async function () {
+      var nomeVal = inpNome.value.trim();
+      var totalVal = parseInt(inpTotal.value, 10) || 0;
+      var dispVal = parseInt(inpDisp.value, 10) || 0;
+      var precoVal = parseFloat(inpPreco.value) || 0;
+      var marcaVal = inpMarca.value.trim();
+      var descricaoVal = inpDescricao.value.trim();
+
+      if (!nomeVal) { msg.style.color = '#c9695c'; msg.textContent = 'Preencha o nome do item.'; return; }
+      if (dispVal > totalVal) { msg.style.color = '#c9695c'; msg.textContent = 'Disponível não pode ser maior que o total.'; return; }
+
+      btnSalvar.disabled = true;
+      msg.style.color = '#8c8c91';
+      msg.textContent = 'Salvando...';
+
+      var { error } = await EF.client.from('estoque_itens').update({
+        nome: nomeVal, categoria: selCat.value, marca: marcaVal, descricao: descricaoVal,
+        quantidade_total: totalVal, quantidade_disponivel: dispVal, preco_unitario: precoVal
+      }).eq('id', it.id);
+
+      btnSalvar.disabled = false;
+      if (error) { msg.style.color = '#c9695c'; msg.textContent = error.message; return; }
+      await carregarEstoque();
+    });
+
+    return painel;
+  }
+
+  function escapeHtml(s) {
+    var d = document.createElement('div');
+    d.textContent = s == null ? '' : s;
+    return d.innerHTML;
+  }
+})();
+</script>
+
+<script src="ef-ui.js"></script>
+</body>
+</html>
