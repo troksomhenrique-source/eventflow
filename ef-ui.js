@@ -42,9 +42,8 @@
       ['clientes.html','Clientes','clientes','finance'],['vendas.html','Vendas','vendas','finance'],['chat.html','Chat','chat'],['notas.html','Notas','notas']
     ]],
     ['Projeto',[
-      ['areas-do-projeto.html','Visão do projeto','dashboard','areas'],['calculadora-som.html','Som','som','areas'],['calculadora-luz.html','Luz','luz','areas'],
-      ['painel-de-led.html','Painel de LED','video','areas'],['video.html','Vídeo','video','areas'],['estrutura.html','Estrutura','estrutura','areas'],
-      ['internet.html','Internet','internet','areas'],['cenografia.html','Cenografia','ceno','areas'],['infraestrutura.html','Infraestrutura','estrutura','areas'],
+      ['calculadora-som.html','Som','som','areas'],['calculadora-luz.html','Luz','luz','areas'],['video.html','Vídeo','video','areas'],['estrutura.html','Estrutura','estrutura','areas'],
+      ['internet.html','Internet','internet','areas'],['cenografia.html','Cenografia','ceno','areas'],
       ['extras.html','Extras','extras','areas'],['servicos.html','Serviços','servicos','areas'],['logistica.html','Logística','logistica','areas'],
       ['descritivo-geral.html','Descritivo geral','descricao','areas'],['ordem-servico.html','Ordem de serviço','os','areas']
     ]],
@@ -66,7 +65,7 @@
     if(window.EF && EF.profile && EF.isOwner && EF.isOwner()) {
       return '<div class="ef-side-top"><a class="ef-brand" href="plataforma.html"><span class="ef-brand-mark">EF</span><span><b>EventFlow</b><small>Administração</small></span></a></div>'+
         '<nav class="ef-nav"><div class="ef-nav-section"><div class="ef-nav-label">Plataforma</div><a class="ef-nav-item ef-nav-active" href="plataforma.html">'+icon('dashboard')+'<span>Empresas e acessos</span></a></div></nav>'+
-        '<div class="ef-user"><div class="ef-avatar" data-ef-user-initials>··</div><div class="ef-user-copy"><strong data-ef-user-name>Carregando…</strong><small data-ef-user-role>Administrador</small></div><button class="ef-logout" type="button" data-ef-logout title="Sair">'+icon('logout')+'</button></div>';
+        '<div class="ef-user"><div class="ef-avatar" id="user-initials" data-ef-user-initials>··</div><div class="ef-user-copy"><strong id="user-name" data-ef-user-name>Carregando…</strong><small id="user-role" data-ef-user-role>Administrador</small></div><button class="ef-logout" id="logout" type="button" data-ef-logout title="Sair">'+icon('logout')+'</button></div>';
     }
     var html='<div class="ef-side-top"><a class="ef-brand" href="dashboard.html"><span class="ef-brand-mark">EF</span><span><b>EventFlow</b><small>Operações</small></span></a></div><nav class="ef-nav" aria-label="Navegação principal">';
     NAV.forEach(function(group){
@@ -78,7 +77,7 @@
       });
       html+='</div>';
     });
-    html+='</nav><div class="ef-user"><div class="ef-avatar" data-ef-user-initials>··</div><div class="ef-user-copy"><strong data-ef-user-name>Carregando…</strong><small data-ef-user-role>—</small></div><button class="ef-logout" type="button" data-ef-logout title="Sair">'+icon('logout')+'</button></div>';
+    html+='</nav><div class="ef-user"><div class="ef-avatar" id="user-initials" data-ef-user-initials>··</div><div class="ef-user-copy"><strong id="user-name" data-ef-user-name>Carregando…</strong><small id="user-role" data-ef-user-role>—</small></div><button class="ef-logout" id="logout" type="button" data-ef-logout title="Sair">'+icon('logout')+'</button></div>';
     return html;
   }
 
@@ -97,6 +96,7 @@
       if(lo) lo.addEventListener('click',function(){ if(window.EF && EF.logout) EF.logout(); });
     }
     if(main){ main.classList.add('ef-main'); main.removeAttribute('style'); }
+    syncUser();
     if(!document.querySelector('.ef-mobile-menu')){
       var menu=document.createElement('button'); menu.className='ef-mobile-menu'; menu.type='button'; menu.setAttribute('aria-label','Abrir menu'); menu.innerHTML=icon('dashboard'); document.body.appendChild(menu); menu.addEventListener('click',toggleMenu);
     }
@@ -120,8 +120,8 @@
   }
 
   function applyPermissions(){
-    syncUser();
     if(document.querySelector('.ef-sidebar')) setupShell();
+    syncUser();
   }
 
   function candidateAddButton(container){
