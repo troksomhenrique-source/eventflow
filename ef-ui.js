@@ -45,6 +45,9 @@
       ['calculadora-som.html','Som','som','areas'],['calculadora-luz.html','Luz','luz','areas'],['video.html','Vídeo','video','areas'],['estrutura.html','Estrutura','estrutura','areas'],
       ['internet.html','Internet','internet','areas'],['cenografia.html','Cenografia','ceno','areas'],['extras.html','Extras','extras','areas'],['servicos.html','Serviços','servicos','areas']
     ]],
+    ['Documentos',[
+      ['descritivo-geral.html','Descritivo Geral','descricao','areas'],['ordem-servico.html','Ordem de Serviço','os','areas']
+    ]],
     ['Sistema',[
       ['usuarios-permissoes.html','Usuários','usuarios','users']
     ]]
