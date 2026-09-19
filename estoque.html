@@ -31,8 +31,8 @@
   .stock-kpi-value{font-family:'Space Grotesk',sans-serif;font-size:28px;line-height:1;font-weight:600;margin-bottom:6px;}
   .stock-kpi-sub{color:#8c8c91;font-size:12px;}
   .stock-panel{background:#0f1013;border:1px solid rgba(243,240,234,.08);border-radius:22px;overflow:hidden;}
-  .stock-toolbar{display:grid;grid-template-columns:minmax(280px,1fr) 230px auto;gap:10px;padding:6px;align-items:center;}
-  .stock-search,.stock-filter{height:46px;border-radius:14px;border:1px solid rgba(243,240,234,.08);background:#141418;color:#f3f0ea;padding:0 14px;font-size:14px;}
+  .stock-toolbar{display:grid;grid-template-columns:minmax(280px,1fr) 230px auto;gap:10px;padding:14px 16px 12px;align-items:center;border-bottom:1px solid rgba(243,240,234,.06);background:linear-gradient(180deg,rgba(255,255,255,.01),rgba(255,255,255,0));}
+  .stock-search,.stock-filter{height:46px;border-radius:14px;border:1px solid rgba(243,240,234,.08);background:#121317;color:#f3f0ea;padding:0 14px;font-size:14px;}
   .stock-search-wrap{position:relative;}
   .stock-search{width:100%;padding-left:42px;}
   .stock-search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:#5c5c62;pointer-events:none;}
@@ -40,7 +40,7 @@
   .stock-tab{height:46px;padding:0 18px;border:0;background:transparent;color:#8c8c91;font-size:14px;font-weight:500;cursor:pointer;}
   .stock-tab + .stock-tab{border-left:1px solid rgba(243,240,234,.08);} .stock-tab.active{background:#141418;color:#f3f0ea;}
   .stock-table{width:100%;border-collapse:collapse;table-layout:fixed;}
-  .stock-table thead th{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#5c5c62;text-align:left;padding:15px 16px;border-top:1px solid rgba(243,240,234,.06);border-bottom:1px solid rgba(243,240,234,.06);}
+  .stock-table thead th{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#5c5c62;text-align:left;padding:15px 16px;border-bottom:1px solid rgba(243,240,234,.06);}
   .stock-table tbody td{padding:14px 16px;border-bottom:1px solid rgba(243,240,234,.06);vertical-align:middle;font-size:14px;color:#ece8e1;}
   .stock-table tbody tr:hover{background:rgba(255,255,255,.015);} 
   .td-item{display:flex;flex-direction:column;gap:3px;min-width:0;}
@@ -55,13 +55,17 @@
   .stock-action:hover{color:#f3f0ea;}
   .stock-table-wrap{overflow:auto;}
   .stock-empty{padding:28px 18px;color:#8c8c91;font-size:14px;}
-  .form-card{background:#101114;border:1px solid rgba(243,240,234,.08);border-radius:20px;padding:18px;display:none;}
-  .form-title{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:600;margin-bottom:16px;}
+  .form-card{background:#0f1013;border:1px solid rgba(243,240,234,.08);border-radius:22px;padding:18px 18px 16px;display:none;}
+  .form-title{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:600;margin-bottom:14px;}
   .form-grid{display:grid;grid-template-columns:1.5fr 1fr 110px 110px;gap:14px;}
   .form-grid-2{display:grid;grid-template-columns:150px 1fr auto;gap:14px;align-items:end;margin-top:14px;}
   .form-field label{display:block;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#5c5c62;margin-bottom:8px;}
-  .form-field input,.form-field select,.form-field textarea{width:100%;background:#141418;border:1px solid rgba(243,240,234,.08);border-radius:14px;min-height:44px;color:#f3f0ea;padding:10px 12px;font-size:14px;}
+  .form-field input,.form-field select,.form-field textarea{width:100%;background:#121317;border:1px solid rgba(243,240,234,.08);border-radius:14px;min-height:44px;color:#f3f0ea;padding:10px 12px;font-size:14px;}
   .form-field textarea{min-height:84px;resize:vertical;}
+  .item-form-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:14px;align-items:end;}
+  .item-form-grid .span-12{grid-column:span 12;} .item-form-grid .span-6{grid-column:span 6;} .item-form-grid .span-4{grid-column:span 4;} .item-form-grid .span-3{grid-column:span 3;} .item-form-grid .span-2{grid-column:span 2;}
+  .item-form-actions{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:14px;padding-top:14px;border-top:1px solid rgba(243,240,234,.06);}
+  .item-form-hint{color:#8c8c91;font-size:12px;}
   .msg{min-height:16px;margin-top:10px;font-size:12px;}
   .vehicle-section{background:#0f1013;border:1px solid rgba(243,240,234,.08);border-radius:22px;padding:20px;}
   .vehicle-list{display:flex;flex-direction:column;margin-top:12px;}
@@ -72,8 +76,8 @@
   .status-pill.busy{background:rgba(201,105,92,.12);color:#e28d81;}
   .stock-edit-panel{padding:18px;border-top:1px solid rgba(243,240,234,.06);background:#111217;}
   .hidden{display:none!important;}
-  @media (max-width:1150px){.stock-kpis{grid-template-columns:repeat(2,1fr)}.form-grid{grid-template-columns:1fr 1fr}.form-grid-2{grid-template-columns:1fr 1fr}.stock-toolbar{grid-template-columns:1fr 1fr}.stock-tabs{justify-self:stretch}.stock-header{flex-direction:column;}}
-  @media (max-width:760px){.stock-kpis{grid-template-columns:1fr}.stock-toolbar{grid-template-columns:1fr}.form-grid,.form-grid-2{grid-template-columns:1fr}.stock-table{min-width:980px}.stock-header h1{font-size:28px}}
+  @media (max-width:1150px){.stock-kpis{grid-template-columns:repeat(2,1fr)}.form-grid{grid-template-columns:1fr 1fr}.form-grid-2{grid-template-columns:1fr 1fr}.stock-toolbar{grid-template-columns:1fr 1fr}.stock-tabs{justify-self:stretch}.stock-header{flex-direction:column;}.item-form-grid .span-6,.item-form-grid .span-4,.item-form-grid .span-3,.item-form-grid .span-2{grid-column:span 6;}}
+  @media (max-width:760px){.stock-kpis{grid-template-columns:1fr}.stock-toolbar{grid-template-columns:1fr}.form-grid,.form-grid-2{grid-template-columns:1fr}.stock-table{min-width:980px}.stock-header h1{font-size:28px}.item-form-grid .span-6,.item-form-grid .span-4,.item-form-grid .span-3,.item-form-grid .span-2,.item-form-grid .span-12{grid-column:span 12;}}
 </style>
 </head>
 <body>
@@ -142,31 +146,26 @@
       <div id="bloco-form" class="form-card">
         <div class="form-title">Cadastrar item</div>
         <form id="form-item">
-          <div class="form-grid" style="grid-template-columns:1fr;">
-            <div class="form-field"><label>Nome</label><input id="novo-nome" required type="text" placeholder="Ex: Line array KARA II"></div>
+          <div class="item-form-grid">
+            <div class="form-field span-6"><label>Nome</label><input id="novo-nome" required type="text" placeholder="Ex: Line array KARA II"></div>
+            <div class="form-field span-3"><label>Marca</label><input id="novo-marca" type="text" placeholder="L-Acoustics"></div>
+            <div class="form-field span-3"><label>SKU</label><input id="novo-sku" type="text" placeholder="KARA-II"></div>
+
+            <div class="form-field span-2"><label>Qtd. estoque</label><input id="novo-total" required type="number" min="0" step="1" value="1"></div>
+            <div class="form-field span-2"><label>Unidade</label><select id="novo-unidade"><option value="Unidade">Unidade</option><option value="Par">Par</option><option value="Kit">Kit</option><option value="Metro">Metro</option><option value="Caixa">Caixa</option></select></div>
+            <div class="form-field span-2"><label>Preço/dia</label><input id="novo-preco" type="number" min="0" step="0.01" value="0"></div>
+            <div class="form-field span-2"><label>Peso (kg)</label><input id="novo-peso" type="number" min="0" step="0.01" placeholder="—"></div>
+            <div class="form-field span-2"><label>Consumo (W)</label><input id="novo-consumo" type="number" min="0" step="0.01" placeholder="—"></div>
+            <div class="form-field span-2"><label>Un./case</label><input id="novo-case" type="number" min="1" step="1" placeholder="—"></div>
+
+            <div class="form-field span-3"><label>Categoria</label><select id="novo-categoria"><option>Som</option><option>Luz</option><option>Vídeo</option><option>Estrutura</option><option>Internet</option><option>Cenografia</option><option>Extras</option><option>Serviços</option></select></div>
+            <div class="form-field span-3"><label>Disponível agora</label><input id="novo-disponivel" required type="number" min="0" step="1" value="1"></div>
+            <div class="form-field span-6"><label>Descrição</label><input id="novo-descricao" type="text" placeholder="Modelo, composição, observações rápidas..."></div>
           </div>
-          <div class="form-grid" style="margin-top:14px;grid-template-columns:1fr 1fr;">
-            <div class="form-field"><label>Marca</label><input id="novo-marca" type="text" placeholder="L-Acoustics"></div>
-            <div class="form-field"><label>SKU</label><input id="novo-sku" type="text" placeholder="KARA-II"></div>
+          <div class="item-form-actions">
+            <div class="item-form-hint">Cadastro rápido e horizontal, sem aquele bloco gigante.</div>
+            <button id="btn-item" type="submit" class="stock-button primary">Adicionar item</button>
           </div>
-          <div class="form-grid" style="margin-top:14px;grid-template-columns:1fr 1fr;">
-            <div class="form-field"><label>Quantidade em estoque</label><input id="novo-total" required type="number" min="0" step="1" value="1"></div>
-            <div class="form-field"><label>Unidade</label><select id="novo-unidade"><option value="Unidade">Unidade</option><option value="Par">Par</option><option value="Kit">Kit</option><option value="Metro">Metro</option><option value="Caixa">Caixa</option></select></div>
-          </div>
-          <div class="form-grid" style="margin-top:14px;grid-template-columns:1fr;">
-            <div class="form-field"><label>Preço de locação / dia</label><input id="novo-preco" type="number" min="0" step="0.01" value="0"></div>
-          </div>
-          <div class="form-grid" style="margin-top:14px;grid-template-columns:1fr 1fr 1fr;">
-            <div class="form-field"><label>Peso (kg)</label><input id="novo-peso" type="number" min="0" step="0.01" placeholder="—"></div>
-            <div class="form-field"><label>Consumo (W)</label><input id="novo-consumo" type="number" min="0" step="0.01" placeholder="—"></div>
-            <div class="form-field"><label>Un. / case</label><input id="novo-case" type="number" min="1" step="1" placeholder="—"></div>
-          </div>
-          <div class="form-grid" style="margin-top:14px;grid-template-columns:1fr 1fr;align-items:end;">
-            <div class="form-field"><label>Categoria</label><select id="novo-categoria"><option>Som</option><option>Luz</option><option>Vídeo</option><option>Estrutura</option><option>Internet</option><option>Cenografia</option><option>Extras</option><option>Serviços</option></select></div>
-            <div class="form-field"><label>Disponível agora</label><input id="novo-disponivel" required type="number" min="0" step="1" value="1"></div>
-          </div>
-          <div class="form-field" style="margin-top:14px;"><label>Descrição</label><textarea id="novo-descricao" rows="2" placeholder="Modelo, composição, observações rápidas..."></textarea></div>
-          <div style="display:flex;justify-content:flex-end;margin-top:14px;"><button id="btn-item" type="submit" class="stock-button primary">Adicionar</button></div>
         </form>
         <div id="item-msg" class="msg"></div>
       </div>
