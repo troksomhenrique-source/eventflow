@@ -201,7 +201,7 @@
 (function () {
   var ROLE_LABEL = { gerencia: 'Gerência', producao: 'Produção', estoque: 'Estoque' };
   var MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
-  var CATEGORIAS_TAREFA = ['Geral', 'Urgente', 'Estoque', 'Som', 'Luz', 'Painel de LED', 'Vídeo', 'Cenografia', 'Serviços', 'Descritivo Geral', 'Equipe', 'Catálogo'];
+  var CATEGORIAS_TAREFA = ['Geral', 'Urgente', 'Estoque', 'Som', 'Luz', 'Vídeo', 'Estrutura', 'Internet', 'Cenografia', 'Extras', 'Serviços', 'Equipe', 'Catálogo'];
   var BUCKET_ORDEM = ['atrasada', 'hoje', 'esta_semana', 'mais_tarde', 'sem_prazo'];
   var BUCKET_LABEL = { atrasada: 'Atrasada', hoje: 'Hoje', esta_semana: 'Esta semana', mais_tarde: 'Mais tarde', sem_prazo: 'Sem prazo' };
 
@@ -222,10 +222,6 @@
     var nome = p.nome || p.email || 'Usuário';
     EU_NOME = nome;
     var iniciais = nome.split(' ').filter(Boolean).slice(0, 2).map(function (s) { return s[0].toUpperCase(); }).join('');
-    document.getElementById('user-name').textContent = nome;
-    document.getElementById('user-role').textContent = ROLE_LABEL[p.role] || p.role;
-    document.getElementById('user-initials').textContent = iniciais || '··';
-    document.getElementById('logout').onclick = function () { EF.logout(); };
 
     montarSelectCategorias();
 

@@ -204,10 +204,6 @@
     EU = EF.profile;
     var nome = EU.nome || EU.email || 'Usuário';
     var iniciais = nome.split(' ').filter(Boolean).slice(0, 2).map(function (s) { return s[0].toUpperCase(); }).join('');
-    document.getElementById('user-name').textContent = nome;
-    document.getElementById('user-role').textContent = ROLE_LABEL[EU.role] || EU.role;
-    document.getElementById('user-initials').textContent = iniciais || '··';
-    document.getElementById('logout').onclick = function () { EF.logout(); };
 
     montarEmojiPicker();
     ligarEventos();

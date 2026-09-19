@@ -37,18 +37,16 @@
   }
 
   var NAV=[
-    ['Principal',[
-      ['dashboard.html','Dashboard','dashboard'],['agenda.html','Agenda','agenda'],['estoque.html','Estoque','estoque'],
-      ['clientes.html','Clientes','clientes','finance'],['vendas.html','Vendas','vendas','finance'],['chat.html','Chat','chat'],['notas.html','Notas','notas']
+    ['Operação',[
+      ['dashboard.html','Operação','dashboard'],['agenda.html','Eventos','agenda'],['estoque.html','Equipamentos','estoque'],
+      ['clientes.html','Clientes','clientes','finance'],['vendas.html','Comercial','vendas','finance'],['notas.html','Notas','notas']
     ]],
-    ['Projeto',[
+    ['Áreas',[
       ['calculadora-som.html','Som','som','areas'],['calculadora-luz.html','Luz','luz','areas'],['video.html','Vídeo','video','areas'],['estrutura.html','Estrutura','estrutura','areas'],
-      ['internet.html','Internet','internet','areas'],['cenografia.html','Cenografia','ceno','areas'],
-      ['extras.html','Extras','extras','areas'],['servicos.html','Serviços','servicos','areas'],['logistica.html','Logística','logistica','areas'],
-      ['descritivo-geral.html','Descritivo geral','descricao','areas'],['ordem-servico.html','Ordem de serviço','os','areas']
+      ['internet.html','Internet','internet','areas'],['cenografia.html','Cenografia','ceno','areas'],['extras.html','Extras','extras','areas'],['servicos.html','Serviços','servicos','areas']
     ]],
     ['Sistema',[
-      ['especificacoes-equipamento.html','Catálogo de equipamentos','catalogo','areas'],['usuarios-permissoes.html','Usuários e permissões','usuarios','users']
+      ['especificacoes-equipamento.html','Equipamentos','catalogo','areas'],['usuarios-permissoes.html','Usuários','usuarios','users']
     ]]
   ];
 
@@ -67,7 +65,7 @@
         '<nav class="ef-nav"><div class="ef-nav-section"><div class="ef-nav-label">Plataforma</div><a class="ef-nav-item ef-nav-active" href="plataforma.html">'+icon('dashboard')+'<span>Empresas e acessos</span></a></div></nav>'+
         '<div class="ef-user"><div class="ef-avatar" id="user-initials" data-ef-user-initials>··</div><div class="ef-user-copy"><strong id="user-name" data-ef-user-name>Carregando…</strong><small id="user-role" data-ef-user-role>Administrador</small></div><button class="ef-logout" id="logout" type="button" data-ef-logout title="Sair">'+icon('logout')+'</button></div>';
     }
-    var html='<div class="ef-side-top"><a class="ef-brand" href="dashboard.html"><span class="ef-brand-mark">EF</span><span><b>EventFlow</b><small>Operações</small></span></a></div><nav class="ef-nav" aria-label="Navegação principal">';
+    var html='<div class="ef-side-top"><a class="ef-brand" href="dashboard.html"><span class="ef-brand-mark">EF</span><span><b>EventFlow</b><small>Workspace</small></span></a></div><nav class="ef-nav" aria-label="Navegação principal">';
     NAV.forEach(function(group){
       var visible=group[1].filter(function(i){return canShow(i[3]);});
       if(!visible.length) return;

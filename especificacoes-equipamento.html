@@ -128,7 +128,7 @@
 <script>
 (function () {
   var ROLE_LABEL = { gerencia: 'Gerência', producao: 'Produção', estoque: 'Estoque' };
-  var CATEGORIAS = ['Som', 'Luz', 'Painel de LED', 'Vídeo', 'Projeção', 'Cenografia', 'Serviços', 'Gerenciamento de áudio', 'Gerenciamento de Luz', 'Gerenciamento de Vídeo', 'Sustentação de LED', 'Geral'];
+  var CATEGORIAS = ['Som', 'Luz', 'Vídeo', 'Estrutura', 'Internet', 'Cenografia', 'Extras', 'Serviços'];
   var ITENS = [];
   var filtroCategoria = '';
 
@@ -144,10 +144,6 @@
     var p = EF.profile;
     var nome = p.nome || p.email || 'Usuário';
     var iniciais = nome.split(' ').filter(Boolean).slice(0, 2).map(function (s) { return s[0].toUpperCase(); }).join('');
-    document.getElementById('user-name').textContent = nome;
-    document.getElementById('user-role').textContent = ROLE_LABEL[p.role] || p.role;
-    document.getElementById('user-initials').textContent = iniciais || '··';
-    document.getElementById('logout').onclick = function () { EF.logout(); };
 
     var selCat = document.getElementById('filtro-categoria');
     CATEGORIAS.forEach(function (c) {

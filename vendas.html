@@ -195,7 +195,7 @@
           <textarea id="novo-observacoes" rows="2" placeholder="Condições, forma de pagamento combinada..."
             style="width: 100%; background: transparent; border: 1px solid #29292d; border-radius: 6px; color: #f3f1ec; font-size: 13px; padding: 8px 10px; box-sizing: border-box; resize: vertical; margin-bottom: 14px;"></textarea>
           <button id="btn-orcamento" type="submit" style="background: none; border: none; padding: 0; font-size: 13px; color: #7fa8c9; cursor: pointer; border-bottom: 1px solid #2a3d4d;">+ Criar orçamento</button>
-          <span id="marca-versao-orcamento" class="mono" style="margin-left: 14px; font-size: 9.5px; color: #3a3a3e;" title="Se esse texto não aparecer na sua tela, o navegador ainda está usando um arquivo antigo em cache.">build: correção-cliente-v2</span>
+          <span id="marca-versao-orcamento" class="mono" style="margin-left: 14px; font-size: 9.5px; color: #3a3a3e;" title="Se esse texto não aparecer na sua tela, o navegador ainda está usando um arquivo antigo em cache.">build: vendas-v6</span>
         </div>
       </form>
       <div id="orcamento-msg" style="margin-top: 10px; font-size: 12.5px; min-height: 16px;"></div>
@@ -214,7 +214,7 @@
   // "não acontecer nada" sem explicação nenhuma.
   window.addEventListener('error', function (ev) {
     console.error('Erro na página:', ev.error || ev.message);
-    alert('Erro inesperado na página de Vendas:\n\n' + (ev.message || (ev.error && ev.error.message) || 'erro desconhecido') + '\n\nTira um print dessa mensagem e manda que eu resolvo.');
+    alert('Erro inesperado na página de Vendas:\n\n' + (ev.message || (ev.error && ev.error.message) || 'erro desconhecido') + '\n\nArquivo: ' + (ev.filename || 'vendas.html') + '\nLinha: ' + (ev.lineno || '?') + ':' + (ev.colno || '?'));
   });
   window.addEventListener('unhandledrejection', function (ev) {
     var motivo = ev.reason;
@@ -231,7 +231,7 @@
   var CLIENTES = [];
   var ESTOQUE_ITENS = [];
   var EMPRESA = null;
-  var CATEGORIAS = ['Som', 'Luz', 'Painel de LED', 'Vídeo', 'Cenografia', 'Serviços', 'Geral'];
+  var CATEGORIAS = ['Som', 'Luz', 'Vídeo', 'Estrutura', 'Internet', 'Cenografia', 'Extras', 'Serviços'];
 
   function fmtMoeda(v) {
     return (v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -249,10 +249,6 @@
     var p = EF.profile;
     var nome = p.nome || p.email || 'Usuário';
     var iniciais = nome.split(' ').filter(Boolean).slice(0, 2).map(function (s) { return s[0].toUpperCase(); }).join('');
-    document.getElementById('user-name').textContent = nome;
-    document.getElementById('user-role').textContent = ROLE_LABEL[p.role] || p.role;
-    document.getElementById('user-initials').textContent = iniciais || '··';
-    document.getElementById('logout').onclick = function () { EF.logout(); };
     document.getElementById('novo-data').value = new Date().toISOString().slice(0, 10);
     document.getElementById('novo-vendedor').value = nome;
 

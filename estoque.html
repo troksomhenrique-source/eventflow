@@ -140,18 +140,12 @@
             <select id="novo-categoria" class="add-form-input">
               <option>Som</option>
               <option>Luz</option>
-              <option>Painel de LED</option>
               <option>Vídeo</option>
-              <option>Projeção</option>
+              <option>Estrutura</option>
+              <option>Internet</option>
               <option>Cenografia</option>
+              <option>Extras</option>
               <option>Serviços</option>
-              <option>Gerenciamento de áudio</option>
-              <option>Gerenciamento de Luz</option>
-              <option>Gerenciamento de Vídeo</option>
-              <option>Sustentação de LED</option>
-              <option>Talha</option>
-              <option>Box</option>
-              <option>Geral</option>
             </select>
           </div>
           <div>
@@ -164,7 +158,7 @@
           </div>
         </div>
         <div id="dica-led-m2" style="display:none; color:#c9a15c; font-size:11px; margin-top:10px; line-height:1.5;">
-          Painel de LED — cadastre Total/Disponível em <strong>m²</strong> (é como o comercial vende), e o Peso e o Consumo (na tela de Especificações) também por m² — a Calculadora de Painel de LED usa direto, sem converter.
+          Use somente as áreas ativas do sistema: <strong>Som, Luz, Vídeo, Estrutura, Internet, Cenografia, Extras e Serviços</strong>.
         </div>
         <div style="margin-top: 18px;">
           <div class="add-form-label">Descrição (opcional)</div>
@@ -260,10 +254,6 @@
     var p = EF.profile;
     var nome = p.nome || p.email || 'Usuário';
     var iniciais = nome.split(' ').filter(Boolean).slice(0, 2).map(function (s) { return s[0].toUpperCase(); }).join('');
-    document.getElementById('user-name').textContent = nome;
-    document.getElementById('user-role').textContent = ROLE_LABEL[p.role] || p.role;
-    document.getElementById('user-initials').textContent = iniciais || '··';
-    document.getElementById('logout').onclick = function () { EF.logout(); };
 
     document.getElementById('novo-categoria').addEventListener('change', function () {
       var ehLed = this.value === 'Painel de LED';

@@ -266,10 +266,6 @@
     var p = EF.profile;
     var nome = p.nome || p.email || 'Usuário';
     var iniciais = nome.split(' ').filter(Boolean).slice(0, 2).map(function (s) { return s[0].toUpperCase(); }).join('');
-    document.getElementById('user-name').textContent = nome;
-    document.getElementById('user-role').textContent = ROLE_LABEL[p.role] || p.role;
-    document.getElementById('user-initials').textContent = iniciais || '··';
-    document.getElementById('logout').onclick = function () { EF.logout(); };
     document.getElementById('resumo').textContent = 'Lista de cenografia do evento.';
 
     document.getElementById('select-evento').addEventListener('change', async function () {

@@ -89,8 +89,8 @@
     <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 30px;">
       <div>
         <div class="mono" style="color: #6e6e73; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 10px;" id="today"></div>
-        <h1 style="font-family: 'Space Grotesk', sans-serif; font-size: 24px; font-weight: 600; margin: 0 0 6px; letter-spacing: -.01em;">Visão geral</h1>
-        <div style="color: #8c8c91; font-size: 13px;">Bem-vindo de volta, <span id="greet-name">…</span> · <span id="empresa-nome" class="mono" style="color: #7fa8c9;"></span></div>
+        <h1 style="font-family: 'Space Grotesk', sans-serif; font-size: 24px; font-weight: 600; margin: 0 0 6px; letter-spacing: -.01em;">Operação</h1>
+        <div style="color: #8c8c91; font-size: 13px;">Painel diário de <span id="greet-name">…</span> · <span id="empresa-nome" class="mono" style="color: #9bb4c7;"></span></div>
       </div>
     </div>
 
@@ -209,12 +209,8 @@
     var iniciais = nome.split(' ').filter(Boolean).slice(0, 2).map(function (s) { return s[0].toUpperCase(); }).join('');
     var roleLabel = { gerencia: 'Gerência', producao: 'Produção', estoque: 'Estoque' }[p.role] || p.role;
 
-    document.getElementById('user-name').textContent = nome;
-    document.getElementById('user-role').textContent = roleLabel;
-    document.getElementById('user-initials').textContent = iniciais || '··';
     document.getElementById('greet-name').textContent = nome.split(' ')[0];
     document.getElementById('role-inline') && (document.getElementById('role-inline').textContent = roleLabel);
-    document.getElementById('logout').onclick = function () { EF.logout(); };
 
     // ---- qual dashboard: gerência (faturamento + vendas) ou produção/estoque (tarefas + próximo evento) ----
     var ehGerencia = EF.canSeeFinance();
