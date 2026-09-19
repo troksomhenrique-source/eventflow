@@ -185,8 +185,84 @@
     });
   }
 
+
+  function directChildUnderMain(el, main){
+    if(!el || !main) return null;
+    var node=el;
+    while(node && node.parentElement!==main) node=node.parentElement;
+    return node && node.parentElement===main ? node : null;
+  }
+
+  function decorateAction(el){
+    if(!el || el.dataset.efActionStyled) return;
+    var text=((el.textContent||el.value||'')+'').trim().toLowerCase();
+    if(!text) return;
+    if(/excluir|remover|apagar|cancelar/.test(text)) el.classList.add('ef-action','ef-action-danger');
+    else if(/^\+|novo|nova|cadastrar|criar|adicionar|incluir|salvar|gerar|confirmar/.test(text)) el.classList.add('ef-action','ef-action-primary');
+    else if(/editar|dados da empresa|ver tudo|abrir|detalhes|voltar/.test(text)) el.classList.add('ef-action','ef-action-secondary');
+    else return;
+    el.dataset.efActionStyled='1';
+  }
+
+  function enhancePageVisuals(){
+    var main=document.querySelector('.ef-main');
+    if(!main) return;
+
+    // Header da página: o bloco superior que contém o H1.
+    var h1=main.querySelector('h1');
+    var pageHead=directChildUnderMain(h1,main);
+    if(pageHead) pageHead.classList.add('ef-page-header');
+    if(h1) h1.classList.add('ef-page-title');
+    if(pageHead){
+      var meta=pageHead.querySelector('.mono');
+      if(meta) meta.classList.add('ef-page-eyebrow');
+    }
+
+    // Blocos de formulário passam a compartilhar o mesmo tratamento visual.
+    main.querySelectorAll('[id^="bloco-form"]').forEach(function(el){ el.classList.add('ef-form-panel'); });
+    main.querySelectorAll('.add-form-card').forEach(function(el){ el.classList.add('ef-surface'); });
+
+    // Faixas de KPI/resumo que originalmente eram apenas linhas soltas.
+    Array.prototype.slice.call(main.children).forEach(function(el){
+      if(!el || !el.getAttribute) return;
+      var st=(el.getAttribute('style')||'').toLowerCase();
+      if(st.indexOf('border-top')!==-1 && st.indexOf('border-bottom')!==-1 && el.children.length>=2){
+        el.classList.add('ef-kpi-strip');
+        Array.prototype.slice.call(el.children).forEach(function(c){c.classList.add('ef-kpi-cell');});
+      }
+      if(st.indexOf('margin-top: 44px')!==-1 || st.indexOf('margin-top:44px')!==-1){ el.classList.add('ef-section-break'); }
+    });
+
+    // Títulos de seção.
+    main.querySelectorAll('h2').forEach(function(h){
+      h.classList.add('ef-section-title');
+      var parent=h.parentElement;
+      if(parent && parent.children.length<=4) parent.classList.add('ef-section-heading');
+    });
+
+    // Links/botões textuais ganham hierarquia consistente.
+    main.querySelectorAll('button, a, span[id^="btn-"]').forEach(decorateAction);
+
+    // Containers de listas/tarefas/cards recorrentes.
+    main.querySelectorAll('[id^="lista-"]').forEach(function(el){el.classList.add('ef-list');});
+    main.querySelectorAll('[id^="kpi-"]').forEach(function(el){
+      if(el.tagName==='DIV' && !el.classList.contains('ef-kpi-strip')) el.classList.add('ef-tabular');
+    });
+  }
+
+  function observeDynamicVisuals(){
+    var main=document.querySelector('.ef-main');
+    if(!main) return;
+    var scheduled=false;
+    new MutationObserver(function(){
+      if(scheduled) return;
+      scheduled=true;
+      requestAnimationFrame(function(){scheduled=false;enhancePageVisuals();polishTables();});
+    }).observe(main,{childList:true,subtree:true});
+  }
+
   function init(){
-    setupShell(); setupEnterToAdd(); setupSearchableAdds(); polishTables(); syncUser();
+    setupShell(); setupEnterToAdd(); setupSearchableAdds(); polishTables(); enhancePageVisuals(); observeDynamicVisuals(); syncUser();
     window.addEventListener('resize',function(){if(window.innerWidth>900)closeMenu();});
   }
 
