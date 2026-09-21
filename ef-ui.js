@@ -1,4 +1,4 @@
-/* EventFlow UI System — v28
+/* EventFlow UI System — v29
    Single source of truth for navigation, keyboard UX and consistent shell. */
 (function(){
   'use strict';
@@ -8,6 +8,7 @@
   function icon(name){
     var paths={
       dashboard:'<rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/>',
+      menu:'<path d="M4 7h16M4 12h16M4 17h16"/>',
       agenda:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18"/>',
       estoque:'<path d="M21 8l-9 5-9-5 9-5 9 5Z"/><path d="m3 12 9 5 9-5M3 16l9 5 9-5"/>',
       clientes:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
@@ -167,15 +168,15 @@
     if(main){ main.classList.add('ef-main'); main.removeAttribute('style'); }
     syncUser();
     if(!document.querySelector('.ef-mobile-menu')){
-      var menu=document.createElement('button'); menu.className='ef-mobile-menu'; menu.type='button'; menu.setAttribute('aria-label','Abrir menu'); menu.innerHTML=icon('dashboard'); document.body.appendChild(menu); menu.addEventListener('click',toggleMenu);
+      var menu=document.createElement('button'); menu.className='ef-mobile-menu'; menu.type='button'; menu.setAttribute('aria-label','Abrir menu'); menu.setAttribute('aria-expanded','false'); menu.innerHTML=icon('menu'); document.body.appendChild(menu); menu.addEventListener('click',toggleMenu);
     }
     if(!document.querySelector('.ef-backdrop')){
       var back=document.createElement('div'); back.className='ef-backdrop'; document.body.appendChild(back); back.addEventListener('click',closeMenu);
     }
   }
 
-  function toggleMenu(){var s=document.querySelector('.ef-sidebar');if(!s)return;s.classList.toggle('ef-open');var b=document.querySelector('.ef-backdrop');if(b)b.classList.toggle('ef-open');}
-  function closeMenu(){var s=document.querySelector('.ef-sidebar');if(s)s.classList.remove('ef-open');var b=document.querySelector('.ef-backdrop');if(b)b.classList.remove('ef-open');}
+  function toggleMenu(){var s=document.querySelector('.ef-sidebar');if(!s)return;var open=s.classList.toggle('ef-open');var b=document.querySelector('.ef-backdrop');if(b)b.classList.toggle('ef-open',open);document.documentElement.classList.toggle('ef-menu-open',open);var m=document.querySelector('.ef-mobile-menu');if(m){m.setAttribute('aria-expanded',open?'true':'false');m.setAttribute('aria-label',open?'Fechar menu':'Abrir menu');}}
+  function closeMenu(){var s=document.querySelector('.ef-sidebar');if(s)s.classList.remove('ef-open');var b=document.querySelector('.ef-backdrop');if(b)b.classList.remove('ef-open');document.documentElement.classList.remove('ef-menu-open');var m=document.querySelector('.ef-mobile-menu');if(m){m.setAttribute('aria-expanded','false');m.setAttribute('aria-label','Abrir menu');}}
 
   function syncUser(){
     if(!window.EF || !EF.profile) return;

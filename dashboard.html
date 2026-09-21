@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="ef-config.js"></script>
-<script src="ef-auth.js?v=28"></script>
+<script src="ef-auth.js?v=29"></script>
 <style>
   body{margin:0;background:#0a0a0b;font-family:'Inter',sans-serif;}
   .mono{font-family:'IBM Plex Mono',monospace;}
@@ -20,7 +20,7 @@
   body [data-usuarios]{display:none !important;}
   html[data-usuarios="true"] body [data-usuarios]{display:block !important;}
 </style>
-<link rel="stylesheet" href="ef-ui.css?v=28">
+<link rel="stylesheet" href="ef-ui.css?v=29">
 </head>
 <body>
 
@@ -82,10 +82,10 @@
   </div>
 
   <!-- ============ MAIN ============ -->
-  <div style="flex-grow: 1; padding: 36px 48px 36px 0; box-sizing: border-box; min-width: 0;">
+  <div class="dashboard-main" style="flex-grow: 1; padding: 36px 48px 36px 0; box-sizing: border-box; min-width: 0;">
 
     <!-- topbar -->
-    <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 30px;">
+    <div class="dashboard-header" style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 30px;">
       <div>
         <div class="mono" style="color: #6e6e73; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 10px;" id="today"></div>
         <h1 style="font-family: 'Space Grotesk', sans-serif; font-size: 24px; font-weight: 600; margin: 0 0 6px; letter-spacing: -.01em;">Operação</h1>
@@ -94,28 +94,28 @@
     </div>
 
     <!-- KPI stat row -->
-    <div style="display: flex; padding: 20px 0; border-top: 1px solid #1c1c1f; border-bottom: 1px solid #1c1c1f; margin-bottom: 30px;">
-      <div id="kpi-cell-1a" style="display:none; flex: 1; padding-right: 26px; border-right: 1px solid #1c1c1f;">
+    <div class="dashboard-kpis" style="display: flex; padding: 20px 0; border-top: 1px solid #1c1c1f; border-bottom: 1px solid #1c1c1f; margin-bottom: 30px;">
+      <div id="kpi-cell-1a" class="dashboard-kpi-cell" style="display:none; flex: 1; padding-right: 26px; border-right: 1px solid #1c1c1f;">
         <div class="mono" style="font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: #6e6e73; margin-bottom: 10px;">Faturamento do mês</div>
         <div id="kpi-faturamento" style="font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 600; color: #7cae83;">—</div>
         <div id="kpi-faturamento-var" style="font-size: 11.5px; color: #6e6e73;">—</div>
       </div>
-      <div id="kpi-cell-1b" style="display:none; flex: 1; padding-right: 26px; border-right: 1px solid #1c1c1f;">
+      <div id="kpi-cell-1b" class="dashboard-kpi-cell" style="display:none; flex: 1; padding-right: 26px; border-right: 1px solid #1c1c1f;">
         <div class="mono" style="font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: #6e6e73; margin-bottom: 10px;">Tarefas de hoje</div>
         <div id="kpi-tarefas" style="font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 600;">—</div>
         <div id="kpi-tarefas-sub" style="font-size: 11.5px; color: #6e6e73;">—</div>
       </div>
-      <div style="flex: 1; padding: 0 26px; border-right: 1px solid #1c1c1f;">
+      <div class="dashboard-kpi-cell" style="flex: 1; padding: 0 26px; border-right: 1px solid #1c1c1f;">
         <div class="mono" style="font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: #6e6e73; margin-bottom: 10px;">Eventos agendados</div>
         <div id="kpi-eventos" style="font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 600;">—</div>
         <div id="kpi-eventos-sub" style="font-size: 11.5px; color: #6e6e73;"><a href="agenda.html" style="color:#6e6e73;">ver agenda →</a></div>
       </div>
-      <div style="flex: 1; padding: 0 26px; border-right: 1px solid #1c1c1f;">
+      <div class="dashboard-kpi-cell" style="flex: 1; padding: 0 26px; border-right: 1px solid #1c1c1f;">
         <div class="mono" style="font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: #6e6e73; margin-bottom: 10px;">Estoque baixo</div>
         <div id="kpi-estoque-baixo" style="font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 600;">—</div>
         <div id="kpi-estoque-sub" style="font-size: 11.5px; color: #6e6e73;"><a href="estoque.html" style="color:#6e6e73;">ver estoque →</a></div>
       </div>
-      <div style="flex: 1; padding-left: 26px;">
+      <div class="dashboard-kpi-cell" style="flex: 1; padding-left: 26px;">
         <div class="mono" style="font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: #6e6e73; margin-bottom: 10px;">Mensagens novas</div>
         <div id="kpi-mensagens" style="font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 600;">—</div>
         <div id="kpi-mensagens-sub" style="font-size: 11.5px; color: #6e6e73;">—</div>
@@ -123,10 +123,10 @@
     </div>
 
     <!-- grid principal -->
-    <div style="display: flex; gap: 28px; align-items: flex-start;">
+    <div class="dashboard-grid" style="display: flex; gap: 28px; align-items: flex-start;">
 
       <!-- coluna 1: Próximo evento (produção/estoque) OU Vendas (gerência) -->
-      <div id="col-proximo-evento" style="display:none; flex: 1.3; min-width: 0;">
+      <div id="col-proximo-evento" class="dashboard-panel" style="display:none; flex: 1.3; min-width: 0;">
         <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:16px;">
           <div style="font-family:'Space Grotesk', sans-serif; font-size:14px; font-weight:600;">Próximo evento</div>
           <span id="proximo-evento-tag" class="mono" style="font-size:10px; color:#7fa8c9; text-transform:uppercase; letter-spacing:.06em;">—</span>
@@ -136,7 +136,7 @@
         </div>
       </div>
 
-      <div id="col-vendas" style="display:none; flex: 1.3; min-width: 0;">
+      <div id="col-vendas" class="dashboard-panel" style="display:none; flex: 1.3; min-width: 0;">
         <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:16px;">
           <div style="font-family:'Space Grotesk', sans-serif; font-size:14px; font-weight:600;">Vendas</div>
           <span class="mono" style="font-size:10px; color:#6e6e73; text-transform:uppercase; letter-spacing:.06em;">6 meses</span>
@@ -149,7 +149,7 @@
       </div>
 
       <!-- coluna 2: Agenda -->
-      <div style="flex: 1.15; min-width: 0;">
+      <div class="dashboard-panel" style="flex: 1.15; min-width: 0;">
         <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:16px;">
           <div style="font-family:'Space Grotesk', sans-serif; font-size:14px; font-weight:600;">Agenda</div>
           <a href="agenda.html" style="color:#7fa8c9; font-size:11.5px; text-decoration:none;">ver tudo</a>
@@ -160,7 +160,7 @@
       </div>
 
       <!-- coluna 3: Estoque -->
-      <div style="flex: 1.15; min-width: 0;">
+      <div class="dashboard-panel" style="flex: 1.15; min-width: 0;">
         <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:16px;">
           <div style="font-family:'Space Grotesk', sans-serif; font-size:14px; font-weight:600;">Estoque</div>
           <a href="estoque.html" id="estoque-count-link" style="color:#6e6e73; font-size:11.5px; text-decoration:none;">—</a>
@@ -171,7 +171,7 @@
       </div>
 
       <!-- coluna 4: Chat -->
-      <div style="flex: 1.15; min-width: 0;">
+      <div class="dashboard-panel" style="flex: 1.15; min-width: 0;">
         <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:16px;">
           <div style="font-family:'Space Grotesk', sans-serif; font-size:14px; font-weight:600;">Chat</div>
           <a href="chat.html" style="color:#7fa8c9; font-size:11.5px; text-decoration:none;">abrir</a>
@@ -462,6 +462,6 @@
 })();
 </script>
 
-<script src="ef-ui.js?v=28"></script>
+<script src="ef-ui.js?v=29"></script>
 </body>
 </html>
