@@ -12,6 +12,17 @@
 (function (g) {
   'use strict';
 
+  // Define o tema antes da renderização para evitar mudança visível de cor
+  // ao navegar. O seletor e a sincronização ficam centralizados no ef-ui.js.
+  (function applyInitialTheme() {
+    var choice = 'auto';
+    try { choice = localStorage.getItem('ef_theme') || 'auto'; } catch (e) {}
+    if (['auto', 'light', 'dark'].indexOf(choice) === -1) choice = 'auto';
+    var systemDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    document.documentElement.dataset.themeChoice = choice;
+    document.documentElement.dataset.theme = choice === 'auto' ? (systemDark ? 'dark' : 'light') : choice;
+  })();
+
   const cfg = g.EF_CONFIG || {};
   const ready = !!(g.supabase && cfg.url && cfg.anonKey && !cfg.url.startsWith('COLE_AQUI'));
   const client = ready ? g.supabase.createClient(cfg.url, cfg.anonKey) : null;

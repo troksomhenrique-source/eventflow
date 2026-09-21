@@ -1,4 +1,4 @@
-/* EventFlow UI System — v22
+/* EventFlow UI System — v28
    Single source of truth for navigation, keyboard UX and consistent shell. */
 (function(){
   'use strict';
@@ -31,6 +31,9 @@
       catalogo:'<path d="M4 4h16v16H4zM4 9h16M9 4v16"/>',
       usuarios:'<path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/>',
       auditoria:'<path d="M4 4h16v16H4z"/><path d="M8 8h8M8 12h5M8 16h3"/><circle cx="17" cy="16" r="3"/><path d="m19.2 18.2 2 2"/>',
+      sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.65 17.65l1.42 1.42M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.65 6.35l1.42-1.42"/>',
+      moon:'<path d="M21 12.8A8.5 8.5 0 1 1 11.2 3 6.6 6.6 0 0 0 21 12.8Z"/>',
+      system:'<rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/>',
       logout:'<path d="M10 17l5-5-5-5M15 12H3"/><path d="M14 3h5a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-5"/>'
     };
     return '<svg class="ef-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+(paths[name]||paths.extras)+'</svg>';
@@ -38,6 +41,43 @@
 
   function roleLabel(role){
     return {owner:'Administrador',gerencia:'Gerência',producao:'Produção',estoque:'Estoque'}[role] || role || 'Usuário';
+  }
+
+  var THEME_KEY='ef_theme';
+  var themeMedia=window.matchMedia?window.matchMedia('(prefers-color-scheme: dark)'):null;
+  function themeChoice(){
+    var choice='auto';
+    try{choice=localStorage.getItem(THEME_KEY)||'auto';}catch(e){}
+    return ['auto','light','dark'].indexOf(choice)!==-1?choice:'auto';
+  }
+  function resolvedTheme(choice){return choice==='auto'?(themeMedia&&themeMedia.matches?'dark':'light'):choice;}
+  function themeLabel(choice){return {auto:'Automático',light:'Claro',dark:'Escuro'}[choice]||'Automático';}
+  function applyTheme(choice){
+    choice=choice||themeChoice();
+    document.documentElement.dataset.themeChoice=choice;
+    document.documentElement.dataset.theme=resolvedTheme(choice);
+    document.querySelectorAll('[data-ef-theme-toggle]').forEach(function(btn){
+      var next=choice==='auto'?'light':choice==='light'?'dark':'auto';
+      btn.innerHTML=icon(choice==='auto'?'system':choice==='light'?'sun':'moon');
+      btn.title='Tema: '+themeLabel(choice)+' · mudar para '+themeLabel(next);
+      btn.setAttribute('aria-label',btn.title);
+    });
+  }
+  function cycleTheme(){
+    var current=themeChoice(),next=current==='auto'?'light':current==='light'?'dark':'auto';
+    try{localStorage.setItem(THEME_KEY,next);}catch(e){}
+    applyTheme(next);
+  }
+  function bindThemeButtons(root){
+    (root||document).querySelectorAll('[data-ef-theme-toggle]').forEach(function(btn){
+      if(btn.dataset.efThemeReady)return;
+      btn.dataset.efThemeReady='1';
+      btn.addEventListener('click',cycleTheme);
+    });
+    applyTheme();
+  }
+  function themeButtonHtml(extraClass){
+    return '<button class="ef-theme-toggle '+(extraClass||'')+'" type="button" data-ef-theme-toggle></button>';
   }
 
   var NAV=[
@@ -77,7 +117,7 @@
     if(window.EF && EF.profile && EF.isOwner && EF.isOwner()) {
       return '<div class="ef-side-top"><a class="ef-brand" href="plataforma.html"><span class="ef-brand-mark">EF</span><span><b>EventFlow</b><small>Administração</small></span></a></div>'+
         '<nav class="ef-nav"><div class="ef-nav-section"><div class="ef-nav-label">Plataforma</div><a class="ef-nav-item ef-nav-active" href="plataforma.html">'+icon('dashboard')+'<span>Empresas e acessos</span></a></div></nav>'+
-        '<div class="ef-user"><div class="ef-avatar" id="user-initials" data-ef-user-initials>··</div><div class="ef-user-copy"><strong id="user-name" data-ef-user-name>Carregando…</strong><small id="user-role" data-ef-user-role>Administrador</small></div><button class="ef-logout" id="logout" type="button" data-ef-logout title="Sair">'+icon('logout')+'</button></div>';
+        '<div class="ef-user"><div class="ef-avatar" id="user-initials" data-ef-user-initials>··</div><div class="ef-user-copy"><strong id="user-name" data-ef-user-name>Carregando…</strong><small id="user-role" data-ef-user-role>Administrador</small></div>'+themeButtonHtml('')+'<button class="ef-logout" id="logout" type="button" data-ef-logout title="Sair">'+icon('logout')+'</button></div>';
     }
     var html='<div class="ef-side-top"><a class="ef-brand" href="dashboard.html"><span class="ef-brand-mark">EF</span><span><b>EventFlow</b><small>Workspace</small></span></a></div><nav class="ef-nav" aria-label="Navegação principal">';
     NAV.forEach(function(group){
@@ -89,7 +129,7 @@
       });
       html+='</div>';
     });
-    html+='</nav><div class="ef-user"><div class="ef-avatar" id="user-initials" data-ef-user-initials>··</div><div class="ef-user-copy"><strong id="user-name" data-ef-user-name>Carregando…</strong><small id="user-role" data-ef-user-role>—</small></div><button class="ef-logout" id="logout" type="button" data-ef-logout title="Sair">'+icon('logout')+'</button></div>';
+    html+='</nav><div class="ef-user"><div class="ef-avatar" id="user-initials" data-ef-user-initials>··</div><div class="ef-user-copy"><strong id="user-name" data-ef-user-name>Carregando…</strong><small id="user-role" data-ef-user-role>—</small></div>'+themeButtonHtml('')+'<button class="ef-logout" id="logout" type="button" data-ef-logout title="Sair">'+icon('logout')+'</button></div>';
     return html;
   }
 
@@ -122,6 +162,7 @@
       side.querySelectorAll('a').forEach(function(a){a.addEventListener('click',closeMenu);});
       var lo=side.querySelector('[data-ef-logout]');
       if(lo) lo.addEventListener('click',function(){ if(window.EF && EF.logout) EF.logout(); });
+      bindThemeButtons(side);
     }
     if(main){ main.classList.add('ef-main'); main.removeAttribute('style'); }
     syncUser();
@@ -299,10 +340,24 @@
   }
 
   function init(){
-    setupShell(); setupEnterToAdd(); setupSearchableAdds(); polishTables(); enhancePageVisuals(); observeDynamicVisuals(); syncUser();
+    applyTheme();
+    if(document.body.classList.contains('ef-public')&&!document.querySelector('.ef-theme-float')){
+      var themeWrap=document.createElement('div');
+      themeWrap.className='ef-theme-float';
+      themeWrap.innerHTML=themeButtonHtml('');
+      document.body.appendChild(themeWrap);
+      bindThemeButtons(themeWrap);
+    }
+    setupShell(); setupEnterToAdd(); setupSearchableAdds(); polishTables(); enhancePageVisuals(); observeDynamicVisuals(); syncUser(); bindThemeButtons(document);
     window.addEventListener('resize',function(){if(window.innerWidth>900)closeMenu();});
   }
 
+  if(themeMedia){
+    var onSystemTheme=function(){if(themeChoice()==='auto')applyTheme('auto');};
+    if(themeMedia.addEventListener)themeMedia.addEventListener('change',onSystemTheme);
+    else if(themeMedia.addListener)themeMedia.addListener(onSystemTheme);
+  }
+
   document.addEventListener('DOMContentLoaded',init);
-  EF_UI.roleLabel=roleLabel; EF_UI.syncUser=syncUser; EF_UI.applyPermissions=applyPermissions; EF_UI.closeMenu=closeMenu; EF_UI.refreshShell=setupShell;
+  EF_UI.roleLabel=roleLabel; EF_UI.syncUser=syncUser; EF_UI.applyPermissions=applyPermissions; EF_UI.closeMenu=closeMenu; EF_UI.refreshShell=setupShell; EF_UI.applyTheme=applyTheme;
 })();
