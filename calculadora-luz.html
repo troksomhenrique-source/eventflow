@@ -1,0 +1,624 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Luz — EventFlow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="ef-config.js"></script>
+<script src="ef-auth.js?v=27"></script>
+<style>
+  body{margin:0;background:#0a0a0b;font-family:'Inter',sans-serif;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  .disp{font-family:'Space Grotesk',sans-serif;}
+  select{font-family:'IBM Plex Mono',monospace;background:transparent;border:none;color:inherit;font-size:12.5px;cursor:pointer;color-scheme:dark;}
+  select option{background:#0d0d0f;color:#f3f1ec;}
+  select:focus{outline:none;}
+  input{font-family:'Inter',sans-serif;}
+  input::placeholder{color:#4a4a4e;}
+  input:focus{outline:none;border-color:#3b82c9 !important;}
+  body [data-financeiro]{display:none !important;}
+  html[data-financeiro="true"] body [data-financeiro]{display:block !important;}
+  body [data-areas]{display:none !important;}
+  html[data-areas="true"] body [data-areas]{display:block !important;}
+  body [data-usuarios]{display:none !important;}
+  html[data-usuarios="true"] body [data-usuarios]{display:block !important;}
+  .icone-acao{cursor:pointer;color:#6e6e73;font-size:11px;}
+  .icone-acao:hover{color:#c9695c;}
+  .secao{padding: 26px 0; border-bottom: 1px solid #1c1c1f;}
+  .secao:last-child{border-bottom:none;}
+  .rotulo-mini{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:#6e6e73;margin-bottom:7px;}
+  .linha-equip{display:flex; align-items:center; padding:11px 0; border-bottom:1px solid #1c1c1f; gap:14px;}
+  .linha-equip:last-child{border-bottom:none;}
+  .card-vara{border:1px solid #1c1c1f; border-radius:8px; padding:20px; margin-bottom:16px;}
+  .nome-vara-input{background:transparent; border:none; border-bottom:1px solid transparent; color:#f3f1ec; font-family:'Space Grotesk',sans-serif; font-size:14.5px; font-weight:600; padding:0 0 3px; width:220px;}
+  .nome-vara-input:focus{border-bottom-color:#3b82c9 !important;}
+  .subcampos{display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:16px; margin-top:12px; padding:12px 14px; background:#111113; border-radius:6px;}
+  .subcampos .field label{display:block; font-size:9.5px; text-transform:uppercase; letter-spacing:.04em; color:#6e6e73; margin-bottom:6px; font-family:'IBM Plex Mono',monospace;}
+  .subcampos .field select, .subcampos .field input{width:100%; background:transparent; border:none; border-bottom:1px solid #29292d; color:#f3f1ec; font-size:12.5px; padding-bottom:6px;}
+  .badge-manual{font-family:'IBM Plex Mono',monospace; font-size:8.5px; color:#c9a15c; border:1px solid #3a301c; padding:1px 5px; border-radius:3px; margin-left:6px;}
+  .add-form-card{background:#131315;border:1px solid #1c1c1f;border-radius:8px;padding:14px 16px;}
+  .add-form-titulo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:#6e6e73;margin-bottom:12px;}
+  .add-form-label{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.05em;text-transform:uppercase;color:#6e6e73;margin-bottom:6px;}
+  .add-form-input{width:100%;background:transparent;border:none;border-bottom:1px solid #29292d;color:#f3f1ec;font-size:13px;padding-bottom:8px;box-sizing:border-box;}
+  .add-form-link{background:none;border:none;padding:0 0 8px;font-size:13px;color:#7fa8c9;cursor:pointer;border-bottom:1px solid #2a3d4d;white-space:nowrap;}
+  .seg-toggle{display:inline-flex;border:1px solid #29292d;border-radius:6px;overflow:hidden;}
+  .seg-toggle span{font-family:'IBM Plex Mono',monospace;padding:6px 14px;font-size:10.5px;letter-spacing:.03em;text-transform:uppercase;cursor:pointer;user-select:none;}
+  .seg-toggle span.ativo{background:#1c2a35;color:#7fa8c9;}
+  .seg-toggle span.inativo{background:transparent;color:#6e6e73;}
+  .tbl-wrap{border:1px solid #1c1c1f; border-radius:10px; overflow:hidden; margin-top:18px;}
+  table.tbl-itens{width:100%; border-collapse:collapse;}
+  table.tbl-itens thead th{text-align:left; font-family:'IBM Plex Mono',monospace; font-size:9.5px; text-transform:uppercase; letter-spacing:.05em; color:#6e6e73; padding:12px 14px; background:#111113; border-bottom:1px solid #1c1c1f; font-weight:500; white-space:nowrap;}
+  table.tbl-itens thead th.num{text-align:right;}
+  table.tbl-itens thead th.check{width:40px;}
+  table.tbl-itens thead th.acoes{width:56px;}
+  table.tbl-itens tbody tr{transition:background .1s ease;}
+  table.tbl-itens tbody tr:hover{background:#111113;}
+  table.tbl-itens tbody tr:nth-child(even){background:#0d0d0e;}
+  table.tbl-itens tbody tr:nth-child(even):hover{background:#131316;}
+  table.tbl-itens tbody td{padding:13px 14px; font-size:13px; color:#e8e6e0; border-bottom:1px solid #17171a; vertical-align:middle;}
+  table.tbl-itens tbody tr:last-child td{border-bottom:none;}
+  table.tbl-itens tbody td.num{text-align:right; font-family:'IBM Plex Mono',monospace; font-size:12px; color:#8c8c91; white-space:nowrap;}
+  table.tbl-itens tbody td.qtd{text-align:right; font-family:'IBM Plex Mono',monospace; font-size:13px; color:#f3f1ec; font-weight:600; white-space:nowrap;}
+  table.tbl-itens tbody td.endereco-col{color:#8c8c91; font-size:12.5px;}
+  table.tbl-itens tbody td.acoes-col{text-align:right;}
+  table.tbl-itens tbody td.item-nome{font-size:13.5px; color:#f3f1ec;}
+  table.tbl-itens tbody td.item-check{padding-right:0;}
+  .item-sub{color:#6e6e73; font-size:11.5px; margin-top:3px; line-height:1.4;}
+  .item-sub.obs{font-style:italic; color:#5c5c60;}
+  table.tbl-itens tbody input[type=checkbox]{width:15px; height:15px; accent-color:#ffd60a; cursor:pointer;}
+  .seg-toggle span.ativo{background:#ffd60a22 !important; color:#ffd60a !important;}
+  .add-form-link{color:#ffd60a !important;}
+  .tbl-wrap{border-top:2px solid #ffd60a66;}
+  .rotulo-cat{width:8px; height:8px; border-radius:50%; background:#ffd60a; display:inline-block; margin-right:10px; flex-shrink:0;}
+</style>
+<link rel="stylesheet" href="ef-ui.css">
+</head>
+<body>
+
+<div style="width: 100%; min-height: 100vh; box-sizing: border-box; display: flex; background: #0a0a0b; color: #f3f1ec;">
+
+  <!-- ============ SIDEBAR ============ -->
+  <div style="width: 220px; flex-shrink: 0; display: flex; flex-direction: column; padding: 36px 24px; box-sizing: border-box;">
+
+    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 40px;">
+      <a href="dashboard.html" style="text-decoration: none; display: flex; align-items: center; gap: 10px;">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" style="flex-shrink: 0;"><path d="M2 12c2 0 2-6.5 4-6.5S8 12 10 12s2-6.5 4-6.5" stroke="#7fa8c9" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div style="font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 13.5px; letter-spacing: -.01em; color: #f3f1ec;">EventFlow</div>
+      </a>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 32px;">
+      <a href="dashboard.html" style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Dashboard</span></a>
+      <a href="agenda.html" style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Agenda</span></a>
+      <a href="estoque.html" style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Estoque</span></a>
+      <a href="clientes.html" data-financeiro style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Clientes</span></a>
+      <a href="vendas.html" data-financeiro style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Vendas</span></a>
+      <a href="chat.html" style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Chat</span></a>
+      <a href="notas.html" style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Notas</span></a>
+    </div>
+
+    <div data-areas>
+      <div class="mono" style="font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: #4a4a4e; margin-bottom: 12px;">Áreas do projeto</div>
+      <div style="display: flex; flex-direction: column; gap: 13px; margin-bottom: 32px;">
+        <a href="calculadora-som.html" style="text-decoration: none; display: flex; align-items: center; gap: 9px;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #ff8a3d; opacity: .55; flex-shrink: 0;"></span><span style="font-size: 12.5px; color: #6e6e73;">Som</span></a>
+        <div style="display: flex; align-items: center; gap: 9px;">
+          <span style="width: 6px; height: 6px; border-radius: 50%; background: #ffd60a; flex-shrink: 0;"></span>
+          <span style="font-size: 12.5px; color: #f3f1ec; font-weight: 600;">Luz</span>
+        </div>
+        <a href="video.html" style="text-decoration: none; display: flex; align-items: center; gap: 9px;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #b073ff; opacity: .55; flex-shrink: 0;"></span><span style="font-size: 12.5px; color: #6e6e73;">Vídeo</span></a>
+        <a href="estrutura.html" style="text-decoration: none; display: flex; align-items: center; gap: 9px;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #3ba7ff; opacity: .55; flex-shrink: 0;"></span><span style="font-size: 12.5px; color: #6e6e73;">Estrutura</span></a>
+        <a href="internet.html" style="text-decoration: none; display: flex; align-items: center; gap: 9px;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #1fe0c4; opacity: .55; flex-shrink: 0;"></span><span style="font-size: 12.5px; color: #6e6e73;">Internet</span></a>
+        <a href="cenografia.html" style="text-decoration: none; display: flex; align-items: center; gap: 9px;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #ff5fa8; opacity: .55; flex-shrink: 0;"></span><span style="font-size: 12.5px; color: #6e6e73;">Cenografia</span></a>
+        <a href="extras.html" style="text-decoration: none; display: flex; align-items: center; gap: 9px;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #4ade80; opacity: .55; flex-shrink: 0;"></span><span style="font-size: 12.5px; color: #6e6e73;">Extras</span></a>
+        <a href="servicos.html" style="text-decoration: none; display: flex; align-items: center; gap: 9px;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #9a9aa0; opacity: .55; flex-shrink: 0;"></span><span style="font-size: 12.5px; color: #6e6e73;">Serviços</span></a>
+        <a href="logistica.html" style="text-decoration: none; display: flex; align-items: center; gap: 9px;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #7fa8c9; opacity: .55; flex-shrink: 0;"></span><span style="font-size: 12.5px; color: #6e6e73;">Logística</span></a>
+        <a href="descritivo-geral.html" style="text-decoration: none; display: flex; align-items: center; gap: 9px;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #7fa8c9; opacity: .55; flex-shrink: 0;"></span><span style="font-size: 12.5px; color: #6e6e73;">Descritivo Geral</span></a>
+        <a href="ordem-servico.html" style="text-decoration: none; display: flex; align-items: center; gap: 9px;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #7fa8c9; opacity: .55; flex-shrink: 0;"></span><span style="font-size: 12.5px; color: #6e6e73;">Ordem de Serviço</span></a>
+      </div>
+    </div>
+
+    <div data-areas>
+      <div class="mono" style="font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: #4a4a4e; margin-bottom: 12px;">Sistema</div>
+      <div style="display: flex; flex-direction: column; gap: 13px;">
+        <a data-usuarios href="usuarios-permissoes.html" style="text-decoration: none; display: block;"><span style="font-size: 12.5px; color: #6e6e73;">Usuários e permissões</span></a>
+      </div>
+    </div>
+
+    <div style="margin-top: auto; padding-top: 18px; border-top: 1px solid #1c1c1f; display: flex; align-items: center; gap: 10px;">
+      <div id="user-initials" style="width: 26px; height: 26px; border-radius: 50%; background: #1a1a1d; display: flex; align-items: center; justify-content: center; font-family: 'Space Grotesk', sans-serif; font-size: 10.5px; font-weight: 600; color: #b8b8bc; flex-shrink: 0;">··</div>
+      <div style="flex-grow: 1; min-width: 0;">
+        <div id="user-name" style="font-size: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Carregando…</div>
+        <div id="user-role" class="mono" style="font-size: 9px; color: #6e6e73; margin-top: 1px;">—</div>
+      </div>
+      <span id="logout" title="Sair" style="cursor: pointer; color: #6e6e73; font-size: 11px; flex-shrink: 0;">sair</span>
+    </div>
+  </div>
+
+  <!-- ============ MAIN ============ -->
+  <div style="flex-grow: 1; padding: 36px 48px 36px 0; box-sizing: border-box; min-width: 0;">
+
+    <div style="margin-bottom: 8px;">
+      <div class="mono" style="color: #6e6e73; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 10px;" id="hoje"></div>
+      <h1 style="font-family: 'Space Grotesk', sans-serif; font-size: 24px; font-weight: 600; margin: 0 0 6px; letter-spacing: -.01em; display:flex; align-items:center;"><span class="rotulo-cat"></span>Luz</h1>
+      <div style="color: #8c8c91; font-size: 13px;" id="resumo"></div>
+    </div>
+
+    <div class="secao" style="padding-top:0;">
+      <div style="max-width: 360px;">
+        <div class="rotulo-mini">Evento</div>
+        <select id="select-evento" style="width: 100%; border-bottom: 1px solid #29292d; padding-bottom: 8px; color: #f3f1ec; font-size: 13.5px;">
+          <option value="">— selecione um evento —</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="bloco-sem-evento" class="secao" style="color: #4a4a4e; font-size: 13px;">Selecione um evento pra montar a lista de Luz.</div>
+
+    <div id="bloco-com-evento" style="display:none;">
+
+      <!-- ============ AÉREOS & SOLOS ============ -->
+      <div class="secao">
+        <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 4px;">
+          <h2 style="font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 600; margin: 0;">Aéreos &amp; Solos</h2>
+        </div>
+
+        <div id="enderecos-wrap"></div>
+        <span id="btn-add-endereco" style="font-size: 13px; color: #7fa8c9; cursor: pointer; border-bottom: 1px solid #2a3d4d; padding-bottom: 8px; display: inline-block; margin-top: 4px;">+ Adicionar Aéreo/Solo</span>
+      </div>
+
+
+      <!-- ============ LISTA DE EQUIPAMENTOS ============ -->
+      <div class="secao" style="border-bottom:none;">
+        <h2 style="font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 600; margin: 0 0 3px;">Lista de luz</h2>
+
+        <div class="add-form-card">
+          <div class="add-form-titulo">Adicionar item</div>
+          <div id="item-toggle-wrap" class="seg-toggle" style="margin-bottom:12px;">
+            <span id="item-modo-estoque" class="ativo">Do estoque</span>
+            <span id="item-modo-escrito" class="inativo">Avulso / manual</span>
+          </div>
+          <div style="display:grid; grid-template-columns: 1.3fr 1fr 70px 1.1fr auto; gap:16px; align-items:end;">
+            <div>
+              <div class="add-form-label">Item</div>
+              <select id="item-estoque-select" class="add-form-input" style="display:none;">
+                <option value="">— escolha um item —</option>
+              </select>
+              <input type="text" id="item-descricao" class="add-form-input">
+            </div>
+            <div>
+              <div class="add-form-label">Endereço</div>
+              <select id="item-endereco-select" class="add-form-input">
+                <option value="">— sem endereço —</option>
+              </select>
+            </div>
+            <div>
+              <div class="add-form-label">Qtd.</div>
+              <input type="number" min="1" step="1" value="1" id="item-qtd" class="add-form-input">
+            </div>
+            <div>
+              <div class="add-form-label">Observação (opcional)</div>
+              <input type="text" id="item-obs" class="add-form-input">
+            </div>
+            <div style="padding-bottom:8px;"><button type="button" class="add-form-link" id="btn-add-item">+ Adicionar</button></div>
+          </div>
+        </div>
+        <div id="bulk-wrap" style="display:none; align-items:center; gap:12px; margin-top:16px; padding:10px 14px; background:#111113; border-radius:6px;">
+          <span class="mono" id="bulk-contagem" style="font-size:11px; color:#7fa8c9;">0 selecionados</span>
+          <span style="color:#4a4a4e;">·</span>
+          <span class="mono" style="font-size:10px; color:#6e6e73; text-transform:uppercase; letter-spacing:.04em;">Atribuir a</span>
+          <select id="bulk-endereco-select" style="border-bottom:1px solid #29292d; padding-bottom:6px; font-size:12.5px; color:#f3f1ec;">
+            <option value="">— sem endereço —</option>
+          </select>
+          <button type="button" class="add-form-link" id="btn-bulk-atribuir" style="padding-bottom:0;">Aplicar</button>
+        </div>
+
+        <div id="itens-vazio" style="display:none; color:#4a4a4e; font-size:13px; padding:18px 0 0;">Nenhum item adicionado ainda.</div>
+        <div id="itens-wrap" class="tbl-wrap" style="display:none;">
+          <table class="tbl-itens">
+            <thead>
+              <tr>
+                <th class="check"></th>
+                <th>Item</th>
+                <th>Endereço</th>
+                <th class="num">Peso</th>
+                <th class="num">Qtd.</th>
+                <th class="acoes"></th>
+              </tr>
+            </thead>
+            <tbody id="itens-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function () {
+  var TEM_ENDERECO = true;
+  var CATEGORIA = 'luz';
+  var ESTOQUE_CATEGORIA = 'Luz';
+  var ROLE_LABEL = { gerencia: 'Gerência', producao: 'Produção', estoque: 'Estoque' };
+  var EVENTOS = [];
+  var ESTOQUE_TODOS = [];
+  var ENDERECOS = [];
+  var ITENS = [];
+  var SELECIONADOS = {};
+  var eventoSelecionadoId = '';
+
+  document.addEventListener('DOMContentLoaded', async function () {
+    if (!window.EF || !EF.ready) return;
+    var ok = await EF.init({ areasOnly: true });
+    if (!ok) return;
+
+    document.getElementById('hoje').textContent = new Date().toLocaleDateString('pt-BR', {
+      weekday: 'long', day: '2-digit', month: 'long'
+    });
+
+    var p = EF.profile;
+    var nome = p.nome || p.email || 'Usuário';
+    var iniciais = nome.split(' ').filter(Boolean).slice(0, 2).map(function (s) { return s[0].toUpperCase(); }).join('');
+    document.getElementById('resumo').textContent = '';
+
+    document.getElementById('select-evento').addEventListener('change', async function () {
+      EF.setEventoSelecionado(this.value);
+      await selecionarEvento(this.value);
+    });
+
+    if (TEM_ENDERECO) {
+      document.getElementById('btn-add-endereco').addEventListener('click', adicionarEndereco);
+      document.getElementById('enderecos-wrap').addEventListener('click', onClickEnderecos);
+      document.getElementById('enderecos-wrap').addEventListener('change', onChangeEnderecos);
+      document.getElementById('btn-bulk-atribuir').addEventListener('click', aplicarBulk);
+    }
+    document.getElementById('btn-add-item').addEventListener('click', adicionarItem);
+    document.getElementById('item-modo-estoque').addEventListener('click', function () { aplicarModoItem(true); });
+    document.getElementById('item-modo-escrito').addEventListener('click', function () { aplicarModoItem(false); });
+    aplicarModoItem(true);
+
+    await carregarEventos();
+    await carregarEstoqueParaItens();
+  });
+
+  function esc(s) { return (s == null ? '' : String(s)).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+  function fmtKg(n) { return (n || n === 0) ? n.toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + ' kg' : '—'; }
+  function estoquePorId(id) { return id ? ESTOQUE_TODOS.find(function (e) { return e.id === id; }) : null; }
+
+  function aplicarModoItem(estoque) {
+    document.getElementById('item-estoque-select').style.display = estoque ? '' : 'none';
+    document.getElementById('item-descricao').style.display = estoque ? 'none' : '';
+    var bE = document.getElementById('item-modo-estoque');
+    var bA = document.getElementById('item-modo-escrito');
+    bE.className = estoque ? 'ativo' : 'inativo';
+    bA.className = estoque ? 'inativo' : 'ativo';
+  }
+
+  async function carregarEstoqueParaItens() {
+    var query = EF.client.from('estoque_itens').select('id, nome, categoria, descricao, peso_kg, quantidade_disponivel').eq('empresa_id', EF.profile.empresa_id);
+    if (ESTOQUE_CATEGORIA) query = query.eq('categoria', ESTOQUE_CATEGORIA);
+    var res = await query.order('categoria', { ascending: true }).order('nome', { ascending: true });
+    ESTOQUE_TODOS = res.data || [];
+    var sel = document.getElementById('item-estoque-select');
+    sel.innerHTML = '<option value="">— escolha um item —</option>';
+    if (ESTOQUE_CATEGORIA) {
+      // categoria já fixa pra esta página — lista direta, sem agrupar
+      ESTOQUE_TODOS.forEach(function (it) {
+        var opt = document.createElement('option');
+        opt.value = it.id;
+        opt.textContent = it.nome;
+        sel.appendChild(opt);
+      });
+      if (!ESTOQUE_TODOS.length) {
+        sel.innerHTML = '<option value="">— nenhum item de ' + ESTOQUE_CATEGORIA + ' no Estoque —</option>';
+      }
+    } else {
+      // sem categoria fixa (Extras) — mostra tudo, agrupado por categoria
+      var grupoAtual = null, optgroupEl = null;
+      ESTOQUE_TODOS.forEach(function (it) {
+        if (it.categoria !== grupoAtual) {
+          grupoAtual = it.categoria;
+          optgroupEl = document.createElement('optgroup');
+          optgroupEl.label = grupoAtual || 'Outras';
+          sel.appendChild(optgroupEl);
+        }
+        var opt = document.createElement('option');
+        opt.value = it.id;
+        opt.textContent = it.nome;
+        optgroupEl.appendChild(opt);
+      });
+    }
+  }
+
+  async function selecionarEvento(id) {
+    eventoSelecionadoId = id;
+    if (!eventoSelecionadoId) {
+      document.getElementById('bloco-sem-evento').style.display = '';
+      document.getElementById('bloco-com-evento').style.display = 'none';
+      ENDERECOS = []; ITENS = []; SELECIONADOS = {};
+      return;
+    }
+    document.getElementById('bloco-sem-evento').style.display = 'none';
+    document.getElementById('bloco-com-evento').style.display = '';
+    if (TEM_ENDERECO) await carregarEnderecos();
+    await carregarItens();
+  }
+
+  async function carregarEventos() {
+    var res = await EF.client.from('eventos').select('id, nome, data_inicio').eq('empresa_id', EF.profile.empresa_id).order('data_inicio', { ascending: false });
+    EVENTOS = res.data || [];
+    var select = document.getElementById('select-evento');
+    EVENTOS.forEach(function (ev) {
+      var opt = document.createElement('option');
+      opt.value = ev.id;
+      opt.textContent = ev.nome;
+      select.appendChild(opt);
+    });
+    // lembra o evento escolhido em outra página, se ele ainda existir na lista
+    var lembrado = EF.getEventoSelecionado();
+    if (lembrado && EVENTOS.some(function (ev) { return ev.id === lembrado; })) {
+      select.value = lembrado;
+      await selecionarEvento(lembrado);
+    }
+  }
+
+  // ---------------- ENDEREÇOS (Aéreo/Solo) ----------------
+
+  async function carregarEnderecos() {
+    var res = await EF.client.from('evento_varas').select('*').eq('evento_id', eventoSelecionadoId).order('ordem', { ascending: true });
+    if (res.error) { console.error('Erro ao carregar endereços:', res.error); ENDERECOS = []; }
+    else { ENDERECOS = (res.data || []).map(function (e) { e.tipo = e.tipo || (e.suspenso ? 'aereo' : 'solo'); e.suspenso = e.tipo !== 'solo'; return e; }); }
+    renderizarEnderecos();
+  }
+
+  function enderecoPorId(id) { return ENDERECOS.find(function (e) { return e.id === id; }); }
+
+  function renderizarEnderecos() {
+    var wrap = document.getElementById('enderecos-wrap');
+    wrap.innerHTML = ENDERECOS.map(function (e) {
+      var aereo = e.tipo !== 'solo';
+      return '<div class="card-vara" data-id="' + e.id + '">' +
+        '<div style="display:flex; align-items:center; justify-content:space-between; gap:14px; margin-bottom:4px; flex-wrap:wrap;">' +
+        '<input type="text" class="nome-vara-input endereco-nome" data-id="' + e.id + '" value="' + esc(e.nome) + '">' +
+        '<div style="display:flex; align-items:center; gap:14px;">' +
+        '<span class="seg-toggle">' +
+        '<span class="' + (aereo ? 'ativo' : 'inativo') + ' endereco-tipo" data-id="' + e.id + '" data-tipo="aereo">Aéreo</span>' +
+        '<span class="' + (!aereo ? 'ativo' : 'inativo') + ' endereco-tipo" data-id="' + e.id + '" data-tipo="solo">Solo</span>' +
+        '</span>' +
+        '<span class="icone-acao endereco-excluir" data-id="' + e.id + '">excluir</span>' +
+        '</div></div>' +
+        '<div class="subcampos">' +
+        (aereo ?
+          '<div class="field"><label>Qtd. pontos</label><input type="number" min="1" step="1" class="endereco-pontos" data-id="' + e.id + '" value="' + (e.qtd_pontos || 1) + '"></div>' +
+          '<div class="field"><label>Peso por ponto (kg)</label><input type="number" min="0" step="0.1" class="endereco-peso-ponto" data-id="' + e.id + '" value="' + (e.peso_por_ponto_manual != null ? e.peso_por_ponto_manual : '') + '" placeholder="0,0"></div>'
+          :
+          '<div class="field"><label>Área de apoio (m²)</label><input type="number" min="0.01" step="0.01" class="endereco-area-m2" data-id="' + e.id + '" value="' + (e.area_m2 != null ? e.area_m2 : '') + '" placeholder="Ex: 4,00"></div>'
+        ) +
+        '</div></div>';
+    }).join('');
+
+    ['item-endereco-select', 'bulk-endereco-select'].forEach(function (selId) {
+      var sel = document.getElementById(selId);
+      if (!sel) return;
+      var atual = sel.value;
+      sel.innerHTML = '<option value="">— sem endereço —</option>' + ENDERECOS.map(function (e) {
+        return '<option value="' + e.id + '">' + esc(e.nome) + ' (' + (e.tipo === 'solo' ? 'Solo' : 'Aéreo') + ')</option>';
+      }).join('');
+      sel.value = atual && enderecoPorId(atual) ? atual : '';
+    });
+  }
+
+  async function adicionarEndereco() {
+    if (!eventoSelecionadoId) return;
+    var payload = { evento_id: eventoSelecionadoId, categoria: 'Compartilhado', nome: 'Aéreo/Solo ' + (ENDERECOS.length + 1), tipo: 'aereo', suspenso: true, qtd_pontos: 1, ordem: ENDERECOS.length };
+    var ins = await EF.client.from('evento_varas').insert(payload).select().maybeSingle();
+    if (ins.error) { alert('Erro ao adicionar endereço: ' + ins.error.message); return; }
+    ENDERECOS.push(ins.data);
+    renderizarEnderecos();
+    var novoEnderecoEl = document.getElementById('enderecos-wrap').lastElementChild;
+    scrollSuavePara(novoEnderecoEl);
+  }
+
+  function onClickEnderecos(e) {
+    var id = e.target.getAttribute('data-id');
+    if (!id) return;
+    if (e.target.classList.contains('endereco-excluir')) { excluirEndereco(id); return; }
+    if (e.target.classList.contains('endereco-tipo')) {
+      var tipo = e.target.getAttribute('data-tipo');
+      var end = enderecoPorId(id);
+      if (!end || end.tipo === tipo) return;
+      end.tipo = tipo;
+      renderizarEnderecos();
+      EF.client.from('evento_varas').update({ tipo: tipo, suspenso: tipo === 'aereo' }).eq('id', id).then(function (r) {
+        if (r.error) alert('Erro ao salvar tipo: ' + r.error.message);
+      });
+      return;
+    }
+  }
+
+  function onChangeEnderecos(e) {
+    var id = e.target.getAttribute('data-id');
+    if (!id) return;
+    var end = enderecoPorId(id);
+    if (!end) return;
+    var patch = null;
+    if (e.target.classList.contains('endereco-nome')) {
+      end.nome = e.target.value.trim() || end.nome;
+      patch = { nome: end.nome };
+      var op = document.querySelector('#item-endereco-select option[value="' + id + '"]');
+    } else if (e.target.classList.contains('endereco-pontos')) {
+      var v = parseInt(e.target.value, 10) || 1;
+      end.qtd_pontos = v;
+      patch = { qtd_pontos: v };
+    } else if (e.target.classList.contains('endereco-peso-ponto')) {
+      var vp = e.target.value === '' ? null : parseFloat(e.target.value);
+      end.peso_por_ponto_manual = vp;
+      patch = { peso_por_ponto_manual: vp };
+    } else if (e.target.classList.contains('endereco-area-m2')) {
+      var area = e.target.value === '' ? null : parseFloat(e.target.value);
+      end.area_m2 = area;
+      patch = { area_m2: area };
+    }
+    if (!patch) return;
+    EF.client.from('evento_varas').update(patch).eq('id', id).then(function (r) {
+      if (r.error) alert('Erro ao salvar: ' + r.error.message);
+    });
+    if (patch.nome) renderizarEnderecos();
+  }
+
+  async function excluirEndereco(id) {
+    if (!confirm('Excluir este Aéreo/Solo? Os itens endereçados a ele ficam sem endereço.')) return;
+    var { error } = await EF.client.from('evento_varas').delete().eq('id', id);
+    if (error) { alert('Erro ao excluir: ' + error.message); return; }
+    ENDERECOS = ENDERECOS.filter(function (e) { return e.id !== id; });
+    renderizarEnderecos();
+    await carregarItens();
+  }
+
+
+  function scrollSuavePara(el) {
+    if (!el) return;
+    setTimeout(function () { try { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {} }, 80);
+  }
+
+  // ---------------- LISTA DE ITENS ----------------
+
+  async function carregarItens() {
+    var res = await EF.client.from('evento_itens_extras').select('*').eq('evento_id', eventoSelecionadoId).eq('area', CATEGORIA).order('ordem', { ascending: true });
+    if (res.error) { console.error('Erro ao carregar itens:', res.error); ITENS = []; }
+    else { ITENS = res.data || []; }
+    SELECIONADOS = {};
+    renderizarItens();
+  }
+
+  function nomeEndereco(id) {
+    if (!id) return '—';
+    var e = enderecoPorId(id);
+    return e ? e.nome : '—';
+  }
+
+  function renderizarItens() {
+    var tbody = document.getElementById('itens-tbody');
+    var vazio = document.getElementById('itens-vazio');
+    var tblWrap = document.getElementById('itens-wrap');
+    var temItens = ITENS.length > 0;
+    vazio.style.display = temItens ? 'none' : '';
+    tblWrap.style.display = temItens ? '' : 'none';
+    tbody.innerHTML = ITENS.map(function (it) {
+      var manual = !it.estoque_item_id;
+      var stockInfo = estoquePorId(it.estoque_item_id);
+      var descricaoStock = stockInfo && stockInfo.descricao ? stockInfo.descricao : '';
+      var pesoUn = stockInfo && stockInfo.peso_kg != null ? stockInfo.peso_kg : null;
+      var pesoTxt = pesoUn == null ? '—' : (it.quantidade > 1 ? (fmtKg(pesoUn) + '/un · ' + fmtKg(pesoUn * it.quantidade)) : fmtKg(pesoUn));
+      return '<tr data-id="' + it.id + '">' +
+        '<td class="item-check"><input type="checkbox" class="item-check" data-id="' + it.id + '"' + (SELECIONADOS[it.id] ? ' checked' : '') + '></td>' +
+        '<td class="item-nome">' +
+        esc(it.descricao) + (manual ? ' <span class="badge-manual">AVULSO</span>' : '') +
+        (descricaoStock ? '<div class="item-sub">' + esc(descricaoStock) + '</div>' : '') +
+        (it.observacao ? '<div class="item-sub obs">' + esc(it.observacao) + '</div>' : '') +
+        '</td>' +
+        (TEM_ENDERECO ? '<td class="endereco-col">' + esc(nomeEndereco(it.endereco_id)) + '</td>' : '') +
+        '<td class="num">' + pesoTxt + '</td>' +
+        '<td class="qtd">' + it.quantidade + 'x</td>' +
+        '<td class="acoes-col"><span class="icone-acao item-excluir" data-id="' + it.id + '">excluir</span></td>' +
+        '</tr>';
+    }).join('');
+
+    tbody.querySelectorAll('.item-check').forEach(function (chk) {
+      chk.addEventListener('change', function () {
+        var id = this.getAttribute('data-id');
+        if (this.checked) SELECIONADOS[id] = true; else delete SELECIONADOS[id];
+        atualizarBulkBar();
+      });
+    });
+    tbody.querySelectorAll('.item-excluir').forEach(function (el) {
+      el.addEventListener('click', function () { excluirItem(this.getAttribute('data-id')); });
+    });
+    atualizarBulkBar();
+  }
+
+  function atualizarBulkBar() {
+    if (!TEM_ENDERECO) return;
+    var n = Object.keys(SELECIONADOS).length;
+    var bar = document.getElementById('bulk-wrap');
+    bar.style.display = n ? 'flex' : 'none';
+    document.getElementById('bulk-contagem').textContent = n + (n === 1 ? ' selecionado' : ' selecionados');
+  }
+
+  async function aplicarBulk() {
+    var ids = Object.keys(SELECIONADOS);
+    if (!ids.length) return;
+    var novoEndereco = document.getElementById('bulk-endereco-select').value || null;
+    var { error } = await EF.client.from('evento_itens_extras').update({ endereco_id: novoEndereco }).in('id', ids);
+    if (error) { alert('Erro ao atribuir endereço: ' + error.message); return; }
+    ITENS.forEach(function (it) { if (SELECIONADOS[it.id]) it.endereco_id = novoEndereco; });
+    SELECIONADOS = {};
+    renderizarItens();
+  }
+
+  async function adicionarItem() {
+    var selEstoque = document.getElementById('item-estoque-select');
+    var descEl = document.getElementById('item-descricao');
+    var qtdEl = document.getElementById('item-qtd');
+    var obsEl = document.getElementById('item-obs');
+    var modoEstoque = selEstoque.style.display !== 'none';
+    var desc = '', estoqueItemId = null;
+    if (modoEstoque) {
+      if (!selEstoque.value) { alert('Escolha um item do estoque antes de adicionar.'); selEstoque.focus(); return; }
+      var item = ESTOQUE_TODOS.find(function (it) { return it.id === selEstoque.value; });
+      desc = item ? item.nome : '';
+      estoqueItemId = selEstoque.value;
+    } else {
+      desc = descEl.value.trim();
+      if (!desc) { alert('Descreva o item antes de adicionar.'); descEl.focus(); return; }
+    }
+    var qtd = parseInt(qtdEl.value, 10) || 1;
+    var obs = obsEl.value.trim();
+    var payload = { evento_id: eventoSelecionadoId, area: CATEGORIA, descricao: desc, quantidade: qtd, observacao: obs, ordem: ITENS.length };
+    if (estoqueItemId) payload.estoque_item_id = estoqueItemId;
+    if (TEM_ENDERECO) {
+      var endSel = document.getElementById('item-endereco-select');
+      if (endSel && endSel.value) payload.endereco_id = endSel.value;
+    }
+    // V18: planejar o item NÃO baixa estoque. A baixa física acontece somente
+    // quando a Ordem de Serviço é gerada, de forma atômica no Supabase.
+    if (estoqueItemId) {
+      var itemLocal = ESTOQUE_TODOS.find(function (it) { return it.id === estoqueItemId; });
+      if (itemLocal && qtd > Number(itemLocal.quantidade_disponivel || 0)) {
+        alert('Há apenas ' + Number(itemLocal.quantidade_disponivel || 0) + ' disponível(is) de "' + itemLocal.nome + '" neste momento. Você pode ajustar o planejamento ou liberar estoque antes de gerar a OS.');
+        selEstoque.focus(); return;
+      }
+    }
+    var ins = await EF.client.from('evento_itens_extras').insert(payload).select().maybeSingle();
+    if (ins.error) {
+      alert('Erro ao adicionar item: ' + ins.error.message); return;
+    }
+    ITENS.push(ins.data);
+    renderizarItens();
+    var novaLinha = document.getElementById('itens-tbody').lastElementChild;
+    scrollSuavePara(novaLinha);
+    if (modoEstoque) { selEstoque.value = ''; selEstoque.focus(); } else { descEl.value = ''; descEl.focus(); }
+    qtdEl.value = '1'; obsEl.value = '';
+  }
+
+  async function excluirItem(id) {
+    if (!confirm('Remover este item da lista?')) return;
+    var removido = ITENS.find(function (it) { return it.id === id; });
+    var { error } = await EF.client.from('evento_itens_extras').delete().eq('id', id);
+    if (error) { alert('Erro ao excluir: ' + error.message); return; }
+    // V18: como o planejamento ainda não baixou estoque, remover a linha também
+    // não devolve nada ao estoque.
+    ITENS = ITENS.filter(function (it) { return it.id !== id; });
+    delete SELECIONADOS[id];
+    renderizarItens();
+  }
+})();
+</script>
+
+<script src="ef-ui.js?v=27"></script>
+</body>
+</html>

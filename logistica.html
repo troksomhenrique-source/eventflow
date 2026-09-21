@@ -1,0 +1,1253 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Logística — EventFlow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="ef-config.js"></script>
+<script src="ef-auth.js?v=27"></script>
+<style>
+  body{margin:0;background:#0a0a0b;font-family:'Inter',sans-serif;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  .disp{font-family:'Space Grotesk',sans-serif;}
+  select{font-family:'IBM Plex Mono',monospace;background:transparent;border:none;color:inherit;font-size:12.5px;cursor:pointer;color-scheme:dark;}
+  select option{background:#0d0d0f;color:#f3f1ec;}
+  select:focus{outline:none;}
+  input, textarea{font-family:'Inter',sans-serif;}
+  input::placeholder, textarea::placeholder{color:#4a4a4e;}
+  input:focus, textarea:focus{outline:none;border-color:#3b82c9 !important;}
+  body [data-financeiro]{display:none !important;}
+  html[data-financeiro="true"] body [data-financeiro]{display:block !important;}
+  body [data-areas]{display:none !important;}
+  html[data-areas="true"] body [data-areas]{display:block !important;}
+  body [data-usuarios]{display:none !important;}
+  html[data-usuarios="true"] body [data-usuarios]{display:block !important;}
+  .icone-acao{cursor:pointer;color:#6e6e73;font-size:11px;}
+  .icone-acao:hover{color:#c9695c;}
+  .secao{padding: 26px 0; border-bottom: 1px solid #1c1c1f;}
+  .secao:last-child{border-bottom:none;}
+  .rotulo-mini{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:#6e6e73;margin-bottom:7px;}
+  .campo{width:100%;background:transparent;border:none;border-bottom:1px solid #29292d;color:#f3f1ec;font-size:13.5px;padding-bottom:8px;box-sizing:border-box;}
+  .campo-mini{width:100%;background:transparent;border:none;border-bottom:1px solid #29292d;color:#f3f1ec;font-size:12.5px;padding-bottom:5px;box-sizing:border-box;}
+  .kpi-mem{flex:1; padding:0 22px; border-right:1px solid #1c1c1f;}
+  .kpi-mem:first-child{padding-left:0;}
+  .kpi-mem:last-child{border-right:none;}
+  .col-dia{width:310px; flex-shrink:0; border:1px solid #1c1c1f; border-radius:12px; padding:16px; display:flex; flex-direction:column; gap:16px; background:#0d0d0f;}
+  .tag-dia{font-size:11px; padding:4px 9px; border-radius:5px; display:inline-block;}
+  .tag-dia.montagem{background:#231b0d; color:#c9a15c;}
+  .tag-dia.operacao{background:#111c26; color:#7fa8c9;}
+  .tag-dia.desmontagem{background:#22151a; color:#c9695c;}
+  .dia-bloco{display:flex;flex-direction:column;gap:9px;padding-top:2px;}
+  .dia-bloco + .dia-bloco{border-top:1px solid #1c1c1f;padding-top:16px;}
+  .dia-bloco-titulo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;color:#77777d;}
+  .card-veiculo{border:1px solid #232328;border-radius:9px;padding:10px 11px;background:#111113;display:flex;align-items:center;gap:9px;}
+  .veiculo-info{flex:1;min-width:0;}
+  .veiculo-nome{font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .veiculo-meta{font-size:9.5px;color:#66666c;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .equipe-linha{border:1px solid #232328;border-radius:9px;padding:10px 11px;background:#111113;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;}
+  .equipe-nome{font-size:12px;font-weight:500;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .equipe-tipo{font-size:9px;color:#66666c;margin-top:3px;text-transform:uppercase;letter-spacing:.04em;}
+  .equipe-veiculo{grid-column:1/-1;grid-row:2;width:100%;border:1px solid #29292d!important;border-radius:7px;padding:7px!important;font-size:10px!important;background:#151518!important;}
+  .equipe-linha>button{grid-column:2;grid-row:1;}
+  .dia-vazio{color:#505056;font-size:10.5px;padding:2px 0;}
+  .dia-acao{width:100%;min-height:35px;border:1px solid rgba(155,180,199,.22);border-radius:9px;background:#9bb4c7;color:#09090b;font:600 10px 'IBM Plex Mono',monospace;letter-spacing:.04em;text-transform:uppercase;cursor:pointer;}
+  .dia-acao:hover{background:#adc2d2;}
+  .dia-acao:disabled{opacity:.35;cursor:not-allowed;}
+  .form-acoes{display:flex;gap:8px;align-items:center;}
+  .form-confirmar{flex:1;min-height:32px;border:0;border-radius:7px;background:#9bb4c7;color:#09090b;font-size:11px;font-weight:600;cursor:pointer;}
+  .form-cancelar{border:0;background:none;color:#77777d;font-size:10.5px;cursor:pointer;padding:7px;}
+  .copiar-form{display:none;border-top:1px solid #1c1c1f;padding-top:12px;flex-direction:column;gap:8px;}
+  .copiar-dias{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;}
+  .copiar-dia{display:flex;align-items:center;gap:7px;padding:7px 8px;border:1px solid #232328;border-radius:7px;background:#111113;color:#a8a8ad;font-size:10px;cursor:pointer;}
+  .copiar-dia input{width:auto;margin:0;}
+  .add-form-card{background:#131315;border:1px solid #1c1c1f;border-radius:8px;padding:14px 16px;}
+  .add-form-titulo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:#6e6e73;margin-bottom:12px;}
+  .add-form-label{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.05em;text-transform:uppercase;color:#6e6e73;margin-bottom:6px;}
+  .add-form-input{width:100%;background:transparent;border:none;border-bottom:1px solid #29292d;color:#f3f1ec;font-size:13px;padding-bottom:8px;box-sizing:border-box;}
+  .add-form-link{background:none;border:none;padding:0 0 8px;font-size:13px;color:#7fa8c9;cursor:pointer;border-bottom:1px solid #2a3d4d;white-space:nowrap;}
+  .aviso-conflito{display:none;margin:7px 0 9px;padding:7px 9px;border-radius:7px;background:rgba(196,165,116,.09);border:1px solid rgba(196,165,116,.2);color:#d4b475;font-size:10.5px;line-height:1.4;}
+</style>
+<link rel="stylesheet" href="ef-ui.css">
+</head>
+<body>
+
+<div style="width: 100%; min-height: 100vh; box-sizing: border-box; display: flex; background: #0a0a0b; color: #f3f1ec;">
+
+  <!-- ============ SIDEBAR ============ -->
+  <div style="width: 220px; flex-shrink: 0; display: flex; flex-direction: column; padding: 36px 24px; box-sizing: border-box;">
+
+    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 40px;">
+      <a href="dashboard.html" style="text-decoration: none; display: flex; align-items: center; gap: 10px;">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" style="flex-shrink: 0;"><path d="M2 12c2 0 2-6.5 4-6.5S8 12 10 12s2-6.5 4-6.5" stroke="#7fa8c9" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div style="font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 13.5px; letter-spacing: -.01em; color: #f3f1ec;">EventFlow</div>
+      </a>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 32px;">
+      <a href="dashboard.html" style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Dashboard</span></a>
+      <a href="agenda.html" style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Agenda</span></a>
+      <a href="estoque.html" style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Estoque</span></a>
+      <a href="clientes.html" data-financeiro style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Clientes</span></a>
+      <a href="vendas.html" data-financeiro style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Vendas</span></a>
+      <a href="chat.html" style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Chat</span></a>
+      <a href="notas.html" style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Notas</span></a>
+    </div>
+
+    <div data-areas>
+      <div class="mono" style="font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: #4a4a4e; margin-bottom: 12px;">Áreas do projeto</div>
+      <div style="display: flex; flex-direction: column; gap: 13px; margin-bottom: 32px;">
+        <a href="calculadora-som.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Som</span></a>
+        <a href="calculadora-luz.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Luz</span></a>
+<a href="video.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Vídeo</span></a>
+        <a href="cenografia.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Cenografia</span></a>
+        <a href="servicos.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Serviços</span></a>
+        <div style="display: flex; align-items: center; gap: 9px;">
+          <span style="width: 4px; height: 4px; border-radius: 50%; background: #7fa8c9; flex-shrink: 0;"></span>
+          <span style="font-size: 12.5px; color: #f3f1ec; font-weight: 600;">Logística</span>
+        </div>
+        <a href="descritivo-geral.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Descritivo Geral</span></a>
+        <a href="ordem-servico.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Ordem de Serviço</span></a>
+      </div>
+    </div>
+
+    <div data-areas>
+      <div class="mono" style="font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: #4a4a4e; margin-bottom: 12px;">Sistema</div>
+      <div style="display: flex; flex-direction: column; gap: 13px;">
+        <a data-usuarios href="usuarios-permissoes.html" style="text-decoration: none; display: block;"><span style="font-size: 12.5px; color: #6e6e73;">Usuários e permissões</span></a>
+      </div>
+    </div>
+
+    <div style="margin-top: auto; padding-top: 18px; border-top: 1px solid #1c1c1f; display: flex; align-items: center; gap: 10px;">
+      <div id="user-initials" style="width: 26px; height: 26px; border-radius: 50%; background: #1a1a1d; display: flex; align-items: center; justify-content: center; font-family: 'Space Grotesk', sans-serif; font-size: 10.5px; font-weight: 600; color: #b8b8bc; flex-shrink: 0;">··</div>
+      <div style="flex-grow: 1; min-width: 0;">
+        <div id="user-name" style="font-size: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Carregando…</div>
+        <div id="user-role" class="mono" style="font-size: 9px; color: #6e6e73; margin-top: 1px;">—</div>
+      </div>
+      <span id="logout" title="Sair" style="cursor: pointer; color: #6e6e73; font-size: 11px; flex-shrink: 0;">sair</span>
+    </div>
+  </div>
+
+  <!-- ============ MAIN ============ -->
+  <div style="flex-grow: 1; padding: 36px 48px 36px 0; box-sizing: border-box; min-width: 0;">
+
+    <div style="margin-bottom: 8px;">
+      <div class="mono" style="color: #6e6e73; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 10px;" id="hoje"></div>
+      <h1 style="font-family: 'Space Grotesk', sans-serif; font-size: 24px; font-weight: 600; margin: 0 0 6px; letter-spacing: -.01em;">Logística</h1>
+      <div style="color: #8c8c91; font-size: 13px;" id="resumo"></div>
+    </div>
+
+    <div class="secao">
+      <div style="max-width: 360px; margin-top: 14px; margin-bottom: 4px;">
+        <div class="rotulo-mini">Evento</div>
+        <select id="select-evento" style="width: 100%; border-bottom: 1px solid #29292d; padding-bottom: 8px; color: #f3f1ec; font-size: 13.5px;">
+          <option value="">— selecione um evento —</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="bloco-sem-evento" class="secao" style="color: #4a4a4e; font-size: 13px;">Selecione um evento pra bater a logística de veículos e técnicos.</div>
+
+    <div id="bloco-com-evento" style="display:none;">
+
+      <div class="secao">
+        <div style="display: flex; padding: 0 0 4px;">
+          <div class="kpi-mem"><div class="mono" style="font-size:9.5px; letter-spacing:.06em; text-transform:uppercase; color:#6e6e73; margin-bottom:8px;">Dias do evento</div><div id="kpi-dias" class="disp" style="font-size:16px; font-weight:600;">—</div></div>
+          <div class="kpi-mem"><div class="mono" style="font-size:9.5px; letter-spacing:.06em; text-transform:uppercase; color:#6e6e73; margin-bottom:8px;">Veículos no total</div><div id="kpi-veiculos" class="disp" style="font-size:16px; font-weight:600;">—</div></div>
+          <div class="kpi-mem"><div class="mono" style="font-size:9.5px; letter-spacing:.06em; text-transform:uppercase; color:#6e6e73; margin-bottom:8px;">Técnicos — montagem</div><div id="kpi-tec-montagem" class="disp" style="font-size:16px; font-weight:600;">—</div></div>
+          <div class="kpi-mem"><div class="mono" style="font-size:9.5px; letter-spacing:.06em; text-transform:uppercase; color:#6e6e73; margin-bottom:8px;">Técnicos — operação</div><div id="kpi-tec-operacao" class="disp" style="font-size:16px; font-weight:600;">—</div></div>
+          <div class="kpi-mem"><div class="mono" style="font-size:9.5px; letter-spacing:.06em; text-transform:uppercase; color:#6e6e73; margin-bottom:8px;">Técnicos — desmontagem</div><div id="kpi-tec-desmontagem" class="disp" style="font-size:16px; font-weight:600;">—</div></div>
+        </div>
+      </div>
+<div class="secao" style="border-bottom:none;">
+        <div id="dias-wrap" style="display:flex; gap:18px; overflow-x:auto; padding-bottom:10px;"></div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function () {
+  var ROLE_LABEL = { gerencia: 'Gerência', producao: 'Produção', estoque: 'Estoque' };
+  var EVENTOS = [];
+  var PROFILES = []; // pessoas da empresa, candidatas a "técnico"
+  var EQUIPE = []; // equipe interna e freelancers cadastrados
+  var DIAS = []; // [{data:'YYYY-MM-DD', label, tipoDia}]
+  var VEICULOS = []; // linhas de evento_logistica_veiculos do evento
+  var VEICULOS_CADASTRO = []; // frota cadastrada em Estoque → Veículos (empresa toda)
+  var OCUPACAO = {}; // dia -> { veiculo_id: { eventoNome } } — veículos da frota já escalados NOUTRO evento naquele dia
+  var OCUPACAO_TECNICOS = []; // escalas de pessoas nos dias exibidos
+  var eventoSelecionadoId = '';
+
+  function esc(v) {
+    return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  var TIPO_DIA_LABEL = { montagem: 'Montagem', operacao: 'Operação', desmontagem: 'Desmontagem' };
+
+  document.addEventListener('DOMContentLoaded', async function () {
+    if (!window.EF || !EF.ready) return;
+    var ok = await EF.init({ logisticaOnly: true });
+    if (!ok) return;
+
+    document.getElementById('hoje').textContent = new Date().toLocaleDateString('pt-BR', {
+      weekday: 'long', day: '2-digit', month: 'long'
+    });
+
+    var p = EF.profile;
+    var nome = p.nome || p.email || 'Usuário';
+    var iniciais = nome.split(' ').filter(Boolean).slice(0, 2).map(function (s) { return s[0].toUpperCase(); }).join('');
+    document.getElementById('resumo').textContent = '';
+
+
+    document.getElementById('select-evento').addEventListener('change', async function () {
+      eventoSelecionadoId = this.value;
+      if (!eventoSelecionadoId) {
+        document.getElementById('bloco-sem-evento').style.display = '';
+        document.getElementById('bloco-com-evento').style.display = 'none';
+        return;
+      }
+      document.getElementById('bloco-sem-evento').style.display = 'none';
+      document.getElementById('bloco-com-evento').style.display = '';
+      await carregarLogistica();
+    });
+
+    await carregarEventos();
+    await carregarProfiles();
+    await carregarEquipe();
+  });
+
+  async function carregarEventos() {
+    var res = await EF.client.from('eventos').select('id, nome, data_inicio, data_fim').eq('empresa_id', EF.profile.empresa_id).order('data_inicio', { ascending: false });
+    EVENTOS = res.data || [];
+    var select = document.getElementById('select-evento');
+    EVENTOS.forEach(function (ev) {
+      var opt = document.createElement('option');
+      opt.value = ev.id;
+      opt.textContent = ev.nome + (ev.data_inicio ? ' — ' + new Date(ev.data_inicio).toLocaleDateString('pt-BR') : '');
+      select.appendChild(opt);
+    });
+  }
+
+  async function carregarProfiles() {
+    var res = await EF.client.from('profiles').select('id, nome, email, role, ativo').eq('empresa_id', EF.profile.empresa_id).order('nome', { ascending: true });
+    PROFILES = (res.data || []).filter(function (u) { return u.ativo !== false; });
+  }
+
+  async function carregarEquipe() {
+    if (!EF.canSeeEquipe || !EF.canSeeEquipe()) { EQUIPE = []; return; }
+    var res = await EF.client.from('equipe_profissionais').select('id,profile_id,tipo,nome,funcoes,possui_veiculo,veiculo_descricao,valor_cache,ativo').eq('empresa_id', EF.profile.empresa_id).eq('ativo', true).order('nome', { ascending: true });
+    EQUIPE = res.error ? [] : (res.data || []);
+  }
+
+  // ---------------- DIAS DO EVENTO ----------------
+
+  function dataParaISO(d) {
+    var y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, '0'), day = String(d.getDate()).padStart(2, '0');
+    return y + '-' + m + '-' + day;
+  }
+
+  // uma coluna por dia corrido entre data_inicio e data_fim do evento
+  // (inclusive dos dois lados) — ex: evento de 3 dias = 3 colunas
+  function calcularDiasEvento(ev) {
+    var dias = [];
+    if (!ev || !ev.data_inicio) return dias;
+    var ini = new Date(ev.data_inicio);
+    var fim = ev.data_fim ? new Date(ev.data_fim) : ini;
+    ini.setHours(0, 0, 0, 0);
+    fim.setHours(0, 0, 0, 0);
+    var cursor = new Date(ini);
+    var protecao = 0;
+    while (cursor <= fim && protecao < 60) {
+      dias.push(dataParaISO(cursor));
+      cursor.setDate(cursor.getDate() + 1);
+      protecao++;
+    }
+    if (!dias.length) dias.push(dataParaISO(ini));
+    return dias;
+  }
+
+  function tipoDiaPadrao(idx, total) {
+    if (total <= 1) return 'operacao';
+    if (idx === 0) return 'montagem';
+    if (idx === total - 1) return 'desmontagem';
+    return 'operacao';
+  }
+
+  async function carregarLogistica() {
+    var ev = EVENTOS.find(function (e) { return e.id === eventoSelecionadoId; });
+    var datasEvento = calcularDiasEvento(ev);
+
+    var resDias = await EF.client.from('evento_logistica_dias').select('*').eq('evento_id', eventoSelecionadoId);
+    if (resDias.error) {
+      alert('Erro ao carregar a logística deste evento: ' + resDias.error.message + '\n\nSe você acabou de atualizar o sistema, confira se rodou o schema-servicos-logistica.sql mais recente no Supabase.');
+      return;
+    }
+    var diasSalvos = {};
+    (resDias.data || []).forEach(function (d) { diasSalvos[d.dia] = d.tipo_dia; });
+
+    DIAS = datasEvento.map(function (iso, idx) {
+      var dt = new Date(iso + 'T12:00:00');
+      return {
+        data: iso,
+        label: dt.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+        diaSemana: dt.toLocaleDateString('pt-BR', { weekday: 'short' }),
+        tipoDia: diasSalvos[iso] || tipoDiaPadrao(idx, datasEvento.length)
+      };
+    });
+
+    var resVeiculos = await EF.client.from('evento_logistica_veiculos').select('*').eq('evento_id', eventoSelecionadoId).order('ordem', { ascending: true });
+    VEICULOS = resVeiculos.data || [];
+
+    await carregarFrota();
+    await carregarOcupacaoFrota(datasEvento);
+    await carregarOcupacaoTecnicos(datasEvento);
+
+    renderizarDias();
+  }
+
+  // frota da empresa, cadastrada em Estoque → Veículos — a mesma lista vale
+  // pra qualquer evento
+  async function carregarFrota() {
+    var res = await EF.client.from('estoque_veiculos').select('*').eq('empresa_id', EF.profile.empresa_id).eq('ativo', true).order('nome', { ascending: true });
+    VEICULOS_CADASTRO = res.data || [];
+  }
+
+  // quem da frota já está escalado NOUTRO evento em cada um dos dias deste
+  // evento — é o que faz o veículo aparecer "livre"/"ocupado" em tempo real
+  // pra qualquer produtor que abrir a tela, sem precisar de nada manual
+  async function carregarOcupacaoFrota(dias) {
+    OCUPACAO = {};
+    if (!dias.length || !VEICULOS_CADASTRO.length) return;
+    var res = await EF.client.from('evento_logistica_veiculos')
+      .select('veiculo_id, dia, evento_id, eventos(nome)')
+      .in('dia', dias)
+      .not('veiculo_id', 'is', null);
+    (res.data || []).forEach(function (row) {
+      if (row.evento_id === eventoSelecionadoId) return; // uso dentro do próprio evento não é conflito
+      if (!OCUPACAO[row.dia]) OCUPACAO[row.dia] = {};
+      OCUPACAO[row.dia][row.veiculo_id] = { eventoNome: row.eventos ? row.eventos.nome : 'outro evento' };
+    });
+  }
+
+  async function carregarOcupacaoTecnicos(dias) {
+    OCUPACAO_TECNICOS = [];
+    if (!dias.length) return;
+    var res = await EF.client.from('evento_logistica_veiculos')
+      .select('id,dia,evento_id,nome_veiculo,tecnicos,eventos(nome)')
+      .in('dia', dias);
+    (res.data || []).forEach(function (row) {
+      (row.tecnicos || []).forEach(function (t) {
+        if (!t.equipe_id && !t.profile_id) return;
+        OCUPACAO_TECNICOS.push({
+          rowId: row.id, dia: row.dia, eventoId: row.evento_id,
+          eventoNome: row.eventos ? row.eventos.nome : 'outro evento',
+          veiculoNome: row.nome_veiculo || '', equipeId: t.equipe_id || null, profileId: t.profile_id || null
+        });
+      });
+    });
+  }
+
+  function conflitoPessoa(dia, ids, ignorarRowId) {
+    ids = ids || {};
+    return OCUPACAO_TECNICOS.find(function (o) {
+      var mesmaPessoa = (ids.equipeId && o.equipeId === ids.equipeId) || (ids.profileId && o.profileId === ids.profileId);
+      return o.dia === dia && mesmaPessoa && o.rowId !== ignorarRowId;
+    }) || null;
+  }
+
+  function sincronizarOcupacaoEquipeDoEvento() {
+    OCUPACAO_TECNICOS = OCUPACAO_TECNICOS.filter(function (o) { return o.eventoId !== eventoSelecionadoId; });
+    var ev = EVENTOS.find(function (e) { return e.id === eventoSelecionadoId; });
+    VEICULOS.forEach(function (v) {
+      (v.tecnicos || []).forEach(function (t) {
+        if (t.equipe_id || t.profile_id) OCUPACAO_TECNICOS.push({rowId:v.id,dia:v.dia,eventoId:eventoSelecionadoId,eventoNome:ev ? ev.nome : 'este evento',veiculoNome:v.nome_veiculo || '',equipeId:t.equipe_id || null,profileId:t.profile_id || null});
+      });
+    });
+  }
+
+  async function salvarTipoDia(dia, tipoDia) {
+    var { error } = await EF.client.from('evento_logistica_dias').upsert(
+      { evento_id: eventoSelecionadoId, dia: dia, tipo_dia: tipoDia },
+      { onConflict: 'evento_id,dia' }
+    );
+    if (error) alert('Erro ao salvar: ' + error.message);
+  }
+
+  // ---------------- RENDER: COLUNAS (uma por dia) ----------------
+
+  function renderizarDias() {
+    var wrap = document.getElementById('dias-wrap');
+    wrap.innerHTML = '';
+    DIAS.forEach(function (dia) {
+      try {
+        var coluna = montarColunaDiaV2(dia);
+        wrap.appendChild(coluna);
+        renderizarDiaV2(dia.data);
+      } catch (e) {
+        console.error('Erro ao montar o dia "' + dia.data + '":', e);
+        var aviso = document.createElement('div');
+        aviso.className = 'col-dia';
+        aviso.style.color = '#c9695c';
+        aviso.style.fontSize = '12px';
+        aviso.textContent = 'Não deu pra mostrar este dia (erro: ' + e.message + ').';
+        wrap.appendChild(aviso);
+      }
+    });
+    atualizarResumo();
+  }
+
+  function montarColunaDia(dia) {
+    var col = document.createElement('div');
+    col.className = 'col-dia';
+    col.id = 'col-dia-' + dia.data;
+
+    var header = document.createElement('div');
+    header.innerHTML =
+      '<div class="disp" style="font-size:15px; font-weight:600;">' + dia.label + '</div>' +
+      '<div class="mono" style="font-size:10px; color:#6e6e73; text-transform:capitalize; margin-bottom:10px;">' + dia.diaSemana + '</div>';
+    var tipoSelect = document.createElement('select');
+    tipoSelect.className = 'tag-dia ' + dia.tipoDia;
+    tipoSelect.style.cssText = 'border:none; width:100%;';
+    ['montagem', 'operacao', 'desmontagem'].forEach(function (t) {
+      var opt = document.createElement('option');
+      opt.value = t; opt.textContent = TIPO_DIA_LABEL[t];
+      if (t === dia.tipoDia) opt.selected = true;
+      tipoSelect.appendChild(opt);
+    });
+    tipoSelect.addEventListener('change', function () {
+      dia.tipoDia = this.value;
+      this.className = 'tag-dia ' + this.value;
+      salvarTipoDia(dia.data, this.value);
+      atualizarResumo();
+    });
+    header.appendChild(tipoSelect);
+    col.appendChild(header);
+
+    var veiculosWrap = document.createElement('div');
+    veiculosWrap.id = 'veiculos-dia-' + dia.data;
+    veiculosWrap.style.cssText = 'display:flex; flex-direction:column; gap:10px;';
+    col.appendChild(veiculosWrap);
+
+    var formAdd = document.createElement('div');
+    formAdd.id = 'form-add-veiculo-' + dia.data;
+    formAdd.className = 'add-form-card';
+    formAdd.style.cssText = 'display:none; flex-direction:column; gap:10px;';
+    formAdd.innerHTML =
+      '<div class="add-form-titulo">Adicionar veículo</div>' +
+      '<div>' +
+        '<div class="add-form-label">Da frota cadastrada</div>' +
+        '<div style="display:flex; gap:8px; align-items:center;">' +
+          '<select id="add-veiculo-select-' + dia.data + '" class="add-form-input" style="font-size:12px;"></select>' +
+          '<span class="icone-acao" id="add-veiculo-confirmar-frota-' + dia.data + '" style="color:#7fa8c9;">+</span>' +
+        '</div>' +
+      '</div>' +
+      '<div>' +
+        '<div class="add-form-label">Ou outro veículo (não cadastrado)</div>' +
+        '<div style="display:flex; gap:8px; align-items:center;">' +
+          '<input class="add-form-input" style="font-size:12px;" id="add-veiculo-nome-livre-' + dia.data + '" placeholder="nome do veículo">' +
+          '<span class="icone-acao" id="add-veiculo-confirmar-livre-' + dia.data + '" style="color:#7fa8c9;">+</span>' +
+        '</div>' +
+      '</div>' +
+      '<span class="icone-acao" id="add-veiculo-cancelar-' + dia.data + '" style="align-self:flex-start;">cancelar</span>';
+    col.appendChild(formAdd);
+
+    var addBtn = document.createElement('span');
+    addBtn.id = 'btn-add-veiculo-' + dia.data;
+    addBtn.className = 'icone-acao';
+    addBtn.style.cssText = 'color:#7fa8c9; font-size:12.5px;';
+    addBtn.textContent = '+ Adicionar veículo';
+    addBtn.addEventListener('click', function () { abrirFormAddVeiculo(dia.data); });
+    col.appendChild(addBtn);
+
+    renderizarVeiculosDoDia(veiculosWrap, dia.data);
+
+    return col;
+  }
+
+  function abrirFormAddVeiculo(diaIso) {
+    document.getElementById('btn-add-veiculo-' + diaIso).style.display = 'none';
+    var formAdd = document.getElementById('form-add-veiculo-' + diaIso);
+    formAdd.style.display = 'flex';
+
+    var selectEl = document.getElementById('add-veiculo-select-' + diaIso);
+    var nomeLivreEl = document.getElementById('add-veiculo-nome-livre-' + diaIso);
+    var ocupacaoDoDia = OCUPACAO[diaIso] || {};
+
+    var opcoes = VEICULOS_CADASTRO.length
+      ? VEICULOS_CADASTRO.map(function (vc) {
+          var ocupado = ocupacaoDoDia[vc.id];
+          var rotulo = vc.nome + (vc.placa ? ' (' + vc.placa + ')' : '') + (ocupado ? ' — ocupado neste dia (' + ocupado.eventoNome + ')' : '');
+          return '<option value="' + vc.id + '"' + (ocupado ? ' disabled' : '') + '>' + rotulo + '</option>';
+        }).join('')
+      : '<option value="">— nenhum veículo cadastrado no Estoque —</option>';
+    selectEl.innerHTML = opcoes;
+    nomeLivreEl.value = '';
+
+    document.getElementById('add-veiculo-cancelar-' + diaIso).onclick = function () {
+      fecharFormAddVeiculo(diaIso);
+    };
+    document.getElementById('add-veiculo-confirmar-frota-' + diaIso).onclick = function () {
+      confirmarAddVeiculoFrota(diaIso, selectEl);
+    };
+    document.getElementById('add-veiculo-confirmar-livre-' + diaIso).onclick = function () {
+      confirmarAddVeiculoLivre(diaIso, nomeLivreEl);
+    };
+    nomeLivreEl.onkeydown = function (ev) {
+      if (ev.key === 'Enter') { ev.preventDefault(); confirmarAddVeiculoLivre(diaIso, nomeLivreEl); }
+    };
+  }
+
+  function fecharFormAddVeiculo(diaIso) {
+    document.getElementById('form-add-veiculo-' + diaIso).style.display = 'none';
+    document.getElementById('btn-add-veiculo-' + diaIso).style.display = '';
+  }
+
+  async function inserirVeiculoNoDia(diaIso, linhaBase) {
+    var linha = Object.assign({
+      evento_id: eventoSelecionadoId,
+      dia: diaIso,
+      tecnicos: [],
+      ordem: VEICULOS.length
+    }, linhaBase);
+
+    var ins = await EF.client.from('evento_logistica_veiculos').insert(linha).select().maybeSingle();
+    if (ins.error) {
+      if (String(ins.error.code || '') === '23505') alert('Este veículo já está reservado nesse dia em outro evento. Atualize a tela e escolha outro veículo.');
+      else alert('Erro ao adicionar veículo: ' + ins.error.message);
+      return;
+    }
+    VEICULOS.push(ins.data);
+    if (linha.veiculo_id) {
+      if (!OCUPACAO[diaIso]) OCUPACAO[diaIso] = {};
+      OCUPACAO[diaIso][linha.veiculo_id] = { eventoNome: 'este evento' };
+    }
+    renderizarVeiculosDoDia(document.getElementById('veiculos-dia-' + diaIso), diaIso);
+    fecharFormAddVeiculo(diaIso);
+    atualizarResumo();
+  }
+
+  async function confirmarAddVeiculoFrota(diaIso, selectEl) {
+    var vc = VEICULOS_CADASTRO.find(function (x) { return x.id === selectEl.value; });
+    if (!vc) { alert('Escolha um veículo da lista, ou use o campo abaixo pra digitar um avulso.'); return; }
+    var ocupacaoDoDia = OCUPACAO[diaIso] || {};
+    if (ocupacaoDoDia[vc.id]) { alert('Este veículo já está ocupado neste dia em outro evento.'); return; }
+    await inserirVeiculoNoDia(diaIso, { veiculo_id: vc.id, nome_veiculo: vc.nome, placa: vc.placa || '' });
+  }
+
+  async function confirmarAddVeiculoLivre(diaIso, nomeLivreEl) {
+    var nome = nomeLivreEl.value.trim();
+    if (!nome) { alert('Digite o nome do veículo.'); nomeLivreEl.focus(); return; }
+    await inserirVeiculoNoDia(diaIso, { veiculo_id: null, nome_veiculo: nome, placa: '' });
+  }
+
+  function veiculosDoDia(diaIso) {
+    return VEICULOS.filter(function (v) { return v.dia === diaIso; });
+  }
+
+  function renderizarVeiculosDoDia(wrap, diaIso) {
+    wrap.innerHTML = '';
+    var lista = veiculosDoDia(diaIso);
+    if (!lista.length) {
+      var vazio = document.createElement('div');
+      vazio.style.cssText = 'color:#4a4a4e; font-size:11.5px;';
+      vazio.textContent = 'Nenhum veículo neste dia.';
+      wrap.appendChild(vazio);
+      return;
+    }
+    lista.forEach(function (v) { wrap.appendChild(montarCardVeiculo(v)); });
+  }
+
+  // ---------------- VEÍCULOS + TÉCNICOS ----------------
+
+  async function removerVeiculo(v) {
+    if (!confirm('Remover este veículo do dia ' + v.dia.split('-').reverse().join('/') + '?')) return;
+    var { error } = await EF.client.from('evento_logistica_veiculos').delete().eq('id', v.id);
+    if (error) { alert('Erro ao remover: ' + error.message); return; }
+    VEICULOS = VEICULOS.filter(function (x) { return x.id !== v.id; });
+    sincronizarOcupacaoEquipeDoEvento();
+    renderizarVeiculosDoDia(document.getElementById('veiculos-dia-' + v.dia), v.dia);
+    atualizarResumo();
+  }
+
+  async function atualizarVeiculo(v, campos) {
+    Object.assign(v, campos);
+    var { error } = await EF.client.from('evento_logistica_veiculos').update(campos).eq('id', v.id);
+    if (error) { alert('Erro ao salvar: ' + error.message); return false; }
+    return true;
+  }
+
+  function montarCardVeiculo(v) {
+    var card = document.createElement('div');
+    card.className = 'card-veiculo';
+
+    card.innerHTML =
+      '<div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">' +
+        '<select class="campo-mini" style="flex:1;" id="veic-select-' + v.id + '"></select>' +
+        '<span class="icone-acao" id="remover-veic-' + v.id + '">✕</span>' +
+      '</div>' +
+      '<div style="color:#4a4a4e; font-size:10.5px; margin-bottom:6px;">ou digite outro veículo (não cadastrado):</div>' +
+      '<input class="campo-mini" style="margin-bottom:8px;" id="nome-veic-' + v.id + '" placeholder="nome do veículo">' +
+      '<input class="campo-mini" style="margin-bottom:10px;" id="placa-veic-' + v.id + '" placeholder="Placa (opcional)">' +
+      '<div class="add-form-label" style="margin-bottom:4px;">Adicionar técnico</div>' +
+      '<div style="display:flex; gap:8px; margin-bottom:6px;">' +
+        '<select id="tec-select-' + v.id + '" class="add-form-input" style="flex:1; font-size:12px; padding-bottom:4px;"></select>' +
+        '<span class="icone-acao" id="tec-add-' + v.id + '" style="color:#7fa8c9;">+</span>' +
+      '</div>' +
+      '<div id="tec-conflito-' + v.id + '" class="aviso-conflito"></div>' +
+      '<div class="add-form-label" style="margin:10px 0 4px;">Adicionar pessoa da equipe</div>' +
+      '<div style="display:flex; gap:8px; margin-bottom:0;">' +
+        '<select id="freela-select-' + v.id + '" class="add-form-input" style="flex:1; font-size:12px; padding-bottom:4px;"></select>' +
+        '<span class="icone-acao" id="freela-add-' + v.id + '" style="color:#7fa8c9;">+</span>' +
+      '</div>' +
+      '<div id="freela-conflito-' + v.id + '" class="aviso-conflito"></div>' +
+      '<div style="display:flex; gap:8px; margin-bottom:8px;">' +
+        '<input class="add-form-input" style="flex:1; font-size:12px; padding-bottom:4px;" id="tec-nome-livre-' + v.id + '" placeholder="ou digite um nome avulso">' +
+        '<span class="icone-acao" id="tec-add-livre-' + v.id + '" style="color:#7fa8c9;">+</span>' +
+      '</div>' +
+      '<div id="tec-lista-' + v.id + '" style="display:flex; flex-direction:column; gap:5px;"></div>';
+
+    // seletor do veículo — traz a frota cadastrada no Estoque; o campo livre
+    // logo abaixo fica sempre visível também, pra digitar outro veículo
+    // (terceiro/alugado, sem cadastro) sem precisar mexer no seletor
+    var veicSelectEl = card.querySelector('#veic-select-' + v.id);
+    var nomeLivreVeicEl = card.querySelector('#nome-veic-' + v.id);
+    var placaEl = card.querySelector('#placa-veic-' + v.id);
+    var ocupacaoDoDia = OCUPACAO[v.dia] || {};
+
+    var opcoes = '<option value="_avulso">— nenhum (usar o campo abaixo) —</option>';
+    opcoes += VEICULOS_CADASTRO.map(function (vc) {
+      var ocupado = vc.id !== v.veiculo_id && ocupacaoDoDia[vc.id];
+      var rotulo = vc.nome + (vc.placa ? ' (' + vc.placa + ')' : '') + (ocupado ? ' — ocupado neste dia (' + ocupado.eventoNome + ')' : '');
+      return '<option value="' + vc.id + '"' + (ocupado ? ' disabled' : '') + '>' + rotulo + '</option>';
+    }).join('');
+    veicSelectEl.innerHTML = opcoes;
+    veicSelectEl.value = v.veiculo_id || '_avulso';
+    nomeLivreVeicEl.value = v.veiculo_id ? '' : (v.nome_veiculo || '');
+    placaEl.value = v.placa || '';
+
+    veicSelectEl.addEventListener('change', function () {
+      if (this.value === '_avulso') {
+        atualizarVeiculo(v, { veiculo_id: null });
+        return;
+      }
+      var vc = VEICULOS_CADASTRO.find(function (x) { return x.id === this.value; });
+      if (!vc) return;
+      nomeLivreVeicEl.value = '';
+      placaEl.value = vc.placa || '';
+      atualizarVeiculo(v, { veiculo_id: vc.id, nome_veiculo: vc.nome, placa: vc.placa || '' });
+      if (!OCUPACAO[v.dia]) OCUPACAO[v.dia] = {};
+      OCUPACAO[v.dia][vc.id] = { eventoNome: 'este evento' };
+    });
+    nomeLivreVeicEl.addEventListener('change', function () {
+      var nome = this.value.trim();
+      if (!nome) return;
+      veicSelectEl.value = '_avulso';
+      atualizarVeiculo(v, { veiculo_id: null, nome_veiculo: nome });
+    });
+    placaEl.addEventListener('change', function () {
+      atualizarVeiculo(v, { placa: this.value });
+    });
+    card.querySelector('#remover-veic-' + v.id).addEventListener('click', function () { removerVeiculo(v); });
+
+    var selectEl = card.querySelector('#tec-select-' + v.id);
+    var jaEscalados = (v.tecnicos || []).map(function (t) { return t.profile_id; });
+    var disponiveis = PROFILES.filter(function (p) { return jaEscalados.indexOf(p.id) === -1; });
+    if (!disponiveis.length) {
+      selectEl.innerHTML = '<option value="">— ninguém disponível —</option>';
+    } else {
+      selectEl.innerHTML = disponiveis.map(function (p) {
+        var cadastro = EQUIPE.find(function (e) { return e.profile_id === p.id; });
+        var conflito = conflitoPessoa(v.dia, { profileId: p.id, equipeId: cadastro ? cadastro.id : null }, v.id);
+        return '<option value="' + p.id + '">' + esc(p.nome) + (p.role ? ' (' + (ROLE_LABEL[p.role] || p.role) + ')' : '') + (conflito ? ' — já está no evento ' + esc(conflito.eventoNome) : '') + '</option>';
+      }).join('');
+    }
+
+    var tecAvisoEl = card.querySelector('#tec-conflito-' + v.id);
+    function atualizarAvisoInterno() {
+      var cadastro = EQUIPE.find(function (e) { return e.profile_id === selectEl.value; });
+      var conflito = conflitoPessoa(v.dia, { profileId: selectEl.value, equipeId: cadastro ? cadastro.id : null }, v.id);
+      if (!conflito) { tecAvisoEl.style.display = 'none'; tecAvisoEl.textContent = ''; return; }
+      tecAvisoEl.textContent = 'Já está no evento ' + conflito.eventoNome + (conflito.veiculoNome ? ', no veículo ' + conflito.veiculoNome : '') + '.';
+      tecAvisoEl.style.display = 'block';
+    }
+    selectEl.addEventListener('change', atualizarAvisoInterno);
+    atualizarAvisoInterno();
+
+    card.querySelector('#tec-add-' + v.id).addEventListener('click', async function () {
+      var profileId = selectEl.value;
+      if (!profileId) return;
+      var pessoa = PROFILES.find(function (p) { return p.id === profileId; });
+      if (!pessoa) return;
+      var cadastro = EQUIPE.find(function (e) { return e.profile_id === pessoa.id; });
+      var conflito = conflitoPessoa(v.dia, { profileId: pessoa.id, equipeId: cadastro ? cadastro.id : null }, v.id);
+      if (conflito && !confirm(pessoa.nome + ' já está no evento ' + conflito.eventoNome + ' neste dia. Deseja escalar mesmo assim?')) return;
+      v.tecnicos = (v.tecnicos || []).concat([{ profile_id: pessoa.id, equipe_id: cadastro ? cadastro.id : null, nome: pessoa.nome }]);
+      if (!await atualizarVeiculo(v, { tecnicos: v.tecnicos })) return;
+      sincronizarOcupacaoEquipeDoEvento();
+      renderizarVeiculosDoDia(document.getElementById('veiculos-dia-' + v.dia), v.dia);
+      atualizarResumo();
+    });
+
+    var freelaSelectEl = card.querySelector('#freela-select-' + v.id);
+    var freelaAvisoEl = card.querySelector('#freela-conflito-' + v.id);
+    var jaPessoas = (v.tecnicos || []).map(function (t) { return t.equipe_id; }).filter(Boolean);
+    var pessoasDisponiveis = EQUIPE.filter(function (f) { return !f.profile_id && jaPessoas.indexOf(f.id) === -1; });
+    if (!pessoasDisponiveis.length) {
+      freelaSelectEl.innerHTML = '<option value="">— nenhuma pessoa disponível —</option>';
+    } else {
+      freelaSelectEl.innerHTML = pessoasDisponiveis.map(function (f) {
+        var conflito = conflitoPessoa(v.dia, { equipeId: f.id }, v.id);
+        return '<option value="' + f.id + '">' + esc(f.nome) + ' — ' + (f.tipo === 'interno' ? 'interno' : 'freelancer') + (f.possui_veiculo ? ' • com veículo' : '') + (conflito ? ' — já está no evento ' + esc(conflito.eventoNome) : '') + '</option>';
+      }).join('');
+    }
+    function atualizarAvisoFreelancer() {
+      var conflito = conflitoPessoa(v.dia, { equipeId: freelaSelectEl.value }, v.id);
+      if (!conflito) { freelaAvisoEl.style.display = 'none'; freelaAvisoEl.textContent = ''; return; }
+      freelaAvisoEl.textContent = 'Já está no evento ' + conflito.eventoNome + (conflito.veiculoNome ? ', no veículo ' + conflito.veiculoNome : '') + '.';
+      freelaAvisoEl.style.display = 'block';
+    }
+    freelaSelectEl.addEventListener('change', atualizarAvisoFreelancer);
+    atualizarAvisoFreelancer();
+    card.querySelector('#freela-add-' + v.id).addEventListener('click', async function () {
+      var pessoaEquipe = EQUIPE.find(function (f) { return f.id === freelaSelectEl.value; });
+      if (!pessoaEquipe) return;
+      var conflito = conflitoPessoa(v.dia, { equipeId: pessoaEquipe.id, profileId: pessoaEquipe.profile_id }, v.id);
+      if (conflito && !confirm(pessoaEquipe.nome + ' já está no evento ' + conflito.eventoNome + ' neste dia. Deseja escalar mesmo assim?')) return;
+      v.tecnicos = (v.tecnicos || []).concat([{ profile_id: pessoaEquipe.profile_id || null, equipe_id: pessoaEquipe.id, nome: pessoaEquipe.nome }]);
+      if (!await atualizarVeiculo(v, { tecnicos: v.tecnicos })) return;
+      sincronizarOcupacaoEquipeDoEvento();
+      renderizarVeiculosDoDia(document.getElementById('veiculos-dia-' + v.dia), v.dia);
+      atualizarResumo();
+    });
+
+    // pessoa que não está cadastrada no sistema (ex: freelancer avulso) —
+    // digita o nome direto, sem precisar existir em Usuários e permissões
+    var nomeLivreEl = card.querySelector('#tec-nome-livre-' + v.id);
+    function adicionarTecnicoLivre() {
+      var nome = nomeLivreEl.value.trim();
+      if (!nome) return;
+      v.tecnicos = (v.tecnicos || []).concat([{ profile_id: null, equipe_id: null, nome: nome }]);
+      atualizarVeiculo(v, { tecnicos: v.tecnicos });
+      nomeLivreEl.value = '';
+      renderizarVeiculosDoDia(document.getElementById('veiculos-dia-' + v.dia), v.dia);
+      atualizarResumo();
+    }
+    card.querySelector('#tec-add-livre-' + v.id).addEventListener('click', adicionarTecnicoLivre);
+    nomeLivreEl.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Enter') { ev.preventDefault(); adicionarTecnicoLivre(); }
+    });
+
+    var tecListaEl = card.querySelector('#tec-lista-' + v.id);
+    (v.tecnicos || []).forEach(function (t, i) {
+      var linha = document.createElement('div');
+      linha.style.cssText = 'display:flex; align-items:center; font-size:12px;';
+      linha.innerHTML = '<div style="flex:1;">' + esc(t.nome) + (t.equipe_id ? '<span style="color:#7fa8c9; font-size:10.5px;"> — pessoa da equipe</span>' : (t.profile_id ? '' : '<span style="color:#6e6e73; font-size:10.5px;"> — avulso</span>')) + '</div><span class="icone-acao" data-rm-tec="' + i + '">remover</span>';
+      tecListaEl.appendChild(linha);
+      linha.querySelector('[data-rm-tec]').addEventListener('click', function () {
+        v.tecnicos.splice(i, 1);
+        atualizarVeiculo(v, { tecnicos: v.tecnicos });
+        sincronizarOcupacaoEquipeDoEvento();
+        renderizarVeiculosDoDia(document.getElementById('veiculos-dia-' + v.dia), v.dia);
+        atualizarResumo();
+      });
+    });
+
+    return card;
+  }
+
+  // ---------------- LOGÍSTICA POR DIA — VEÍCULOS E EQUIPE ----------------
+
+  function montarColunaDiaV2(dia) {
+    var col = document.createElement('div');
+    col.className = 'col-dia';
+    col.id = 'col-dia-' + dia.data;
+
+    var header = document.createElement('div');
+    header.innerHTML =
+      '<div class="disp" style="font-size:15px;font-weight:600;">' + dia.label + '</div>' +
+      '<div class="mono" style="font-size:10px;color:#6e6e73;text-transform:capitalize;margin-bottom:10px;">' + dia.diaSemana + '</div>';
+    var tipoSelect = document.createElement('select');
+    tipoSelect.className = 'tag-dia ' + dia.tipoDia;
+    tipoSelect.style.cssText = 'border:none;width:100%;';
+    ['montagem', 'operacao', 'desmontagem'].forEach(function (t) {
+      var opt = document.createElement('option');
+      opt.value = t;
+      opt.textContent = TIPO_DIA_LABEL[t];
+      opt.selected = t === dia.tipoDia;
+      tipoSelect.appendChild(opt);
+    });
+    tipoSelect.addEventListener('change', function () {
+      dia.tipoDia = this.value;
+      this.className = 'tag-dia ' + this.value;
+      salvarTipoDia(dia.data, this.value);
+      atualizarResumo();
+    });
+    header.appendChild(tipoSelect);
+    col.appendChild(header);
+
+    var blocoVeiculos = document.createElement('div');
+    blocoVeiculos.className = 'dia-bloco';
+    blocoVeiculos.innerHTML =
+      '<div class="dia-bloco-titulo">Veículos</div>' +
+      '<div id="v2-veiculos-' + dia.data + '" style="display:flex;flex-direction:column;gap:7px;"></div>' +
+      '<div id="v2-form-veiculo-' + dia.data + '" class="add-form-card" style="display:none;flex-direction:column;gap:10px;">' +
+        '<div class="add-form-titulo">Adicionar veículo</div>' +
+        '<div><div class="add-form-label">Frota cadastrada</div><select id="v2-frota-' + dia.data + '" class="add-form-input"></select></div>' +
+        '<div><div class="add-form-label">Veículo não cadastrado</div><input id="v2-veiculo-livre-' + dia.data + '" class="add-form-input" placeholder="Nome do veículo"></div>' +
+        '<div><div class="add-form-label">Placa</div><input id="v2-placa-livre-' + dia.data + '" class="add-form-input" placeholder="Opcional"></div>' +
+        '<div class="form-acoes"><button id="v2-cancelar-veiculo-' + dia.data + '" class="form-cancelar" type="button">Cancelar</button><button id="v2-confirmar-veiculo-' + dia.data + '" class="form-confirmar" type="button">Adicionar</button></div>' +
+      '</div>' +
+      '<button id="v2-abrir-veiculo-' + dia.data + '" class="dia-acao" type="button">+ Adicionar veículo</button>';
+    col.appendChild(blocoVeiculos);
+
+    var blocoEquipe = document.createElement('div');
+    blocoEquipe.className = 'dia-bloco';
+    blocoEquipe.innerHTML =
+      '<div class="dia-bloco-titulo">Equipe</div>' +
+      '<div id="v2-equipe-' + dia.data + '" style="display:flex;flex-direction:column;gap:7px;"></div>' +
+      '<div id="v2-form-equipe-' + dia.data + '" class="add-form-card" style="display:none;flex-direction:column;gap:10px;">' +
+        '<div class="add-form-titulo">Adicionar equipe</div>' +
+        '<div><div class="add-form-label">Pessoa cadastrada</div><select id="v2-pessoa-' + dia.data + '" class="add-form-input"></select></div>' +
+        '<div id="v2-conflito-' + dia.data + '" class="aviso-conflito"></div>' +
+        '<div><div class="add-form-label">Ou nome avulso</div><input id="v2-pessoa-livre-' + dia.data + '" class="add-form-input" placeholder="Nome da pessoa"></div>' +
+        '<div><div class="add-form-label">Função</div><input id="v2-pessoa-funcao-' + dia.data + '" class="add-form-input" placeholder="Ex.: Aux. Tec."></div>' +
+        '<div><div class="add-form-label">Veículo</div><select id="v2-equipe-veiculo-' + dia.data + '" class="add-form-input"></select></div>' +
+        '<div class="form-acoes"><button id="v2-cancelar-equipe-' + dia.data + '" class="form-cancelar" type="button">Cancelar</button><button id="v2-confirmar-equipe-' + dia.data + '" class="form-confirmar" type="button">Adicionar</button></div>' +
+      '</div>' +
+      '<button id="v2-abrir-equipe-' + dia.data + '" class="dia-acao" type="button">+ Adicionar equipe</button>';
+    col.appendChild(blocoEquipe);
+
+    var blocoCopiar = document.createElement('div');
+    blocoCopiar.className = 'dia-bloco';
+    blocoCopiar.innerHTML =
+      '<button id="v2-abrir-copiar-' + dia.data + '" class="dia-acao" type="button">Copiar para outros dias</button>' +
+      '<div id="v2-form-copiar-' + dia.data + '" class="copiar-form">' +
+        '<div class="add-form-titulo" style="margin:0;">Copiar veículos e equipe</div>' +
+        '<div id="v2-copiar-dias-' + dia.data + '" class="copiar-dias"></div>' +
+        '<div class="form-acoes"><button id="v2-cancelar-copiar-' + dia.data + '" class="form-cancelar" type="button">Cancelar</button><button id="v2-confirmar-copiar-' + dia.data + '" class="form-confirmar" type="button">Copiar</button></div>' +
+      '</div>';
+    col.appendChild(blocoCopiar);
+
+    col.querySelector('#v2-abrir-veiculo-' + dia.data).addEventListener('click', function () { abrirFormVeiculoV2(dia.data); });
+    col.querySelector('#v2-cancelar-veiculo-' + dia.data).addEventListener('click', function () { fecharFormVeiculoV2(dia.data); });
+    col.querySelector('#v2-confirmar-veiculo-' + dia.data).addEventListener('click', function () { adicionarVeiculoV2(dia.data); });
+    col.querySelector('#v2-abrir-equipe-' + dia.data).addEventListener('click', function () { abrirFormEquipeV2(dia.data); });
+    col.querySelector('#v2-cancelar-equipe-' + dia.data).addEventListener('click', function () { fecharFormEquipeV2(dia.data); });
+    col.querySelector('#v2-confirmar-equipe-' + dia.data).addEventListener('click', function () { adicionarPessoaV2(dia.data); });
+    col.querySelector('#v2-pessoa-' + dia.data).addEventListener('change', function () { atualizarConflitoPessoaV2(dia.data); preencherFuncaoPessoaV2(dia.data); });
+    col.querySelector('#v2-pessoa-livre-' + dia.data).addEventListener('input', function () {
+      if (this.value.trim()) col.querySelector('#v2-pessoa-' + dia.data).value = '';
+    });
+    col.querySelector('#v2-abrir-copiar-' + dia.data).addEventListener('click', function () { abrirCopiarDiaV2(dia.data); });
+    col.querySelector('#v2-cancelar-copiar-' + dia.data).addEventListener('click', function () { fecharCopiarDiaV2(dia.data); });
+    col.querySelector('#v2-confirmar-copiar-' + dia.data).addEventListener('click', function () { copiarDiaV2(dia.data); });
+
+    return col;
+  }
+
+  function veiculoNomeV2(v) {
+    return v.nome_veiculo || 'Veículo';
+  }
+
+  function renderizarDiaV2(diaIso) {
+    renderizarVeiculosV2(diaIso);
+    renderizarEquipeV2(diaIso);
+    var btnEquipe = document.getElementById('v2-abrir-equipe-' + diaIso);
+    if (btnEquipe) btnEquipe.disabled = !veiculosDoDia(diaIso).length;
+    var btnCopiar = document.getElementById('v2-abrir-copiar-' + diaIso);
+    if (btnCopiar) btnCopiar.disabled = !veiculosDoDia(diaIso).length || DIAS.length < 2;
+  }
+
+  function renderizarVeiculosV2(diaIso) {
+    var wrap = document.getElementById('v2-veiculos-' + diaIso);
+    if (!wrap) return;
+    wrap.innerHTML = '';
+    var lista = veiculosDoDia(diaIso);
+    if (!lista.length) {
+      wrap.innerHTML = '<div class="dia-vazio">Nenhum veículo adicionado.</div>';
+      return;
+    }
+    lista.forEach(function (v) {
+      var qtd = (v.tecnicos || []).length;
+      var card = document.createElement('div');
+      card.className = 'card-veiculo';
+      card.innerHTML =
+        '<div class="veiculo-info"><div class="veiculo-nome">' + esc(veiculoNomeV2(v)) + '</div>' +
+        '<div class="veiculo-meta">' + esc(v.placa || (v.veiculo_id ? 'Frota cadastrada' : 'Veículo avulso')) + ' · ' + qtd + (qtd === 1 ? ' pessoa' : ' pessoas') + '</div></div>' +
+        '<button class="form-cancelar" type="button" title="Remover veículo">✕</button>';
+      card.querySelector('button').addEventListener('click', function () { removerVeiculoV2(v); });
+      wrap.appendChild(card);
+    });
+  }
+
+  function abrirFormVeiculoV2(diaIso) {
+    var form = document.getElementById('v2-form-veiculo-' + diaIso);
+    var btn = document.getElementById('v2-abrir-veiculo-' + diaIso);
+    var select = document.getElementById('v2-frota-' + diaIso);
+    var ocupacaoDoDia = OCUPACAO[diaIso] || {};
+    var usados = {};
+    veiculosDoDia(diaIso).forEach(function (v) { if (v.veiculo_id) usados[v.veiculo_id] = true; });
+    select.innerHTML = '<option value="">— selecionar da frota —</option>' + VEICULOS_CADASTRO.map(function (vc) {
+      var conflito = ocupacaoDoDia[vc.id];
+      var indisponivel = conflito || usados[vc.id];
+      var complemento = conflito ? ' — no evento ' + conflito.eventoNome : (usados[vc.id] ? ' — já adicionado' : '');
+      return '<option value="' + vc.id + '"' + (indisponivel ? ' disabled' : '') + '>' + esc(vc.nome) + (vc.placa ? ' (' + esc(vc.placa) + ')' : '') + complemento + '</option>';
+    }).join('');
+    document.getElementById('v2-veiculo-livre-' + diaIso).value = '';
+    document.getElementById('v2-placa-livre-' + diaIso).value = '';
+    form.style.display = 'flex';
+    btn.style.display = 'none';
+  }
+
+  function fecharFormVeiculoV2(diaIso) {
+    document.getElementById('v2-form-veiculo-' + diaIso).style.display = 'none';
+    document.getElementById('v2-abrir-veiculo-' + diaIso).style.display = '';
+  }
+
+  async function adicionarVeiculoV2(diaIso) {
+    var frotaId = document.getElementById('v2-frota-' + diaIso).value;
+    var nomeLivre = document.getElementById('v2-veiculo-livre-' + diaIso).value.trim();
+    var placaLivre = document.getElementById('v2-placa-livre-' + diaIso).value.trim();
+    var base;
+    if (frotaId) {
+      var vc = VEICULOS_CADASTRO.find(function (x) { return x.id === frotaId; });
+      if (!vc) return;
+      base = { veiculo_id: vc.id, nome_veiculo: vc.nome, placa: vc.placa || '' };
+    } else {
+      if (!nomeLivre) { alert('Selecione um veículo cadastrado ou informe o nome de um veículo avulso.'); return; }
+      base = { veiculo_id: null, nome_veiculo: nomeLivre, placa: placaLivre };
+    }
+    var linha = Object.assign({ evento_id: eventoSelecionadoId, dia: diaIso, tecnicos: [], ordem: VEICULOS.length }, base);
+    var ins = await EF.client.from('evento_logistica_veiculos').insert(linha).select().maybeSingle();
+    if (ins.error) { alert('Erro ao adicionar veículo: ' + ins.error.message); return; }
+    VEICULOS.push(ins.data);
+    fecharFormVeiculoV2(diaIso);
+    renderizarDiaV2(diaIso);
+    atualizarResumo();
+  }
+
+  async function removerVeiculoV2(v) {
+    var qtd = (v.tecnicos || []).length;
+    var complemento = qtd ? ' As ' + qtd + (qtd === 1 ? ' pessoa vinculada também será removida.' : ' pessoas vinculadas também serão removidas.') : '';
+    if (!confirm('Remover ' + veiculoNomeV2(v) + ' deste dia?' + complemento)) return;
+    var res = await EF.client.from('evento_logistica_veiculos').delete().eq('id', v.id);
+    if (res.error) { alert('Erro ao remover: ' + res.error.message); return; }
+    VEICULOS = VEICULOS.filter(function (x) { return x.id !== v.id; });
+    sincronizarOcupacaoEquipeDoEvento();
+    fecharFormEquipeV2(v.dia);
+    renderizarDiaV2(v.dia);
+    atualizarResumo();
+  }
+
+  function pessoasEscaladasNoDiaV2(diaIso) {
+    var ids = { equipe: {}, profile: {} };
+    veiculosDoDia(diaIso).forEach(function (v) {
+      (v.tecnicos || []).forEach(function (t) {
+        if (t.equipe_id) ids.equipe[t.equipe_id] = true;
+        if (t.profile_id) ids.profile[t.profile_id] = true;
+      });
+    });
+    return ids;
+  }
+
+  function opcoesPessoasV2(diaIso) {
+    var escaladas = pessoasEscaladasNoDiaV2(diaIso);
+    var opcoes = [];
+    EQUIPE.forEach(function (p) {
+      if (escaladas.equipe[p.id] || (p.profile_id && escaladas.profile[p.profile_id])) return;
+      opcoes.push({ valor: 'e:' + p.id, nome: p.nome, tipo: p.tipo === 'freelancer' ? 'Freelancer' : 'Equipe interna', funcao: p.funcoes || '', equipeId: p.id, profileId: p.profile_id || null });
+    });
+    PROFILES.forEach(function (p) {
+      var vinculado = EQUIPE.some(function (e) { return e.profile_id === p.id; });
+      if (vinculado || escaladas.profile[p.id]) return;
+      opcoes.push({ valor: 'p:' + p.id, nome: p.nome || p.email, tipo: ROLE_LABEL[p.role] || p.role || 'Usuário', funcao: ROLE_LABEL[p.role] || p.role || '', equipeId: null, profileId: p.id });
+    });
+    return opcoes.sort(function (a, b) { return a.nome.localeCompare(b.nome, 'pt-BR'); });
+  }
+
+  function preencherVeiculosEquipeV2(diaIso, select) {
+    var lista = veiculosDoDia(diaIso);
+    select.innerHTML = lista.map(function (v) { return '<option value="' + v.id + '">' + esc(veiculoNomeV2(v)) + (v.placa ? ' · ' + esc(v.placa) : '') + '</option>'; }).join('');
+  }
+
+  function abrirFormEquipeV2(diaIso) {
+    if (!veiculosDoDia(diaIso).length) { alert('Adicione pelo menos um veículo antes de montar a equipe.'); return; }
+    var select = document.getElementById('v2-pessoa-' + diaIso);
+    var opcoes = opcoesPessoasV2(diaIso);
+    select.innerHTML = '<option value="">— selecionar pessoa —</option>' + opcoes.map(function (p) {
+      var conflito = conflitoPessoa(diaIso, { equipeId: p.equipeId, profileId: p.profileId }, null);
+      return '<option value="' + p.valor + '">' + esc(p.nome) + (p.funcao ? ' — ' + esc(p.funcao) : '') + ' · ' + esc(p.tipo) + (conflito ? ' · já está no evento ' + esc(conflito.eventoNome) : '') + '</option>';
+    }).join('');
+    document.getElementById('v2-pessoa-livre-' + diaIso).value = '';
+    document.getElementById('v2-pessoa-funcao-' + diaIso).value = '';
+    preencherVeiculosEquipeV2(diaIso, document.getElementById('v2-equipe-veiculo-' + diaIso));
+    document.getElementById('v2-form-equipe-' + diaIso).style.display = 'flex';
+    document.getElementById('v2-abrir-equipe-' + diaIso).style.display = 'none';
+    atualizarConflitoPessoaV2(diaIso);
+  }
+
+  function fecharFormEquipeV2(diaIso) {
+    var form = document.getElementById('v2-form-equipe-' + diaIso);
+    var btn = document.getElementById('v2-abrir-equipe-' + diaIso);
+    if (form) form.style.display = 'none';
+    if (btn) btn.style.display = '';
+  }
+
+  function pessoaSelecionadaV2(diaIso) {
+    var valor = document.getElementById('v2-pessoa-' + diaIso).value;
+    if (!valor) return null;
+    var partes = valor.split(':');
+    if (partes[0] === 'e') {
+      var e = EQUIPE.find(function (x) { return x.id === partes[1]; });
+      return e ? { nome: e.nome, funcao: e.funcoes || '', equipe_id: e.id, profile_id: e.profile_id || null } : null;
+    }
+    var p = PROFILES.find(function (x) { return x.id === partes[1]; });
+    return p ? { nome: p.nome || p.email, funcao: ROLE_LABEL[p.role] || p.role || '', equipe_id: null, profile_id: p.id } : null;
+  }
+
+  function preencherFuncaoPessoaV2(diaIso) {
+    var pessoa = pessoaSelecionadaV2(diaIso);
+    document.getElementById('v2-pessoa-funcao-' + diaIso).value = pessoa ? (pessoa.funcao || '') : '';
+  }
+
+  function atualizarConflitoPessoaV2(diaIso) {
+    var aviso = document.getElementById('v2-conflito-' + diaIso);
+    if (!aviso) return;
+    var pessoa = pessoaSelecionadaV2(diaIso);
+    var conflito = pessoa ? conflitoPessoa(diaIso, { equipeId: pessoa.equipe_id, profileId: pessoa.profile_id }, null) : null;
+    aviso.textContent = conflito ? 'Já está no evento ' + conflito.eventoNome + (conflito.veiculoNome ? ', no veículo ' + conflito.veiculoNome : '') + '.' : '';
+    aviso.style.display = conflito ? 'block' : 'none';
+  }
+
+  async function adicionarPessoaV2(diaIso) {
+    var veiculo = VEICULOS.find(function (v) { return v.id === document.getElementById('v2-equipe-veiculo-' + diaIso).value; });
+    if (!veiculo) { alert('Selecione o veículo da pessoa.'); return; }
+    var pessoa = pessoaSelecionadaV2(diaIso);
+    var nomeLivre = document.getElementById('v2-pessoa-livre-' + diaIso).value.trim();
+    var funcao = document.getElementById('v2-pessoa-funcao-' + diaIso).value.trim();
+    if (nomeLivre) pessoa = { nome: nomeLivre, funcao: funcao, equipe_id: null, profile_id: null };
+    if (!pessoa) { alert('Selecione uma pessoa cadastrada ou informe um nome avulso.'); return; }
+    pessoa.funcao = funcao || pessoa.funcao || '';
+    var conflito = conflitoPessoa(diaIso, { equipeId: pessoa.equipe_id, profileId: pessoa.profile_id }, null);
+    if (conflito && !confirm(pessoa.nome + ' já está no evento ' + conflito.eventoNome + ' neste dia. Deseja adicionar mesmo assim?')) return;
+    var tecnicos = (veiculo.tecnicos || []).concat([pessoa]);
+    var res = await EF.client.from('evento_logistica_veiculos').update({ tecnicos: tecnicos }).eq('id', veiculo.id);
+    if (res.error) { alert('Erro ao adicionar pessoa: ' + res.error.message); return; }
+    veiculo.tecnicos = tecnicos;
+    sincronizarOcupacaoEquipeDoEvento();
+    fecharFormEquipeV2(diaIso);
+    renderizarDiaV2(diaIso);
+    atualizarResumo();
+  }
+
+  async function moverPessoaV2(diaIso, origem, indice, destinoId) {
+    if (origem.id === destinoId) return;
+    var destino = VEICULOS.find(function (v) { return v.id === destinoId; });
+    if (!destino) return;
+    var pessoa = (origem.tecnicos || [])[indice];
+    if (!pessoa) return;
+    var origemNova = (origem.tecnicos || []).slice();
+    origemNova.splice(indice, 1);
+    var destinoNova = (destino.tecnicos || []).concat([pessoa]);
+    var r1 = await EF.client.from('evento_logistica_veiculos').update({ tecnicos: origemNova }).eq('id', origem.id);
+    if (r1.error) { alert('Erro ao trocar o veículo: ' + r1.error.message); renderizarDiaV2(diaIso); return; }
+    var r2 = await EF.client.from('evento_logistica_veiculos').update({ tecnicos: destinoNova }).eq('id', destino.id);
+    if (r2.error) {
+      await EF.client.from('evento_logistica_veiculos').update({ tecnicos: origem.tecnicos || [] }).eq('id', origem.id);
+      alert('Erro ao trocar o veículo: ' + r2.error.message);
+      renderizarDiaV2(diaIso);
+      return;
+    }
+    origem.tecnicos = origemNova;
+    destino.tecnicos = destinoNova;
+    sincronizarOcupacaoEquipeDoEvento();
+    renderizarDiaV2(diaIso);
+  }
+
+  async function removerPessoaV2(diaIso, veiculo, indice) {
+    var tecnicos = (veiculo.tecnicos || []).slice();
+    tecnicos.splice(indice, 1);
+    var res = await EF.client.from('evento_logistica_veiculos').update({ tecnicos: tecnicos }).eq('id', veiculo.id);
+    if (res.error) { alert('Erro ao remover pessoa: ' + res.error.message); return; }
+    veiculo.tecnicos = tecnicos;
+    sincronizarOcupacaoEquipeDoEvento();
+    renderizarDiaV2(diaIso);
+    atualizarResumo();
+  }
+
+  function funcaoPessoaV2(t) {
+    var cadastro = EQUIPE.find(function (p) {
+      return (t.equipe_id && p.id === t.equipe_id) || (t.profile_id && p.profile_id === t.profile_id);
+    });
+    if (cadastro) return cadastro.funcoes || t.funcao || '';
+    if (t.funcao) return t.funcao;
+    var perfil = PROFILES.find(function (p) { return t.profile_id && p.id === t.profile_id; });
+    return perfil ? (ROLE_LABEL[perfil.role] || perfil.role || '') : '';
+  }
+
+  function renderizarEquipeV2(diaIso) {
+    var wrap = document.getElementById('v2-equipe-' + diaIso);
+    if (!wrap) return;
+    wrap.innerHTML = '';
+    var veiculos = veiculosDoDia(diaIso);
+    var total = 0;
+    veiculos.forEach(function (v) { total += (v.tecnicos || []).length; });
+    if (!total) {
+      wrap.innerHTML = '<div class="dia-vazio">Nenhuma pessoa adicionada.</div>';
+      return;
+    }
+    veiculos.forEach(function (v) {
+      (v.tecnicos || []).forEach(function (t, indice) {
+        var linha = document.createElement('div');
+        linha.className = 'equipe-linha';
+        var tipo = t.equipe_id ? 'Equipe' : (t.profile_id ? 'Usuário' : 'Avulso');
+        var funcao = funcaoPessoaV2(t);
+        linha.innerHTML =
+          '<div style="min-width:0;"><div class="equipe-nome">' + esc(t.nome) + (funcao ? ' — ' + esc(funcao) : '') + '</div><div class="equipe-tipo">' + tipo + '</div></div>' +
+          '<select class="equipe-veiculo"></select>' +
+          '<button class="form-cancelar" type="button" title="Remover pessoa">✕</button>';
+        var select = linha.querySelector('select');
+        select.innerHTML = veiculos.map(function (destino) { return '<option value="' + destino.id + '"' + (destino.id === v.id ? ' selected' : '') + '>' + esc(veiculoNomeV2(destino)) + '</option>'; }).join('');
+        select.addEventListener('change', function () { moverPessoaV2(diaIso, v, indice, this.value); });
+        linha.querySelector('button').addEventListener('click', function () { removerPessoaV2(diaIso, v, indice); });
+        wrap.appendChild(linha);
+      });
+    });
+  }
+
+  function abrirCopiarDiaV2(diaIso) {
+    if (!veiculosDoDia(diaIso).length) return;
+    var lista = document.getElementById('v2-copiar-dias-' + diaIso);
+    lista.innerHTML = DIAS.filter(function (d) { return d.data !== diaIso; }).map(function (d) {
+      return '<label class="copiar-dia"><input type="checkbox" value="' + d.data + '"><span>' + d.label + ' · ' + esc(TIPO_DIA_LABEL[d.tipoDia] || d.tipoDia) + '</span></label>';
+    }).join('');
+    document.getElementById('v2-form-copiar-' + diaIso).style.display = 'flex';
+    document.getElementById('v2-abrir-copiar-' + diaIso).style.display = 'none';
+  }
+
+  function fecharCopiarDiaV2(diaIso) {
+    document.getElementById('v2-form-copiar-' + diaIso).style.display = 'none';
+    document.getElementById('v2-abrir-copiar-' + diaIso).style.display = '';
+  }
+
+  function chaveVeiculoV2(v) {
+    if (v.veiculo_id) return 'frota:' + v.veiculo_id;
+    return 'livre:' + String(v.nome_veiculo || '').trim().toLowerCase() + '|' + String(v.placa || '').trim().toLowerCase();
+  }
+
+  function mesmaPessoaV2(a, b) {
+    if (a.equipe_id && b.equipe_id) return a.equipe_id === b.equipe_id;
+    if (a.profile_id && b.profile_id) return a.profile_id === b.profile_id;
+    if (!a.equipe_id && !a.profile_id && !b.equipe_id && !b.profile_id) {
+      return String(a.nome || '').trim().toLowerCase() === String(b.nome || '').trim().toLowerCase();
+    }
+    return false;
+  }
+
+  function pessoaJaNoDiaV2(diaIso, pessoa) {
+    return veiculosDoDia(diaIso).some(function (v) {
+      return (v.tecnicos || []).some(function (existente) { return mesmaPessoaV2(existente, pessoa); });
+    });
+  }
+
+  async function copiarDiaV2(origemDia) {
+    var marcados = Array.from(document.querySelectorAll('#v2-copiar-dias-' + origemDia + ' input:checked')).map(function (el) { return el.value; });
+    if (!marcados.length) { alert('Selecione pelo menos um dia de destino.'); return; }
+    var originais = veiculosDoDia(origemDia);
+    var adicionados = 0, mesclados = 0, veiculosPulados = 0, conflitosPessoas = 0;
+    var botao = document.getElementById('v2-confirmar-copiar-' + origemDia);
+    botao.disabled = true;
+    botao.textContent = 'Copiando...';
+
+    for (var d = 0; d < marcados.length; d++) {
+      var destinoDia = marcados[d];
+      for (var i = 0; i < originais.length; i++) {
+        var origem = originais[i];
+        var destino = veiculosDoDia(destinoDia).find(function (v) { return chaveVeiculoV2(v) === chaveVeiculoV2(origem); });
+        if (!destino && origem.veiculo_id && (OCUPACAO[destinoDia] || {})[origem.veiculo_id]) {
+          veiculosPulados++;
+          continue;
+        }
+        var tecnicosCopiados = (origem.tecnicos || []).reduce(function (lista, t) {
+          var copia = Object.assign({}, t);
+          copia.funcao = copia.funcao || funcaoPessoaV2(t);
+          if (pessoaJaNoDiaV2(destinoDia, copia)) return lista;
+          var conflito = (copia.equipe_id || copia.profile_id) ? conflitoPessoa(destinoDia, { equipeId: copia.equipe_id, profileId: copia.profile_id }, null) : null;
+          if (conflito && conflito.eventoId !== eventoSelecionadoId) conflitosPessoas++;
+          lista.push(copia);
+          return lista;
+        }, []);
+
+        if (!destino) {
+          var linha = {
+            evento_id: eventoSelecionadoId,
+            dia: destinoDia,
+            veiculo_id: origem.veiculo_id || null,
+            nome_veiculo: origem.nome_veiculo || '',
+            placa: origem.placa || '',
+            tecnicos: tecnicosCopiados,
+            ordem: VEICULOS.length
+          };
+          var ins = await EF.client.from('evento_logistica_veiculos').insert(linha).select().maybeSingle();
+          if (ins.error) { veiculosPulados++; continue; }
+          VEICULOS.push(ins.data);
+          adicionados++;
+        } else {
+          var atual = (destino.tecnicos || []).slice();
+          tecnicosCopiados.forEach(function (pessoa) {
+            if (!atual.some(function (existente) { return mesmaPessoaV2(existente, pessoa); })) atual.push(pessoa);
+          });
+          var mudou = atual.length !== (destino.tecnicos || []).length;
+          if (mudou) {
+            var upd = await EF.client.from('evento_logistica_veiculos').update({ tecnicos: atual }).eq('id', destino.id);
+            if (!upd.error) { destino.tecnicos = atual; mesclados++; }
+          }
+        }
+      }
+    }
+
+    sincronizarOcupacaoEquipeDoEvento();
+    marcados.forEach(function (dia) { renderizarDiaV2(dia); });
+    fecharCopiarDiaV2(origemDia);
+    atualizarResumo();
+    botao.disabled = false;
+    botao.textContent = 'Copiar';
+    var mensagem = 'Cópia concluída: ' + adicionados + ' veículo(s) adicionado(s)';
+    if (mesclados) mensagem += ', ' + mesclados + ' equipe(s) complementada(s)';
+    if (veiculosPulados) mensagem += '. ' + veiculosPulados + ' veículo(s) não foram copiados por indisponibilidade ou erro';
+    if (conflitosPessoas) mensagem += '. Atenção: ' + conflitosPessoas + ' pessoa(s) já possuem outro evento no dia de destino';
+    alert(mensagem + '.');
+  }
+
+  // ---------------- RESUMO ----------------
+
+  function atualizarResumo() {
+    document.getElementById('kpi-dias').textContent = DIAS.length || '—';
+    document.getElementById('kpi-veiculos').textContent = VEICULOS.length || '0';
+
+    var tecMontagem = 0, tecOperacao = 0, tecDesmontagem = 0;
+    var tipoPorDia = {};
+    DIAS.forEach(function (d) { tipoPorDia[d.data] = d.tipoDia; });
+    VEICULOS.forEach(function (v) {
+      var qtd = (v.tecnicos || []).length;
+      if (tipoPorDia[v.dia] === 'montagem') tecMontagem += qtd;
+      if (tipoPorDia[v.dia] === 'operacao') tecOperacao += qtd;
+      if (tipoPorDia[v.dia] === 'desmontagem') tecDesmontagem += qtd;
+    });
+    document.getElementById('kpi-tec-montagem').textContent = tecMontagem;
+    document.getElementById('kpi-tec-operacao').textContent = tecOperacao;
+    document.getElementById('kpi-tec-desmontagem').textContent = tecDesmontagem;
+  }
+})();
+</script>
+
+<script src="ef-ui.js?v=27"></script>
+</body>
+</html>

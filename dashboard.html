@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dashboard — EventFlow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="ef-config.js"></script>
+<script src="ef-auth.js?v=27"></script>
+<style>
+  body{margin:0;background:#0a0a0b;font-family:'Inter',sans-serif;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  .disp{font-family:'Space Grotesk',sans-serif;}
+  body [data-financeiro]{display:none !important;}
+  html[data-financeiro="true"] body [data-financeiro]{display:block !important;}
+  body [data-areas]{display:none !important;}
+  html[data-areas="true"] body [data-areas]{display:block !important;}
+  body [data-usuarios]{display:none !important;}
+  html[data-usuarios="true"] body [data-usuarios]{display:block !important;}
+</style>
+<link rel="stylesheet" href="ef-ui.css">
+</head>
+<body>
+
+<div style="width: 100%; min-height: 100vh; box-sizing: border-box; display: flex; background: #0a0a0b; color: #f3f1ec;">
+
+  <!-- ============ SIDEBAR ============ -->
+  <div style="width: 220px; flex-shrink: 0; display: flex; flex-direction: column; padding: 36px 24px; box-sizing: border-box;">
+
+    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 40px;">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" style="flex-shrink: 0;"><path d="M2 12c2 0 2-6.5 4-6.5S8 12 10 12s2-6.5 4-6.5" stroke="#7fa8c9" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div style="font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 13.5px; letter-spacing: -.01em;">EventFlow</div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 32px;">
+      <div style="display: flex; align-items: center; gap: 9px;">
+        <span style="width: 4px; height: 4px; border-radius: 50%; background: #7fa8c9; flex-shrink: 0;"></span>
+        <span style="font-size: 13px; font-weight: 600; color: #f3f1ec;">Dashboard</span>
+      </div>
+      <a href="agenda.html" style="display: flex; align-items: center; justify-content: space-between; text-decoration: none;"><span style="font-size: 13px; color: #8c8c91; padding-left: 13px;">Agenda</span></a>
+      <a href="estoque.html" style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Estoque</span></a>
+      <a href="clientes.html" data-financeiro style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Clientes</span></a>
+      <a href="vendas.html" data-financeiro style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Vendas</span></a>
+      <a href="chat.html" style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Chat</span></a>
+      <a href="notas.html" style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Notas</span></a>
+    </div>
+
+    <div data-areas>
+      <div class="mono" style="font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: #4a4a4e; margin-bottom: 12px;">Áreas do projeto</div>
+      <div style="display: flex; flex-direction: column; gap: 13px; margin-bottom: 32px;">
+        <a href="calculadora-som.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Som</span></a>
+        <a href="calculadora-luz.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Luz</span></a>
+        <a href="video.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Vídeo</span></a>
+        <a href="estrutura.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Estrutura</span></a>
+        <a href="internet.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Internet</span></a>
+        <a href="cenografia.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Cenografia</span></a>
+        <a href="extras.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Extras</span></a>
+        <a href="servicos.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Serviços</span></a>
+        <a href="logistica.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Logística</span></a>
+        <a href="descritivo-geral.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Descritivo Geral</span></a>
+        <a href="ordem-servico.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Ordem de Serviço</span></a>
+      </div>
+    </div>
+
+    <div data-areas>
+      <div class="mono" style="font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: #4a4a4e; margin-bottom: 12px;">Sistema</div>
+      <div style="display: flex; flex-direction: column; gap: 13px;">
+        <a data-usuarios href="usuarios-permissoes.html" style="text-decoration: none; display: block;"><span style="font-size: 12.5px; color: #6e6e73;">Usuários e permissões</span></a>
+      </div>
+    </div>
+
+    <div style="margin-top: auto; padding-top: 18px; border-top: 1px solid #1c1c1f; display: flex; align-items: center; gap: 10px;">
+      <div id="user-initials" style="width: 26px; height: 26px; border-radius: 50%; background: #1a1a1d; display: flex; align-items: center; justify-content: center; font-family: 'Space Grotesk', sans-serif; font-size: 10.5px; font-weight: 600; color: #b8b8bc; flex-shrink: 0;">··</div>
+      <div style="flex-grow: 1; min-width: 0;">
+        <div id="user-name" style="font-size: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Carregando…</div>
+        <div id="user-role" class="mono" style="font-size: 9px; color: #6e6e73; margin-top: 1px;">—</div>
+      </div>
+      <span id="logout" title="Sair" style="cursor: pointer; color: #6e6e73; font-size: 11px; flex-shrink: 0;">sair</span>
+    </div>
+  </div>
+
+  <!-- ============ MAIN ============ -->
+  <div style="flex-grow: 1; padding: 36px 48px 36px 0; box-sizing: border-box; min-width: 0;">
+
+    <!-- topbar -->
+    <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 30px;">
+      <div>
+        <div class="mono" style="color: #6e6e73; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 10px;" id="today"></div>
+        <h1 style="font-family: 'Space Grotesk', sans-serif; font-size: 24px; font-weight: 600; margin: 0 0 6px; letter-spacing: -.01em;">Operação</h1>
+        <div style="color: #8c8c91; font-size: 13px;">Painel diário de <span id="greet-name">…</span> · <span id="empresa-nome" class="mono" style="color: #9bb4c7;"></span></div>
+      </div>
+    </div>
+
+    <!-- KPI stat row -->
+    <div style="display: flex; padding: 20px 0; border-top: 1px solid #1c1c1f; border-bottom: 1px solid #1c1c1f; margin-bottom: 30px;">
+      <div id="kpi-cell-1a" style="display:none; flex: 1; padding-right: 26px; border-right: 1px solid #1c1c1f;">
+        <div class="mono" style="font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: #6e6e73; margin-bottom: 10px;">Faturamento do mês</div>
+        <div id="kpi-faturamento" style="font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 600; color: #7cae83;">—</div>
+        <div id="kpi-faturamento-var" style="font-size: 11.5px; color: #6e6e73;">—</div>
+      </div>
+      <div id="kpi-cell-1b" style="display:none; flex: 1; padding-right: 26px; border-right: 1px solid #1c1c1f;">
+        <div class="mono" style="font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: #6e6e73; margin-bottom: 10px;">Tarefas de hoje</div>
+        <div id="kpi-tarefas" style="font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 600;">—</div>
+        <div id="kpi-tarefas-sub" style="font-size: 11.5px; color: #6e6e73;">—</div>
+      </div>
+      <div style="flex: 1; padding: 0 26px; border-right: 1px solid #1c1c1f;">
+        <div class="mono" style="font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: #6e6e73; margin-bottom: 10px;">Eventos agendados</div>
+        <div id="kpi-eventos" style="font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 600;">—</div>
+        <div id="kpi-eventos-sub" style="font-size: 11.5px; color: #6e6e73;"><a href="agenda.html" style="color:#6e6e73;">ver agenda →</a></div>
+      </div>
+      <div style="flex: 1; padding: 0 26px; border-right: 1px solid #1c1c1f;">
+        <div class="mono" style="font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: #6e6e73; margin-bottom: 10px;">Estoque baixo</div>
+        <div id="kpi-estoque-baixo" style="font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 600;">—</div>
+        <div id="kpi-estoque-sub" style="font-size: 11.5px; color: #6e6e73;"><a href="estoque.html" style="color:#6e6e73;">ver estoque →</a></div>
+      </div>
+      <div style="flex: 1; padding-left: 26px;">
+        <div class="mono" style="font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: #6e6e73; margin-bottom: 10px;">Mensagens novas</div>
+        <div id="kpi-mensagens" style="font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 600;">—</div>
+        <div id="kpi-mensagens-sub" style="font-size: 11.5px; color: #6e6e73;">—</div>
+      </div>
+    </div>
+
+    <!-- grid principal -->
+    <div style="display: flex; gap: 28px; align-items: flex-start;">
+
+      <!-- coluna 1: Próximo evento (produção/estoque) OU Vendas (gerência) -->
+      <div id="col-proximo-evento" style="display:none; flex: 1.3; min-width: 0;">
+        <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:16px;">
+          <div style="font-family:'Space Grotesk', sans-serif; font-size:14px; font-weight:600;">Próximo evento</div>
+          <span id="proximo-evento-tag" class="mono" style="font-size:10px; color:#7fa8c9; text-transform:uppercase; letter-spacing:.06em;">—</span>
+        </div>
+        <div id="proximo-evento-body">
+          <div style="color:#6e6e73; font-size:12.5px;">Nenhum evento futuro agendado.</div>
+        </div>
+      </div>
+
+      <div id="col-vendas" style="display:none; flex: 1.3; min-width: 0;">
+        <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:16px;">
+          <div style="font-family:'Space Grotesk', sans-serif; font-size:14px; font-weight:600;">Vendas</div>
+          <span class="mono" style="font-size:10px; color:#6e6e73; text-transform:uppercase; letter-spacing:.06em;">6 meses</span>
+        </div>
+        <div id="vendas-chart" style="display:flex; align-items:flex-end; gap:10px; height:110px; margin-bottom:12px;"></div>
+        <div style="border-top:1px solid #1c1c1f; padding-top:12px;">
+          <div class="mono" style="font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:#6e6e73; margin-bottom:6px;" id="vendas-mes-label">—</div>
+          <div id="vendas-mes-valor" style="font-family:'Space Grotesk', sans-serif; font-size:20px; font-weight:600;">—</div>
+        </div>
+      </div>
+
+      <!-- coluna 2: Agenda -->
+      <div style="flex: 1.15; min-width: 0;">
+        <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:16px;">
+          <div style="font-family:'Space Grotesk', sans-serif; font-size:14px; font-weight:600;">Agenda</div>
+          <a href="agenda.html" style="color:#7fa8c9; font-size:11.5px; text-decoration:none;">ver tudo</a>
+        </div>
+        <div id="lista-agenda" style="display:flex; flex-direction:column; gap:16px;">
+          <div style="color:#6e6e73; font-size:12.5px;">Carregando…</div>
+        </div>
+      </div>
+
+      <!-- coluna 3: Estoque -->
+      <div style="flex: 1.15; min-width: 0;">
+        <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:16px;">
+          <div style="font-family:'Space Grotesk', sans-serif; font-size:14px; font-weight:600;">Estoque</div>
+          <a href="estoque.html" id="estoque-count-link" style="color:#6e6e73; font-size:11.5px; text-decoration:none;">—</a>
+        </div>
+        <div id="lista-estoque" style="display:flex; flex-direction:column; gap:14px;">
+          <div style="color:#6e6e73; font-size:12.5px;">Carregando…</div>
+        </div>
+      </div>
+
+      <!-- coluna 4: Chat -->
+      <div style="flex: 1.15; min-width: 0;">
+        <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:16px;">
+          <div style="font-family:'Space Grotesk', sans-serif; font-size:14px; font-weight:600;">Chat</div>
+          <a href="chat.html" style="color:#7fa8c9; font-size:11.5px; text-decoration:none;">abrir</a>
+        </div>
+        <div id="lista-chat" style="display:flex; flex-direction:column; gap:14px;">
+          <div style="color:#6e6e73; font-size:12.5px;">Carregando…</div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function () {
+  document.getElementById('today').textContent = new Date().toLocaleDateString('pt-BR', {
+    weekday: 'long', day: '2-digit', month: 'long'
+  });
+
+  function fmtMoeda(v) { return (v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+  function fmtDataCurta(d) { return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }).replace('.', '').toUpperCase(); }
+  function fmtHora(d) { return d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }); }
+  var STATUS_LABEL = { a_confirmar: 'A confirmar', confirmado: 'Confirmado', em_andamento: 'Em andamento', concluido: 'Concluído', cancelado: 'Cancelado' };
+  var STATUS_COR = { a_confirmar: '#d1a24a', confirmado: '#7cae83', em_andamento: '#7fa8c9', concluido: '#6e6e73', cancelado: '#c9695c' };
+
+  document.addEventListener('DOMContentLoaded', async function () {
+    if (!window.EF || !EF.ready) return;
+    var ok = await EF.init({});
+    if (!ok) return;
+
+    var p = EF.profile;
+    var nome = p.nome || p.email || 'Usuário';
+    var iniciais = nome.split(' ').filter(Boolean).slice(0, 2).map(function (s) { return s[0].toUpperCase(); }).join('');
+    var roleLabel = { gerencia: 'Gerência', producao: 'Produção', estoque: 'Estoque' }[p.role] || p.role;
+
+    document.getElementById('greet-name').textContent = nome.split(' ')[0];
+    document.getElementById('role-inline') && (document.getElementById('role-inline').textContent = roleLabel);
+
+    // ---- qual dashboard: gerência (faturamento + vendas) ou produção/estoque (tarefas + próximo evento) ----
+    var ehGerencia = EF.canSeeFinance();
+    document.getElementById('kpi-cell-1a').style.display = ehGerencia ? '' : 'none';
+    document.getElementById('kpi-cell-1b').style.display = ehGerencia ? 'none' : '';
+    document.getElementById('col-vendas').style.display = ehGerencia ? '' : 'none';
+    document.getElementById('col-proximo-evento').style.display = ehGerencia ? 'none' : '';
+
+    if (!p.empresa_id) return;
+
+    var { data: empresa } = await EF.client.from('empresas').select('nome').eq('id', p.empresa_id).maybeSingle();
+    document.getElementById('empresa-nome').textContent = empresa ? empresa.nome : '';
+
+    // ================= ESTOQUE =================
+    var { data: itens } = await EF.client.from('estoque_itens').select('id, nome, quantidade_total, quantidade_disponivel').eq('empresa_id', p.empresa_id);
+    itens = itens || [];
+    var baixos = itens.filter(function (it) { return it.quantidade_total > 0 && (it.quantidade_disponivel / it.quantidade_total) < 0.3; });
+    baixos.sort(function (a, b) { return (a.quantidade_disponivel / (a.quantidade_total || 1)) - (b.quantidade_disponivel / (b.quantidade_total || 1)); });
+    document.getElementById('kpi-estoque-baixo').textContent = baixos.length;
+    document.getElementById('kpi-estoque-sub').innerHTML = baixos.length
+      ? '<a href="estoque.html" style="color:#c9695c;">revisar reposição</a>'
+      : '<a href="estoque.html" style="color:#6e6e73;">ver estoque →</a>';
+
+    var estoqueCountLink = document.getElementById('estoque-count-link');
+    estoqueCountLink.textContent = baixos.length;
+
+    var listaEstoqueEl = document.getElementById('lista-estoque');
+    listaEstoqueEl.innerHTML = '';
+    if (!baixos.length) {
+      listaEstoqueEl.innerHTML = '<div style="color:#6e6e73; font-size:12.5px;">Nenhum item com estoque baixo.</div>';
+    } else {
+      baixos.slice(0, 6).forEach(function (it) {
+        var pct = it.quantidade_total > 0 ? Math.round((it.quantidade_disponivel / it.quantidade_total) * 100) : 0;
+        var cor = pct < 20 ? '#c9695c' : pct < 30 ? '#d1a24a' : '#7fa8c9';
+        var linha = document.createElement('div');
+        linha.innerHTML =
+          '<div style="display:flex; justify-content:space-between; font-size:12.5px; margin-bottom:6px;">' +
+            '<span>' + escHtml(it.nome) + '</span>' +
+            '<span class="mono" style="color:#8c8c91;">' + it.quantidade_disponivel + '/' + it.quantidade_total + '</span>' +
+          '</div>' +
+          '<div style="height:2px; background:#1c1c1f; border-radius:2px; overflow:hidden;"><div style="height:100%; width:' + pct + '%; background:' + cor + ';"></div></div>';
+        listaEstoqueEl.appendChild(linha);
+      });
+    }
+
+    // ================= EVENTOS / AGENDA =================
+    var { data: eventos } = await EF.client.from('eventos').select('id, nome, cliente, local, data_inicio, data_fim, status').eq('empresa_id', p.empresa_id);
+    eventos = eventos || [];
+    var agora = new Date();
+    var futuros = eventos
+      .filter(function (ev) { return new Date(ev.data_fim) >= agora && ev.status !== 'cancelado'; })
+      .sort(function (a, b) { return new Date(a.data_inicio) - new Date(b.data_inicio); });
+    document.getElementById('kpi-eventos').textContent = futuros.length;
+    var estaSemana = futuros.filter(function (ev) {
+      var d = new Date(ev.data_inicio);
+      return (d - agora) <= 7 * 24 * 3600 * 1000;
+    }).length;
+    document.getElementById('kpi-eventos-sub').innerHTML = '<span class="mono" style="color:#6e6e73;">' + estaSemana + ' nesta semana</span>';
+
+    // lista de agenda (próximos 4)
+    var listaAgendaEl = document.getElementById('lista-agenda');
+    listaAgendaEl.innerHTML = '';
+    if (!futuros.length) {
+      listaAgendaEl.innerHTML = '<div style="color:#6e6e73; font-size:12.5px;">Nenhum evento futuro agendado.</div>';
+    } else {
+      futuros.slice(0, 4).forEach(function (ev) {
+        var d = new Date(ev.data_inicio);
+        var ehHoje = d.toDateString() === agora.toDateString();
+        var linha = document.createElement('div');
+        linha.innerHTML =
+          '<div style="display:flex; gap:12px;">' +
+            '<div class="mono" style="font-size:10.5px; color:#6e6e73; width:38px; flex-shrink:0; padding-top:2px;">' + fmtDataCurta(d) + '</div>' +
+            '<div style="flex:1; min-width:0;">' +
+              '<div style="display:flex; justify-content:space-between; gap:8px;">' +
+                '<span style="font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + escHtml(ev.nome) + '</span>' +
+                '<span class="mono" style="font-size:9.5px; color:' + (ehHoje ? '#7fa8c9' : (STATUS_COR[ev.status] || '#6e6e73')) + '; text-transform:uppercase; flex-shrink:0;">' + (ehHoje ? 'HOJE' : (STATUS_LABEL[ev.status] || ev.status)) + '</span>' +
+              '</div>' +
+              '<div style="font-size:11.5px; color:#6e6e73; margin-top:2px;">' + escHtml(ev.local || 'local a definir') + ' · ' + fmtHora(d) + '</div>' +
+            '</div>' +
+          '</div>';
+        listaAgendaEl.appendChild(linha);
+      });
+    }
+
+    // ================= PRÓXIMO EVENTO (produção/estoque) =================
+    if (!ehGerencia) {
+      var prox = futuros[0];
+      var proxTag = document.getElementById('proximo-evento-tag');
+      var proxBody = document.getElementById('proximo-evento-body');
+      if (!prox) {
+        proxTag.textContent = '';
+        proxBody.innerHTML = '<div style="color:#6e6e73; font-size:12.5px;">Nenhum evento futuro agendado.</div>';
+      } else {
+        var dProx = new Date(prox.data_inicio);
+        var ehHojeProx = dProx.toDateString() === agora.toDateString();
+        proxTag.textContent = ehHojeProx ? 'HOJE' : fmtDataCurta(dProx);
+
+        // equipe escalada: técnicos únicos em evento_logistica_veiculos deste evento
+        var equipeCount = null;
+        try {
+          var { data: veiculosLog } = await EF.client.from('evento_logistica_veiculos').select('tecnicos').eq('evento_id', prox.id);
+          if (veiculosLog) {
+            var nomes = {};
+            veiculosLog.forEach(function (v) { (v.tecnicos || []).forEach(function (t) { nomes[t.profile_id || t.nome] = true; }); });
+            equipeCount = Object.keys(nomes).length;
+          }
+        } catch (e) { /* logística pode não estar migrada ainda — ignora */ }
+
+        var linhasProx = [
+          '<div style="font-family:\'Space Grotesk\', sans-serif; font-size:18px; font-weight:600; margin-bottom:4px;">' + escHtml(prox.nome) + '</div>',
+          '<div style="color:#8c8c91; font-size:12.5px; margin-bottom:18px;">' + escHtml(prox.local || 'local a definir') + ' · ' + fmtHora(dProx) + '</div>'
+        ];
+        function linhaInfo(label, valor) {
+          return '<div style="display:flex; justify-content:space-between; padding:10px 0; border-top:1px solid #1c1c1f; font-size:12.5px;">' +
+            '<span style="color:#8c8c91;">' + label + '</span><span style="font-weight:600;">' + valor + '</span></div>';
+        }
+        linhasProx.push(linhaInfo('Cliente', escHtml(prox.cliente || '—')));
+        linhasProx.push(linhaInfo('Status', '<span style="color:' + (STATUS_COR[prox.status] || '#6e6e73') + ';">' + (STATUS_LABEL[prox.status] || prox.status) + '</span>'));
+        if (equipeCount != null) linhasProx.push(linhaInfo('Equipe escalada', equipeCount + ' técnico' + (equipeCount === 1 ? '' : 's')));
+        proxBody.innerHTML = linhasProx.join('');
+      }
+    }
+
+    // ================= TAREFAS (produção/estoque) =================
+    if (!ehGerencia) {
+      try {
+        var hojeStr = new Date().toISOString().slice(0, 10);
+        var { data: tarefasHoje } = await EF.client.from('tarefas').select('id, concluida').eq('empresa_id', p.empresa_id).eq('prazo', hojeStr);
+        tarefasHoje = tarefasHoje || [];
+        var concluidas = tarefasHoje.filter(function (t) { return t.concluida; }).length;
+        document.getElementById('kpi-tarefas').textContent = tarefasHoje.length;
+        document.getElementById('kpi-tarefas-sub').textContent = concluidas + ' concluída' + (concluidas === 1 ? '' : 's');
+      } catch (e) {
+        document.getElementById('kpi-tarefas').textContent = '—';
+      }
+    }
+
+    // ================= VENDAS (gerência) =================
+    if (ehGerencia) {
+      var { data: orcamentos } = await EF.client.from('orcamentos').select('id, status, valor_pago, data').eq('empresa_id', p.empresa_id);
+      orcamentos = orcamentos || [];
+      var pagos = orcamentos.filter(function (o) { return o.status === 'pago' || o.status === 'pago_parcial'; });
+
+      var hoje = new Date();
+      var faturamentoMes = 0, faturamentoMesAnterior = 0;
+      var meses = []; // últimos 6 meses, mais antigo primeiro
+      for (var i = 5; i >= 0; i--) {
+        var ref = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
+        meses.push({ ano: ref.getFullYear(), mes: ref.getMonth(), total: 0 });
+      }
+      pagos.forEach(function (o) {
+        var d = new Date(o.data + 'T00:00:00');
+        meses.forEach(function (m) {
+          if (d.getFullYear() === m.ano && d.getMonth() === m.mes) m.total += (o.valor_pago || 0);
+        });
+        if (d.getFullYear() === hoje.getFullYear() && d.getMonth() === hoje.getMonth()) faturamentoMes += (o.valor_pago || 0);
+        var refAnterior = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1);
+        if (d.getFullYear() === refAnterior.getFullYear() && d.getMonth() === refAnterior.getMonth()) faturamentoMesAnterior += (o.valor_pago || 0);
+      });
+
+      document.getElementById('kpi-faturamento').textContent = fmtMoeda(faturamentoMes);
+      if (faturamentoMesAnterior > 0) {
+        var variacao = Math.round(((faturamentoMes - faturamentoMesAnterior) / faturamentoMesAnterior) * 100);
+        var elVar = document.getElementById('kpi-faturamento-var');
+        elVar.textContent = (variacao >= 0 ? '↑ ' : '↓ ') + Math.abs(variacao) + '% vs. mês anterior';
+        elVar.style.color = variacao >= 0 ? '#7cae83' : '#c9695c';
+      } else {
+        document.getElementById('kpi-faturamento-var').textContent = 'sem dados do mês anterior';
+      }
+
+      var maxMes = Math.max.apply(null, meses.map(function (m) { return m.total; }).concat([1]));
+      var chartEl = document.getElementById('vendas-chart');
+      chartEl.innerHTML = '';
+      var nomesMes = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+      meses.forEach(function (m, i) {
+        var ehAtual = i === meses.length - 1;
+        var alturaPct = Math.max(4, Math.round((m.total / maxMes) * 100));
+        var col = document.createElement('div');
+        col.style.cssText = 'flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; gap:6px;';
+        col.innerHTML =
+          '<div style="width:100%; max-width:22px; height:' + alturaPct + '%; background:' + (ehAtual ? '#7fa8c9' : '#29292d') + '; border-radius:2px 2px 0 0;"></div>' +
+          '<div class="mono" style="font-size:9.5px; color:' + (ehAtual ? '#f3f1ec' : '#6e6e73') + ';">' + nomesMes[m.mes] + '</div>';
+        chartEl.appendChild(col);
+      });
+      document.getElementById('vendas-mes-label').textContent = nomesMes[hoje.getMonth()].toUpperCase() + ' (ATUAL)';
+      document.getElementById('vendas-mes-valor').textContent = fmtMoeda(faturamentoMes);
+    }
+
+    // ================= CHAT =================
+    try {
+      var { data: partsMinhas } = await EF.client.from('conversa_participantes').select('conversa_id').eq('profile_id', p.id);
+      var idsConversas = (partsMinhas || []).map(function (x) { return x.conversa_id; });
+      var listaChatEl = document.getElementById('lista-chat');
+      listaChatEl.innerHTML = '';
+
+      if (!idsConversas.length) {
+        listaChatEl.innerHTML = '<div style="color:#6e6e73; font-size:12.5px;">Nenhuma conversa ainda.</div>';
+        document.getElementById('kpi-mensagens').textContent = '0';
+        document.getElementById('kpi-mensagens-sub').textContent = 'nenhuma conversa';
+      } else {
+        var { data: conversas } = await EF.client.from('conversas').select('id, tipo, nome').in('id', idsConversas);
+        conversas = conversas || [];
+
+        var desde = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
+        var novasTotal = 0;
+        var itensChat = [];
+
+        for (var ci = 0; ci < conversas.length; ci++) {
+          var c = conversas[ci];
+          var { data: ultimas } = await EF.client.from('mensagens').select('autor_id, autor_nome, tipo, conteudo, created_at').eq('conversa_id', c.id).order('created_at', { ascending: false }).limit(1);
+          var ultima = (ultimas || [])[0];
+          if (!ultima) continue;
+          var { count: novasCount } = await EF.client.from('mensagens').select('id', { count: 'exact', head: true }).eq('conversa_id', c.id).gt('created_at', desde).neq('autor_id', p.id);
+          novasTotal += (novasCount || 0);
+          itensChat.push({ conversa: c, ultima: ultima, novas: novasCount || 0 });
+        }
+
+        itensChat.sort(function (a, b) { return new Date(b.ultima.created_at) - new Date(a.ultima.created_at); });
+        document.getElementById('kpi-mensagens').textContent = novasTotal;
+        document.getElementById('kpi-mensagens-sub').textContent = novasTotal ? (itensChat.filter(function (i) { return i.novas > 0; }).length + ' aguardando resposta') : 'tudo em dia';
+
+        if (!itensChat.length) {
+          listaChatEl.innerHTML = '<div style="color:#6e6e73; font-size:12.5px;">Nenhuma mensagem ainda.</div>';
+        } else {
+          itensChat.slice(0, 5).forEach(function (i) {
+            var nomeConversa = i.conversa.tipo === 'grupo' ? i.conversa.nome : i.ultima.autor_nome;
+            var preview = i.ultima.tipo === 'texto' ? i.ultima.conteudo : (i.ultima.tipo === 'audio' ? '🎤 áudio' : '📎 anexo');
+            var iniciaisChat = (nomeConversa || '?').split(' ').filter(Boolean).slice(0, 2).map(function (s) { return s[0].toUpperCase(); }).join('');
+            var linha = document.createElement('div');
+            linha.style.cssText = 'display:flex; align-items:center; gap:10px;';
+            linha.innerHTML =
+              '<div style="width:28px; height:28px; border-radius:50%; background:#1a1a1d; display:flex; align-items:center; justify-content:center; font-family:\'Space Grotesk\', sans-serif; font-size:10.5px; font-weight:600; color:#b8b8bc; flex-shrink:0;">' + (iniciaisChat || '··') + '</div>' +
+              '<div style="flex:1; min-width:0;">' +
+                '<div style="font-size:12.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + escHtml(nomeConversa || 'Conversa') + '</div>' +
+                '<div style="font-size:11.5px; color:#8c8c91; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + escHtml(preview || '') + '</div>' +
+              '</div>' +
+              (i.novas > 0 ? '<span style="width:6px; height:6px; border-radius:50%; background:#7fa8c9; flex-shrink:0;"></span>' : '');
+            listaChatEl.appendChild(linha);
+          });
+        }
+      }
+    } catch (e) {
+      document.getElementById('lista-chat').innerHTML = '<div style="color:#6e6e73; font-size:12.5px;">Chat indisponível.</div>';
+    }
+  });
+
+  function escHtml(v) {
+    return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+})();
+</script>
+
+<script src="ef-ui.js?v=27"></script>
+</body>
+</html>

@@ -1,0 +1,710 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ordem de Serviço — EventFlow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="ef-config.js"></script>
+<script src="ef-auth.js?v=27"></script>
+<style>
+  body{margin:0;background:#0a0a0b;font-family:'Inter',sans-serif;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  .disp{font-family:'Space Grotesk',sans-serif;}
+  select{font-family:'IBM Plex Mono',monospace;background:transparent;border:none;color:inherit;font-size:12.5px;cursor:pointer;color-scheme:dark;}
+  select option{background:#0d0d0f;color:#f3f1ec;}
+  select:focus{outline:none;}
+  input{font-family:'Inter',sans-serif;}
+  input::placeholder{color:#4a4a4e;}
+  input:focus{outline:none;border-color:#3b82c9 !important;}
+  body [data-financeiro]{display:none !important;}
+  html[data-financeiro="true"] body [data-financeiro]{display:block !important;}
+  body [data-areas]{display:none !important;}
+  html[data-areas="true"] body [data-areas]{display:block !important;}
+  body [data-usuarios]{display:none !important;}
+  html[data-usuarios="true"] body [data-usuarios]{display:block !important;}
+  .icone-acao{cursor:pointer;color:#6e6e73;font-size:11px;}
+  .icone-acao:hover{color:#c9695c;}
+  .secao{padding: 26px 0; border-bottom: 1px solid #1c1c1f;}
+  .secao:last-child{border-bottom:none;}
+  .rotulo-mini{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:#6e6e73;margin-bottom:7px;}
+  .campo{width:100%;background:transparent;border:none;border-bottom:1px solid #29292d;color:#f3f1ec;font-size:13.5px;padding-bottom:8px;box-sizing:border-box;}
+  .kpi-mem{flex:1; padding:0 22px; border-right:1px solid #1c1c1f;}
+  .kpi-mem:first-child{padding-left:0;}
+  .kpi-mem:last-child{border-right:none;}
+  .badge{font-family:'IBM Plex Mono',monospace; font-size:9.5px; text-transform:uppercase; letter-spacing:.04em; padding:3px 8px; border-radius:3px; display:inline-block;}
+  .badge-rascunho{color:#c9a15c; border:1px solid #3a301c;}
+  .badge-gerada{color:#7cae83; border:1px solid #22381f;}
+  .badge-cancelada{color:#c9695c; border:1px solid #3a1f1c;}
+  .badge-manual{font-family:'IBM Plex Mono',monospace; font-size:8.5px; color:#c9a15c; border:1px solid #3a301c; padding:1px 5px; border-radius:3px; margin-left:6px;}
+  table.tbl-os{width:100%; border-collapse:collapse; margin-top:12px;}
+  table.tbl-os th{text-align:left; font-family:'IBM Plex Mono',monospace; font-size:9.5px; text-transform:uppercase; letter-spacing:.04em; color:#6e6e73; padding:8px; border-bottom:1px solid #1c1c1f;}
+  table.tbl-os th.num, table.tbl-os td.num{text-align:right;}
+  table.tbl-os td{padding:10px 8px; font-size:12.5px; border-bottom:1px solid #17171a;}
+  table.tbl-os td.area-cell{color:#6e6e73; font-family:'IBM Plex Mono',monospace; font-size:10.5px;}
+  .add-form-card{background:#131315;border:1px solid #1c1c1f;border-radius:8px;padding:14px 16px;}
+  .add-form-titulo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:#6e6e73;margin-bottom:12px;}
+  .add-form-label{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.05em;text-transform:uppercase;color:#6e6e73;margin-bottom:6px;}
+  .add-form-input{width:100%;background:transparent;border:none;border-bottom:1px solid #29292d;color:#f3f1ec;font-size:13px;padding-bottom:8px;box-sizing:border-box;}
+  .add-form-link{background:none;border:none;padding:0 0 8px;font-size:13px;color:#7fa8c9;cursor:pointer;border-bottom:1px solid #2a3d4d;white-space:nowrap;}
+  #print-os{display:none;}
+  @media print {
+    @page{size:A4 portrait;margin:10mm;}
+    body>*:not(#print-os){display:none !important;}
+    #print-os{display:block !important;color:#111;background:#fff;font-family:Arial,Helvetica,sans-serif;}
+    body{background:#fff !important;color:#111 !important;margin:0 !important;}
+    .po-head{border-bottom:2px solid #111;padding-bottom:8px;margin-bottom:10px;}
+    .po-brand{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#555;}
+    .po-title{font-size:22px;font-weight:800;margin:3px 0 2px;}
+    .po-sub{font-size:10px;color:#555;line-height:1.45;}
+    .po-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:9px 0 12px;}
+    .po-box{border:1px solid #bbb;padding:6px;min-height:35px;}
+    .po-label{font-size:7.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#666;margin-bottom:3px;}
+    .po-value{font-size:10px;font-weight:700;line-height:1.3;}
+    .po-section{break-inside:avoid;margin:11px 0 5px;font-size:12px;font-weight:800;border-bottom:1.5px solid #222;padding-bottom:3px;text-transform:uppercase;}
+    .po-area{break-inside:avoid;margin-top:9px;}
+    .po-area-title{font-size:10px;font-weight:800;background:#ececec;border:1px solid #aaa;padding:5px 6px;text-transform:uppercase;}
+    .po-table{width:100%;border-collapse:collapse;font-size:8.2px;}
+    .po-table th{background:#f2f2f2;border:1px solid #aaa;padding:4px 3px;text-align:left;font-size:7.3px;text-transform:uppercase;}
+    .po-table td{border:1px solid #bbb;padding:4px 3px;vertical-align:top;line-height:1.25;}
+    .po-table .num{text-align:right;white-space:nowrap;}
+    .po-item-name{font-weight:800;font-size:9px;}
+    .po-detail{font-size:7.8px;color:#333;margin-top:2px;line-height:1.25;}
+    .po-check{width:10mm;text-align:center;font-size:13px;}
+    .po-log-card{break-inside:avoid;border:1px solid #aaa;margin:5px 0;padding:6px;}
+    .po-log-title{font-size:9px;font-weight:800;}
+    .po-log-tech{font-size:8px;margin-top:3px;}
+    .po-alert{border:2px solid #111;padding:7px;font-size:9px;font-weight:700;margin:8px 0;}
+    .po-footer{margin-top:12px;border-top:1px solid #aaa;padding-top:5px;font-size:7.5px;color:#666;display:flex;justify-content:space-between;}
+    .po-page-break{break-before:page;}
+  }
+</style>
+<link rel="stylesheet" href="ef-ui.css">
+</head>
+<body>
+<div id="print-os"></div>
+
+<div style="width: 100%; min-height: 100vh; box-sizing: border-box; display: flex; background: #0a0a0b; color: #f3f1ec;">
+
+  <!-- ============ SIDEBAR ============ -->
+  <div style="width: 220px; flex-shrink: 0; display: flex; flex-direction: column; padding: 36px 24px; box-sizing: border-box;">
+
+    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 40px;">
+      <a href="dashboard.html" style="text-decoration: none; display: flex; align-items: center; gap: 10px;">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" style="flex-shrink: 0;"><path d="M2 12c2 0 2-6.5 4-6.5S8 12 10 12s2-6.5 4-6.5" stroke="#7fa8c9" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div style="font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 13.5px; letter-spacing: -.01em; color: #f3f1ec;">EventFlow</div>
+      </a>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 32px;">
+      <a href="dashboard.html" style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Dashboard</span></a>
+      <a href="agenda.html" style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Agenda</span></a>
+      <a href="estoque.html" style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Estoque</span></a>
+      <a href="clientes.html" data-financeiro style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Clientes</span></a>
+      <a href="vendas.html" data-financeiro style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Vendas</span></a>
+      <a href="chat.html" style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Chat</span></a>
+      <a href="notas.html" style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Notas</span></a>
+    </div>
+
+    <div data-areas>
+      <div class="mono" style="font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: #4a4a4e; margin-bottom: 12px;">Áreas</div>
+      <div style="display: flex; flex-direction: column; gap: 13px; margin-bottom: 32px;">
+        <a href="calculadora-som.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Som</span></a>
+        <a href="calculadora-luz.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Luz</span></a>
+<a href="video.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Vídeo</span></a>
+        <a href="cenografia.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Cenografia</span></a>
+        <a href="servicos.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Serviços</span></a>
+        <a href="logistica.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Logística</span></a>
+        <a href="descritivo-geral.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Descritivo Geral</span></a>
+        <div style="display: flex; align-items: center; gap: 9px;">
+          <span style="width: 4px; height: 4px; border-radius: 50%; background: #7fa8c9; flex-shrink: 0;"></span>
+          <span style="font-size: 12.5px; color: #f3f1ec; font-weight: 600;">Ordem de Serviço</span>
+        </div>
+      </div>
+    </div>
+
+    <div data-areas>
+      <div class="mono" style="font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: #4a4a4e; margin-bottom: 12px;">Sistema</div>
+      <div style="display: flex; flex-direction: column; gap: 13px;">
+        <a data-usuarios href="usuarios-permissoes.html" style="text-decoration: none; display: block;"><span style="font-size: 12.5px; color: #6e6e73;">Usuários e permissões</span></a>
+      </div>
+    </div>
+
+    <div style="margin-top: auto; padding-top: 18px; border-top: 1px solid #1c1c1f; display: flex; align-items: center; gap: 10px;">
+      <div id="user-initials" style="width: 26px; height: 26px; border-radius: 50%; background: #1a1a1d; display: flex; align-items: center; justify-content: center; font-family: 'Space Grotesk', sans-serif; font-size: 10.5px; font-weight: 600; color: #b8b8bc; flex-shrink: 0;">··</div>
+      <div style="flex-grow: 1; min-width: 0;">
+        <div id="user-name" style="font-size: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Carregando…</div>
+        <div id="user-role" class="mono" style="font-size: 9px; color: #6e6e73; margin-top: 1px;">—</div>
+      </div>
+      <span id="logout" title="Sair" style="cursor: pointer; color: #6e6e73; font-size: 11px; flex-shrink: 0;">sair</span>
+    </div>
+  </div>
+
+  <!-- ============ MAIN ============ -->
+  <div style="flex-grow: 1; padding: 36px 48px 36px 0; box-sizing: border-box; min-width: 0;">
+
+    <div style="margin-bottom: 8px;">
+      <div class="mono" style="color: #6e6e73; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 10px;" id="hoje"></div>
+      <h1 style="font-family: 'Space Grotesk', sans-serif; font-size: 24px; font-weight: 600; margin: 0 0 6px; letter-spacing: -.01em;">Ordem de Serviço</h1>
+      <div style="color: #8c8c91; font-size: 13px;" id="resumo"></div>
+    </div>
+
+    <div class="secao">
+      <div style="max-width: 360px;">
+        <div class="rotulo-mini">Evento</div>
+        <select id="select-evento" style="width: 100%; border-bottom: 1px solid #29292d; padding-bottom: 8px; color: #f3f1ec; font-size: 13.5px;">
+          <option value="">— selecione um evento —</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="bloco-sem-evento" class="secao" style="color: #4a4a4e; font-size: 13px;">Selecione um evento pra ver ou montar a Ordem de Serviço.</div>
+
+    <div id="bloco-com-evento" style="display:none;">
+
+      <div class="secao">
+        <div style="display:flex; align-items:center; gap:14px; margin-bottom:4px;">
+          <h2 style="font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 600; margin: 0;">Itens da OS</h2>
+          <span id="os-status-badge"></span>
+        </div>
+        <div style="color: #6e6e73; font-size: 12px; margin-bottom: 4px;" id="os-info-texto"></div>
+
+        <div id="bloco-sem-os" style="padding: 18px 0;">
+          <span id="btn-montar-os" style="font-size: 13px; color: #7fa8c9; cursor: pointer; border-bottom: 1px solid #2a3d4d; padding-bottom: 8px; display: inline-block;">+ Montar OS a partir do planejamento</span>
+        </div>
+
+        <div id="bloco-com-os" style="display:none;">
+          <table class="tbl-os">
+            <thead>
+              <tr><th>Área</th><th>Item</th><th class="num">Qtd.</th><th class="num">Peso</th><th class="num">Consumo</th><th></th></tr>
+            </thead>
+            <tbody id="tbl-os-body"></tbody>
+          </table>
+          <div id="os-vazio" style="display:none; color:#4a4a4e; font-size:13px; padding:12px 0;">Nenhum item na OS ainda.</div>
+
+          <div id="add-item-wrap" class="add-form-card" style="margin-top:16px;">
+            <div class="add-form-titulo">Adicionar item à OS</div>
+            <div style="display:flex; gap:14px; align-items:end; flex-wrap:wrap;">
+              <div style="flex:2; min-width:160px;"><div class="add-form-label">Item (avulso/manual)</div><input type="text" class="add-form-input" id="add-nome"></div>
+              <div style="width:90px;"><div class="add-form-label">Área</div><input type="text" placeholder="Geral" class="add-form-input" id="add-area"></div>
+              <div style="width:90px;"><div class="add-form-label">Peso (kg)</div><input type="number" min="0" step="0.1" placeholder="opcional" class="add-form-input" id="add-peso"></div>
+              <div style="width:90px;"><div class="add-form-label">Quantidade</div><input type="number" min="1" step="1" value="1" class="add-form-input" id="add-qtd"></div>
+              <div><button type="button" class="add-form-link" id="btn-add-item">+ Adicionar</button></div>
+            </div>
+          </div>
+
+          <div id="acoes-os" style="display:flex; gap:22px; align-items:center; margin-top:18px; padding-top:16px; border-top:1px solid #1c1c1f;">
+            <span id="btn-puxar" style="font-size:12.5px; color:#7fa8c9; cursor:pointer; border-bottom:1px solid #2a3d4d; padding-bottom:6px;">↻ atualizar com o planejamento atual</span>
+            <span id="btn-gerar" style="font-size:12.5px; color:#7cae83; cursor:pointer; border-bottom:1px solid #22381f; padding-bottom:6px;">✓ gerar OS</span>
+            <span id="btn-imprimir" style="font-size:12.5px; color:#8c8c91; cursor:pointer; border-bottom:1px solid #2a2a2d; padding-bottom:6px;">imprimir</span>
+            <span id="btn-cancelar" style="font-size:12.5px; color:#c9695c; cursor:pointer; border-bottom:1px solid #3a1f1c; padding-bottom:6px;">cancelar OS</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="secao" id="secao-totais" style="display:none;">
+        <h2 style="font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 600; margin: 0 0 18px;">Totais</h2>
+        <div style="display: flex; padding: 18px 0; border-top: 1px solid #1c1c1f; border-bottom: 1px solid #1c1c1f;">
+          <div class="kpi-mem">
+            <div class="mono" style="font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: #6e6e73; margin-bottom: 10px;">Peso total</div>
+            <div id="tot-peso" class="disp" style="font-size: 20px; font-weight: 600;">—</div>
+          </div>
+          <div class="kpi-mem">
+            <div class="mono" style="font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: #6e6e73; margin-bottom: 10px;">Consumo total</div>
+            <div id="tot-consumo" class="disp" style="font-size: 20px; font-weight: 600;">—</div>
+          </div>
+          <div class="kpi-mem">
+            <div class="mono" style="font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: #6e6e73; margin-bottom: 10px;">Itens</div>
+            <div id="tot-itens" class="disp" style="font-size: 20px; font-weight: 600;">—</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function () {
+  var ROLE_LABEL = { gerencia: 'Gerência', producao: 'Produção', estoque: 'Estoque' };
+  var EVENTOS = [];
+  var eventoSelecionadoId = '';
+  var OS_ATUAL = null; // { ...linha ordens_servico, itens: [...] }
+  var EVENTO_ATUAL = null;
+
+  function esc(v) {
+    return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', async function () {
+    if (!window.EF || !EF.ready) return;
+    var ok = await EF.init({ osOnly: true });
+    if (!ok) return;
+
+    document.getElementById('hoje').textContent = new Date().toLocaleDateString('pt-BR', {
+      weekday: 'long', day: '2-digit', month: 'long'
+    });
+
+    var p = EF.profile;
+    var nome = p.nome || p.email || 'Usuário';
+    var iniciais = nome.split(' ').filter(Boolean).slice(0, 2).map(function (s) { return s[0].toUpperCase(); }).join('');
+    document.getElementById('resumo').textContent = '';
+
+    document.getElementById('select-evento').addEventListener('change', async function () {
+      eventoSelecionadoId = this.value;
+      if (!eventoSelecionadoId) {
+        document.getElementById('bloco-sem-evento').style.display = '';
+        document.getElementById('bloco-com-evento').style.display = 'none';
+        return;
+      }
+      document.getElementById('bloco-sem-evento').style.display = 'none';
+      document.getElementById('bloco-com-evento').style.display = '';
+      await carregarOS();
+    });
+
+    document.getElementById('btn-montar-os').addEventListener('click', montarOS);
+    document.getElementById('btn-puxar').addEventListener('click', puxarPlanejamento);
+    document.getElementById('btn-gerar').addEventListener('click', gerarOS);
+    document.getElementById('btn-cancelar').addEventListener('click', cancelarOS);
+    document.getElementById('btn-imprimir').addEventListener('click', async function () { await imprimirOSCompleta(); });
+    document.getElementById('btn-add-item').addEventListener('click', adicionarItemManual);
+
+    await carregarEventos();
+  });
+
+  // ---------------- EVENTOS ----------------
+
+  async function carregarEventos() {
+    var res = await EF.client.from('eventos').select('id, nome, data_inicio').eq('empresa_id', EF.profile.empresa_id).order('data_inicio', { ascending: false });
+    EVENTOS = res.data || [];
+    var select = document.getElementById('select-evento');
+    EVENTOS.forEach(function (ev) {
+      var opt = document.createElement('option');
+      opt.value = ev.id;
+      opt.textContent = ev.nome + (ev.data_inicio ? ' — ' + new Date(ev.data_inicio).toLocaleDateString('pt-BR') : '');
+      select.appendChild(opt);
+    });
+    var eventoQuery = new URLSearchParams(location.search).get('evento');
+    if (eventoQuery && EVENTOS.some(function (ev) { return ev.id === eventoQuery; })) {
+      select.value = eventoQuery;
+      eventoSelecionadoId = eventoQuery;
+      document.getElementById('bloco-sem-evento').style.display = 'none';
+      document.getElementById('bloco-com-evento').style.display = '';
+      await carregarOS();
+      if (new URLSearchParams(location.search).get('print') === '1' && OS_ATUAL) {
+        setTimeout(function(){ imprimirOSCompleta(); }, 180);
+      }
+    }
+  }
+
+  // ---------------- CARREGAR / MONTAR OS ----------------
+
+  async function carregarOS() {
+    var evRes = await EF.client.from('eventos').select('*').eq('id', eventoSelecionadoId).maybeSingle();
+    EVENTO_ATUAL = evRes.data || null;
+    var res = await EF.client.from('ordens_servico').select('*').eq('evento_id', eventoSelecionadoId).neq('status', 'cancelada').order('created_at', { ascending: false });
+    var os = (res.data || [])[0] || null;
+    if (os) {
+      var resItens = await EF.client.from('ordem_servico_itens').select('*').eq('os_id', os.id).order('ordem', { ascending: true });
+      os.itens = resItens.data || [];
+    }
+    OS_ATUAL = os;
+    renderizarOS();
+    // V17: a OS acompanha automaticamente tudo que foi lançado nas áreas
+    // do evento, sem depender do clique em "atualizar com o planejamento atual".
+    if (OS_ATUAL && OS_ATUAL.status === 'rascunho') await puxarPlanejamento(true);
+  }
+
+  async function montarOS() {
+    var ins = await EF.client.from('ordens_servico').insert({
+      evento_id: eventoSelecionadoId,
+      status: 'rascunho'
+    }).select().maybeSingle();
+    if (ins.error) { alert('Erro ao montar OS: ' + ins.error.message); return; }
+    OS_ATUAL = ins.data;
+    OS_ATUAL.itens = [];
+    renderizarOS();
+    await puxarPlanejamento();
+  }
+
+  // junta o que já está planejado nas calculadoras (Som: varas / Luz e outras: evento_equipamentos)
+  async function coletarPlanejado() {
+    var linhas = [];
+
+    var endRes = await EF.client.from('evento_varas').select('id,nome,tipo,suspenso,qtd_pontos,area_m2').eq('evento_id', eventoSelecionadoId);
+    var endMap = {};
+    if (!endRes.error) (endRes.data || []).forEach(function(e){ endMap[e.id]=e; });
+
+    var resAreas = await EF.client.from('evento_itens_extras').select('*').eq('evento_id', eventoSelecionadoId).order('area', {ascending:true}).order('ordem', {ascending:true});
+    if (resAreas.error) throw new Error('Não foi possível ler o planejamento das áreas: ' + resAreas.error.message);
+    var itensAreas = resAreas.data || [];
+    var idsEstoque = Array.from(new Set(itensAreas.map(function(x){return x.estoque_item_id;}).filter(Boolean)));
+    var stockMap = {};
+    if (idsEstoque.length) {
+      var rs = await EF.client.from('estoque_itens').select('*').in('id', idsEstoque);
+      if (rs.error) throw new Error('Não foi possível ler o cadastro técnico do estoque: ' + rs.error.message);
+      (rs.data || []).forEach(function(s){stockMap[s.id]=s;});
+    }
+    var areaLabel={som:'Som',luz:'Luz',video:'Vídeo',estrutura:'Estrutura',internet:'Internet',cenografia:'Cenografia',extras:'Extras',servicos:'Serviços'};
+    itensAreas.forEach(function(it){
+      var stock=it.estoque_item_id ? stockMap[it.estoque_item_id] : null;
+      var end=it.endereco_id ? endMap[it.endereco_id] : null;
+      var areaKey=String(it.area||'Geral').toLowerCase();
+      linhas.push({
+        estoque_item_id:it.estoque_item_id||null,
+        nome:stock ? stock.nome : (it.descricao||'Item'),
+        nome_manual:it.estoque_item_id ? null : (it.descricao||'Item'),
+        peso:stock ? stock.peso_kg : null,
+        consumo:stock ? stock.consumo_w : null,
+        area:areaLabel[areaKey] || it.area || 'Geral',
+        quantidade:Number(it.quantidade)||1,
+        marca:stock ? (stock.marca||'') : '', sku:stock ? (stock.sku||'') : '', unidade:stock ? (stock.unidade||'Unidade') : 'Unidade',
+        descricao_tecnica:stock ? (stock.descricao||'') : '', unidades_por_case:stock ? stock.unidades_por_case : null,
+        especificacoes:stock ? (stock.especificacoes||{}) : {}, observacao:it.observacao||'',
+        endereco:end ? (end.nome + ' · ' + ((end.tipo==='solo'||end.suspenso===false)?'Solo':'Aéreo')) : ''
+      });
+    });
+
+    // Compatibilidade com instalações antigas: essas tabelas são opcionais.
+    var resEquip = await EF.client.from('evento_equipamentos').select('*').eq('evento_id', eventoSelecionadoId);
+    if (!resEquip.error) {
+      var equipamentos=resEquip.data||[];
+      var idsEq=Array.from(new Set(equipamentos.map(function(x){return x.estoque_item_id;}).filter(Boolean)));
+      var eqMap={};
+      if(idsEq.length){var re=await EF.client.from('estoque_itens').select('*').in('id',idsEq);if(!re.error)(re.data||[]).forEach(function(x){eqMap[x.id]=x;});}
+      equipamentos.forEach(function(eq){var item=eqMap[eq.estoque_item_id];if(!item)return;linhas.push({estoque_item_id:item.id,nome:item.nome,nome_manual:null,peso:item.peso_kg,consumo:item.consumo_w,area:item.categoria||'Serviços',quantidade:Number(eq.quantidade)||1,marca:item.marca||'',sku:item.sku||'',unidade:item.unidade||'Unidade',descricao_tecnica:item.descricao||'',unidades_por_case:item.unidades_por_case,especificacoes:item.especificacoes||{},observacao:'',endereco:''});});
+    }
+
+    var resAvulsos = await EF.client.from('evento_servicos_avulsos').select('*').eq('evento_id', eventoSelecionadoId).order('ordem', {ascending:true});
+    if (!resAvulsos.error) (resAvulsos.data||[]).forEach(function(av){linhas.push({estoque_item_id:null,nome:av.nome||'Serviço',nome_manual:av.nome||'Serviço',peso:null,consumo:null,area:'Serviços',quantidade:1,marca:'',sku:'',unidade:'Serviço',descricao_tecnica:'',unidades_por_case:null,especificacoes:{},observacao:(av.fornecedor?'Fornecedor: '+av.fornecedor:''),endereco:''});});
+
+    var agrupado={};
+    linhas.forEach(function(l){var chave=l.estoque_item_id?('item:'+l.estoque_item_id+':'+l.area):('manual:'+l.area+':'+l.nome_manual);if(!agrupado[chave])agrupado[chave]=Object.assign({},l,{quantidade:0});agrupado[chave].quantidade+=Number(l.quantidade)||0;});
+    return Object.keys(agrupado).map(function(k){return agrupado[k];});
+  }
+
+  function chavePlanejamento(l) {
+    var area = (l.area || 'Geral').trim();
+    if (l.estoque_item_id) return 'item:' + l.estoque_item_id + ':area:' + area;
+    return 'manual:' + area + ':' + (l.nome_manual || l.nome || 'Item').trim().toLowerCase();
+  }
+
+  async function puxarPlanejamento(silencioso) {
+    if (!OS_ATUAL) return;
+    var planejado;
+    try { planejado = await coletarPlanejado(); }
+    catch (err) { console.error(err); if (!silencioso) alert(err.message || String(err)); return; }
+
+    // V17: estoque + área formam a identidade do item. Assim o mesmo
+    // equipamento pode existir em Som e Luz sem uma área esconder a outra.
+    var existentes = {};
+    OS_ATUAL.itens.forEach(function (it) {
+      existentes[chavePlanejamento(it)] = it;
+    });
+
+    var adicionados = 0;
+    var atualizados = 0;
+
+    for (var i = 0; i < planejado.length; i++) {
+      var l = planejado[i];
+      var chave = chavePlanejamento(l);
+      var atual = existentes[chave];
+
+      if (atual) {
+        // Mantém a OS atualizada caso quantidade, nome, peso ou consumo tenham
+        // mudado na área depois da criação da OS.
+        var patch = {
+          nome: l.nome || l.nome_manual || 'Item',
+          nome_manual: l.estoque_item_id ? null : (l.nome_manual || l.nome || 'Item'),
+          peso_manual: l.peso == null ? null : l.peso,
+          consumo_manual: l.consumo == null ? null : l.consumo,
+          area: l.area || 'Geral',
+          quantidade: Math.max(1, Number(l.quantidade) || 1),
+          marca_snapshot: l.marca || '', sku_snapshot: l.sku || '', unidade_snapshot: l.unidade || 'Unidade',
+          descricao_snapshot: l.descricao_tecnica || '', unidades_por_case_snapshot: l.unidades_por_case || null,
+          especificacoes_snapshot: l.especificacoes || {}, observacao_snapshot: l.observacao || '', endereco_snapshot: l.endereco || ''
+        };
+        var mudou =
+          String(atual.nome || '') !== String(patch.nome || '') ||
+          String(atual.nome_manual || '') !== String(patch.nome_manual || '') ||
+          Number(atual.quantidade || 0) !== Number(patch.quantidade || 0) ||
+          String(atual.area || '') !== String(patch.area || '') ||
+          Number(atual.peso_manual || 0) !== Number(patch.peso_manual || 0) ||
+          Number(atual.consumo_manual || 0) !== Number(patch.consumo_manual || 0);
+
+        if (mudou) {
+          var up = await EF.client.from('ordem_servico_itens').update(patch).eq('id', atual.id).select().maybeSingle();
+          if (up.error) { console.error('Erro ao atualizar item da OS', up.error); if (!silencioso) alert('Erro ao atualizar a OS: ' + up.error.message); continue; }
+          if (up.data) { Object.assign(atual, up.data); atualizados++; }
+        }
+        continue;
+      }
+
+      var ins = await EF.client.from('ordem_servico_itens').insert({
+        os_id: OS_ATUAL.id,
+        estoque_item_id: l.estoque_item_id,
+        nome: l.nome || l.nome_manual || 'Item',
+        nome_manual: l.estoque_item_id ? null : (l.nome_manual || l.nome || 'Item'),
+        peso_manual: l.peso == null ? null : l.peso,
+        consumo_manual: l.consumo == null ? null : l.consumo,
+        area: l.area || 'Geral',
+        quantidade: Math.max(1, Number(l.quantidade) || 1),
+        marca_snapshot: l.marca || '', sku_snapshot: l.sku || '', unidade_snapshot: l.unidade || 'Unidade',
+        descricao_snapshot: l.descricao_tecnica || '', unidades_por_case_snapshot: l.unidades_por_case || null,
+        especificacoes_snapshot: l.especificacoes || {}, observacao_snapshot: l.observacao || '', endereco_snapshot: l.endereco || '',
+        ordem: OS_ATUAL.itens.length + adicionados
+      }).select().maybeSingle();
+      if (ins.error) { console.error('Erro ao inserir item da OS', ins.error); if (!silencioso) alert('Erro ao trazer item para a OS: ' + ins.error.message + '\n\nConfira se a migração V22 foi executada no Supabase.'); continue; }
+      if (ins.data) { OS_ATUAL.itens.push(ins.data); existentes[chave] = ins.data; adicionados++; }
+    }
+
+    if (!silencioso && !adicionados && !atualizados && !OS_ATUAL.itens.length) {
+      alert('Nenhum item planejado ainda nas áreas deste evento.');
+    }
+
+    renderizarOS();
+  }
+
+  async function adicionarItemManual() {
+    if (!OS_ATUAL) return;
+    var nome = document.getElementById('add-nome').value.trim();
+    var area = document.getElementById('add-area').value.trim() || 'Geral';
+    var peso = document.getElementById('add-peso').value;
+    var qtd = parseInt(document.getElementById('add-qtd').value, 10) || 0;
+    if (!nome || qtd < 1) { alert('Informe o nome do item e uma quantidade válida.'); return; }
+
+    var ins = await EF.client.from('ordem_servico_itens').insert({
+      os_id: OS_ATUAL.id,
+      nome: nome,
+      nome_manual: nome,
+      area: area,
+      peso_manual: peso === '' ? null : parseFloat(peso),
+      marca_snapshot:'', sku_snapshot:'', unidade_snapshot:'Unidade', descricao_snapshot:'', unidades_por_case_snapshot:null, especificacoes_snapshot:{}, observacao_snapshot:'', endereco_snapshot:'',
+      quantidade: qtd,
+      ordem: OS_ATUAL.itens.length
+    }).select().maybeSingle();
+    if (ins.error) { alert('Erro ao adicionar item: ' + ins.error.message); return; }
+    OS_ATUAL.itens.push(ins.data);
+
+    document.getElementById('add-nome').value = '';
+    document.getElementById('add-area').value = '';
+    document.getElementById('add-peso').value = '';
+    document.getElementById('add-qtd').value = 1;
+    renderizarOS();
+  }
+
+  async function removerItemOS(itemId) {
+    if (!OS_ATUAL) return;
+    var { error } = await EF.client.from('ordem_servico_itens').delete().eq('id', itemId);
+    if (error) { alert('Erro ao remover item: ' + error.message); return; }
+    OS_ATUAL.itens = OS_ATUAL.itens.filter(function (it) { return it.id !== itemId; });
+    renderizarOS();
+  }
+
+  async function gerarOS() {
+    if (!OS_ATUAL) return;
+    // Garante que tudo que foi lançado nas áreas entre na OS antes de gerar.
+    await puxarPlanejamento(true);
+    if (!OS_ATUAL.itens.length) { alert('Adicione pelo menos um item antes de gerar a OS.'); return; }
+
+    if (!confirm('Gerar esta OS agora? Neste momento os itens do estoque serão baixados/reservados para o evento.')) return;
+
+    var btn = document.getElementById('btn-gerar');
+    btn.disabled = true;
+    btn.textContent = 'Gerando e baixando estoque…';
+
+    var res = await EF.client.rpc('gerar_ordem_servico_com_baixa', { p_os_id: OS_ATUAL.id });
+    if (res.error) {
+      alert('Não foi possível gerar a OS: ' + res.error.message);
+      btn.disabled = false;
+      btn.textContent = 'Gerar OS';
+      return;
+    }
+
+    // A OS gerada vira documento fechado e vai para o histórico.
+    location.href = 'os-geradas.html?os=' + encodeURIComponent(OS_ATUAL.id);
+  }
+
+  async function cancelarOS() {
+    if (!OS_ATUAL) return;
+    var gerada = OS_ATUAL.status === 'gerada' && OS_ATUAL.estoque_baixado_em;
+    var aviso = gerada
+      ? 'Cancelar esta OS gerada? Os equipamentos reservados serão devolvidos ao estoque automaticamente.'
+      : 'Cancelar este rascunho de OS?';
+    if (!confirm(aviso)) return;
+    var res = await EF.client.rpc('cancelar_ordem_servico', { p_os_id: OS_ATUAL.id });
+    if (res.error) { alert('Erro ao cancelar OS: ' + res.error.message); return; }
+    OS_ATUAL = null;
+    renderizarOS();
+  }
+
+  // ---------------- IMPRESSÃO OPERACIONAL COMPLETA ----------------
+
+  function escPrint(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]});}
+  function fmtPrintData(v){if(!v)return '—';try{return new Date(v).toLocaleString('pt-BR')}catch(e){return String(v)}}
+  function fmtPrintDia(v){if(!v)return '—';try{return new Date(v+'T12:00:00').toLocaleDateString('pt-BR')}catch(e){return String(v)}}
+  function fmtKg(v){return v==null?'—':Number(v).toLocaleString('pt-BR',{maximumFractionDigits:2})+' kg'}
+  function fmtW(v){if(v==null)return '—';var n=Number(v);return n>=1000?(n/1000).toLocaleString('pt-BR',{maximumFractionDigits:2})+' kW':n.toLocaleString('pt-BR',{maximumFractionDigits:0})+' W'}
+  function specsTexto(obj){
+    if(!obj)return '';
+    if(typeof obj==='string'){try{obj=JSON.parse(obj)}catch(e){return obj}}
+    if(typeof obj!=='object')return String(obj);
+    return Object.keys(obj).filter(function(k){return obj[k]!==null&&obj[k]!==''&&obj[k]!==false}).map(function(k){
+      var v=obj[k]; if(Array.isArray(v))v=v.join(', '); else if(typeof v==='object')v=JSON.stringify(v);
+      return k.replace(/_/g,' ') + ': ' + v;
+    }).join(' · ');
+  }
+
+  async function imprimirOSCompleta(){
+    if(!OS_ATUAL){alert('Selecione ou monte uma OS primeiro.');return;}
+    var ev=EVENTO_ATUAL;
+    if(!ev){var er=await EF.client.from('eventos').select('*').eq('id',eventoSelecionadoId).maybeSingle();ev=er.data||{};EVENTO_ATUAL=ev;}
+
+    // Para OS antigas, completa o snapshot com o cadastro atual do estoque sem alterar a quantidade da OS.
+    var ids=[...new Set((OS_ATUAL.itens||[]).map(function(i){return i.estoque_item_id}).filter(Boolean))];
+    var stocks={};
+    if(ids.length){var sr=await EF.client.from('estoque_itens').select('id,nome,marca,sku,unidade,descricao,peso_kg,consumo_w,unidades_por_case,especificacoes').in('id',ids);(sr.data||[]).forEach(function(x){stocks[x.id]=x;});}
+
+    var diasRes=await EF.client.from('evento_logistica_dias').select('*').eq('evento_id',eventoSelecionadoId).order('dia',{ascending:true});
+    var veicRes=await EF.client.from('evento_logistica_veiculos').select('*').eq('evento_id',eventoSelecionadoId).order('dia',{ascending:true}).order('ordem',{ascending:true});
+    var dias=diasRes.data||[], veics=veicRes.data||[];
+    var endRes=await EF.client.from('evento_varas').select('id,nome,tipo,suspenso').eq('evento_id',eventoSelecionadoId);
+    var endMap={};(endRes.data||[]).forEach(function(e){endMap[e.id]=e;});
+    var planRes=await EF.client.from('evento_itens_extras').select('estoque_item_id,descricao,area,endereco_id,observacao').eq('evento_id',eventoSelecionadoId);
+    var planMap={};(planRes.data||[]).forEach(function(x){var k=(x.estoque_item_id?('i:'+x.estoque_item_id):('m:'+(x.descricao||'').toLowerCase()))+'|'+(x.area||'Geral');if(!planMap[k])planMap[k]=x;});
+
+    var itens=(OS_ATUAL.itens||[]).map(function(it){
+      var st=stocks[it.estoque_item_id]||{};
+      var pk=(it.estoque_item_id?('i:'+it.estoque_item_id):('m:'+(it.nome_manual||it.nome||'').toLowerCase()))+'|'+(it.area||'Geral');
+      var pl=planMap[pk]||{};var en=pl.endereco_id?endMap[pl.endereco_id]:null;var enderecoAtual=en?(en.nome+' · '+((en.tipo==='solo'||en.suspenso===false)?'Solo':'Aéreo')):'';
+      return Object.assign({},it,{
+        marca_snapshot:it.marca_snapshot||st.marca||'', sku_snapshot:it.sku_snapshot||st.sku||'', unidade_snapshot:it.unidade_snapshot||st.unidade||'Unidade',
+        descricao_snapshot:it.descricao_snapshot||st.descricao||'', unidades_por_case_snapshot:it.unidades_por_case_snapshot||st.unidades_por_case||null,
+        especificacoes_snapshot:(it.especificacoes_snapshot&&Object.keys(it.especificacoes_snapshot||{}).length)?it.especificacoes_snapshot:(st.especificacoes||{}),
+        observacao_snapshot:it.observacao_snapshot||pl.observacao||'', endereco_snapshot:it.endereco_snapshot||enderecoAtual,
+        peso_manual:it.peso_manual!=null?it.peso_manual:st.peso_kg, consumo_manual:it.consumo_manual!=null?it.consumo_manual:st.consumo_w
+      });
+    });
+    var areas={};itens.forEach(function(it){var a=it.area||'Geral';(areas[a]||(areas[a]=[])).push(it);});
+    var qtd=0,peso=0,cons=0,cases=0;itens.forEach(function(it){var q=Number(it.quantidade)||0;qtd+=q;if(it.peso_manual!=null)peso+=Number(it.peso_manual)*q;if(it.consumo_manual!=null)cons+=Number(it.consumo_manual)*q;if(it.unidades_por_case_snapshot)cases+=Math.ceil(q/Number(it.unidades_por_case_snapshot));});
+
+    var html='<div class="po-head"><div class="po-brand">EventFlow · Separação de Barracão</div><div class="po-title">ORDEM DE SERVIÇO</div><div class="po-sub">Documento operacional de separação, conferência, carregamento e logística. Sem valores comerciais.</div></div>';
+    html+='<div class="po-grid">'+
+      '<div class="po-box"><div class="po-label">Evento</div><div class="po-value">'+escPrint(ev.nome||'—')+'</div></div>'+
+      '<div class="po-box"><div class="po-label">Cliente</div><div class="po-value">'+escPrint(ev.cliente||'—')+'</div></div>'+
+      '<div class="po-box"><div class="po-label">Local</div><div class="po-value">'+escPrint(ev.local||'—')+'</div></div>'+
+      '<div class="po-box"><div class="po-label">Período</div><div class="po-value">'+escPrint(fmtPrintData(ev.data_inicio))+'<br>'+escPrint(fmtPrintData(ev.data_fim))+'</div></div>'+
+      '<div class="po-box"><div class="po-label">OS</div><div class="po-value">'+escPrint((OS_ATUAL.id||'').slice(0,8).toUpperCase())+'</div></div>'+
+      '<div class="po-box"><div class="po-label">Gerada em</div><div class="po-value">'+escPrint(fmtPrintData(OS_ATUAL.gerada_em||OS_ATUAL.created_at))+'</div></div>'+
+      '<div class="po-box"><div class="po-label">Volumes / unidades</div><div class="po-value">'+qtd+' item(ns)</div></div>'+
+      '<div class="po-box"><div class="po-label">Cases estimados</div><div class="po-value">'+(cases||'—')+'</div></div>'+
+      '</div>';
+    if(ev.observacoes)html+='<div class="po-alert">OBSERVAÇÕES DO EVENTO: '+escPrint(ev.observacoes)+'</div>';
+    html+='<div class="po-section">Resumo para conferência</div><div class="po-grid">'+
+      '<div class="po-box"><div class="po-label">Quantidade total</div><div class="po-value">'+qtd+'</div></div>'+
+      '<div class="po-box"><div class="po-label">Peso conhecido</div><div class="po-value">'+escPrint(fmtKg(peso))+'</div></div>'+
+      '<div class="po-box"><div class="po-label">Consumo conhecido</div><div class="po-value">'+escPrint(fmtW(cons))+'</div></div>'+
+      '<div class="po-box"><div class="po-label">Áreas</div><div class="po-value">'+Object.keys(areas).length+'</div></div></div>';
+
+    Object.keys(areas).sort().forEach(function(area){
+      html+='<div class="po-area"><div class="po-area-title">'+escPrint(area)+'</div><table class="po-table"><thead><tr><th class="po-check">Sep.</th><th class="po-check">Car.</th><th>Qtd.</th><th>Equipamento / especificação</th><th>Endereço</th><th>Case</th><th class="num">Peso</th><th class="num">Consumo</th></tr></thead><tbody>';
+      areas[area].forEach(function(it){
+        var q=Number(it.quantidade)||1, caseTxt=it.unidades_por_case_snapshot?(Math.ceil(q/Number(it.unidades_por_case_snapshot))+' case(s) · '+it.unidades_por_case_snapshot+'/case'):'—';
+        var detalhes=[];
+        if(it.marca_snapshot)detalhes.push('Marca: '+it.marca_snapshot);if(it.sku_snapshot)detalhes.push('SKU: '+it.sku_snapshot);if(it.unidade_snapshot)detalhes.push('Unidade: '+it.unidade_snapshot);
+        if(it.descricao_snapshot)detalhes.push(it.descricao_snapshot);var sp=specsTexto(it.especificacoes_snapshot);if(sp)detalhes.push('Especificações: '+sp);if(it.observacao_snapshot)detalhes.push('Obs.: '+it.observacao_snapshot);
+        html+='<tr><td class="po-check">☐</td><td class="po-check">☐</td><td><strong>'+q+'x</strong></td><td><div class="po-item-name">'+escPrint(itemLinhaNome(it))+(it.estoque_item_id?'':' · AVULSO')+'</div>'+(detalhes.length?'<div class="po-detail">'+escPrint(detalhes.join(' · '))+'</div>':'')+'</td><td>'+escPrint(it.endereco_snapshot||'—')+'</td><td>'+escPrint(caseTxt)+'</td><td class="num">'+escPrint(fmtKg(it.peso_manual))+'<div class="po-detail">tot. '+escPrint(fmtKg(it.peso_manual!=null?Number(it.peso_manual)*q:null))+'</div></td><td class="num">'+escPrint(fmtW(it.consumo_manual))+'<div class="po-detail">tot. '+escPrint(fmtW(it.consumo_manual!=null?Number(it.consumo_manual)*q:null))+'</div></td></tr>';
+      });
+      html+='</tbody></table></div>';
+    });
+
+    html+='<div class="po-page-break"></div><div class="po-section">Logística — veículos e equipes</div>';
+    if(!dias.length&&!veics.length){html+='<div class="po-alert">Nenhuma logística cadastrada para este evento.</div>';}else{
+      dias.forEach(function(d){
+        var dv=veics.filter(function(v){return v.dia===d.dia});
+        html+='<div class="po-area"><div class="po-area-title">'+escPrint(fmtPrintDia(d.dia))+' · '+escPrint(String(d.tipo_dia||'evento').toUpperCase())+'</div>';
+        if(!dv.length)html+='<div class="po-detail" style="padding:6px;border:1px solid #bbb">Nenhum veículo escalado.</div>';
+        dv.forEach(function(v){var tec=(v.tecnicos||[]).map(function(t){return t.nome||'Técnico'});html+='<div class="po-log-card"><div class="po-log-title">☐ '+escPrint(v.nome_veiculo||'Veículo')+(v.placa?' · placa '+escPrint(v.placa):'')+'</div><div class="po-log-tech"><strong>Técnicos:</strong> '+escPrint(tec.length?tec.join(' · '):'nenhum cadastrado')+'</div></div>';});
+        html+='</div>';
+      });
+    }
+    html+='<div class="po-section">Conferência final</div><table class="po-table"><tbody><tr><td>☐ Separação conferida</td><td>Responsável: __________________________</td><td>Data/hora: ____/____/____ ____:____</td></tr><tr><td>☐ Carregamento conferido</td><td>Responsável: __________________________</td><td>Data/hora: ____/____/____ ____:____</td></tr></tbody></table>';
+    html+='<div class="po-footer"><span>OS '+escPrint((OS_ATUAL.id||'').slice(0,8).toUpperCase())+' · '+escPrint(ev.nome||'Evento')+'</span><span>Impresso em '+escPrint(new Date().toLocaleString('pt-BR'))+'</span></div>';
+    document.getElementById('print-os').innerHTML=html;
+    setTimeout(function(){window.print();},80);
+  }
+
+  // ---------------- RENDER ----------------
+
+  function itemLinhaNome(it) {
+    return it.nome || it.nome_manual || '(item)';
+  }
+
+  function renderizarOS() {
+    var badge = document.getElementById('os-status-badge');
+    var info = document.getElementById('os-info-texto');
+    var blocoSemOs = document.getElementById('bloco-sem-os');
+    var blocoComOs = document.getElementById('bloco-com-os');
+    var secaoTotais = document.getElementById('secao-totais');
+
+    if (!OS_ATUAL) {
+      badge.innerHTML = '';
+      info.textContent = 'Nenhuma OS montada ainda pra esse evento.';
+      blocoSemOs.style.display = '';
+      blocoComOs.style.display = 'none';
+      secaoTotais.style.display = 'none';
+      return;
+    }
+
+    blocoSemOs.style.display = 'none';
+    blocoComOs.style.display = '';
+    secaoTotais.style.display = '';
+
+    var statusLabel = { rascunho: 'rascunho', gerada: 'gerada', cancelada: 'cancelada' }[OS_ATUAL.status] || OS_ATUAL.status;
+    badge.innerHTML = '<span class="badge badge-' + esc(OS_ATUAL.status) + '">' + esc(statusLabel) + '</span>';
+    info.textContent = OS_ATUAL.status === 'gerada'
+      ? 'Gerada em ' + new Date(OS_ATUAL.gerada_em).toLocaleString('pt-BR')
+      : '';
+
+    document.getElementById('btn-gerar').style.display = OS_ATUAL.status === 'rascunho' ? 'inline-block' : 'none';
+    document.getElementById('btn-puxar').style.display = OS_ATUAL.status === 'rascunho' ? 'inline-block' : 'none';
+    document.getElementById('btn-add-item').style.display = OS_ATUAL.status === 'rascunho' ? 'inline-block' : 'none';
+
+    var body = document.getElementById('tbl-os-body');
+    var itensOrdenados = OS_ATUAL.itens.slice().sort(function (a, b) { return (a.area || '').localeCompare(b.area || ''); });
+    document.getElementById('os-vazio').style.display = itensOrdenados.length ? 'none' : '';
+    body.innerHTML = itensOrdenados.map(function (it) {
+      return '<tr><td class="area-cell">' + esc(it.area || 'Geral') + '</td>' +
+        '<td>' + esc(itemLinhaNome(it)) + (it.estoque_item_id ? '' : '<span class="badge-manual">avulso</span>') + '</td>' +
+        '<td class="num">x' + esc(it.quantidade) + '</td>' +
+        '<td class="num">' + (it.peso_manual != null ? it.peso_manual.toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + 'kg' : '—') + '</td>' +
+        '<td class="num">' + (it.consumo_manual != null ? it.consumo_manual.toLocaleString('pt-BR', { maximumFractionDigits: 0 }) + 'W' : '—') + '</td>' +
+        '<td class="num">' + (OS_ATUAL.status === 'rascunho' ? '<span class="icone-acao" data-remover="' + it.id + '">✕</span>' : '—') + '</td></tr>';
+    }).join('');
+    body.querySelectorAll('[data-remover]').forEach(function (el) {
+      el.addEventListener('click', function () { removerItemOS(el.dataset.remover); });
+    });
+
+    var pesoTotal = 0, temPeso = false;
+    var consumoTotal = 0, temConsumo = false;
+    var qtdTotal = 0;
+    OS_ATUAL.itens.forEach(function (it) {
+      qtdTotal += it.quantidade;
+      if (it.peso_manual != null) { pesoTotal += it.peso_manual * it.quantidade; temPeso = true; }
+      if (it.consumo_manual != null) { consumoTotal += it.consumo_manual * it.quantidade; temConsumo = true; }
+    });
+    document.getElementById('tot-peso').textContent = temPeso ? pesoTotal.toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + ' kg' : '—';
+    document.getElementById('tot-consumo').textContent = temConsumo ? consumoTotal.toLocaleString('pt-BR', { maximumFractionDigits: 0 }) + ' W' : '—';
+    document.getElementById('tot-itens').textContent = String(qtdTotal);
+  }
+})();
+</script>
+
+<script src="ef-ui.js?v=27"></script>
+</body>
+</html>

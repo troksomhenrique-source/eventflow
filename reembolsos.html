@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Reembolsos — EventFlow</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="ef-config.js"></script>
+<script src="ef-auth.js?v=27"></script>
+<link rel="stylesheet" href="ef-ui.css">
+<style>
+  .re-head{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;margin-bottom:26px}.re-head h1{margin:0 0 7px}.re-sub{color:#8c8c91;font-size:13px;line-height:1.5}.re-btn{min-height:40px;padding:0 14px;border:1px solid rgba(243,240,234,.12);border-radius:10px;background:#17181c;color:#f3f0ea;cursor:pointer}.re-btn.primary{background:#9bb4c7!important;color:#0a0a0b!important;border-color:#9bb4c7!important}.re-btn.danger{background:rgba(201,105,92,.08)!important;color:#d98478!important;border-color:rgba(201,105,92,.25)!important}
+  .re-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid rgba(243,240,234,.08);border-radius:16px;overflow:hidden;background:#111113;margin-bottom:24px}.re-kpi{padding:18px 20px;border-right:1px solid rgba(243,240,234,.08)}.re-kpi:last-child{border-right:0}.re-kpi small{display:block;color:#5c5c62;font:500 9px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;margin-bottom:9px}.re-kpi strong{font:600 23px 'Space Grotesk',sans-serif}.re-kpi span{display:block;color:#8c8c91;font-size:11px;margin-top:5px}
+  .re-panel{border:1px solid rgba(243,240,234,.08);border-radius:16px;background:linear-gradient(180deg,#111113,#0f1013);padding:20px;margin-bottom:24px}.re-panel h2{margin:0 0 17px;font-size:17px}.re-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px}.re-field.full{grid-column:1/-1}.re-field.two{grid-column:span 2}.re-label{display:block;color:#6e6e73;font:500 9px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;margin-bottom:7px}.re-field input,.re-field select,.re-field textarea,.re-filter input,.re-filter select,.re-status-box select,.re-status-box textarea{width:100%;box-sizing:border-box}.re-help{color:#6e6e73;font-size:11px;margin-top:6px}.re-file-list{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px}.re-file-chip{padding:6px 9px;border-radius:999px;background:#191a1e;border:1px solid rgba(243,240,234,.08);color:#a8a8ac;font-size:11px;max-width:260px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .re-form-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:18px}.re-message{font-size:12px;min-height:18px;margin-top:12px}.re-filters{display:grid;grid-template-columns:1.2fr 1fr 1.5fr;gap:12px;margin-bottom:18px}.re-empty{padding:44px 20px;text-align:center;color:#6e6e73;border:1px dashed rgba(243,240,234,.1);border-radius:14px}
+  .re-list{display:flex;flex-direction:column;gap:12px}.re-card{border:1px solid rgba(243,240,234,.08);border-radius:16px;background:#101012;overflow:hidden}.re-card-head{display:flex;align-items:flex-start;gap:13px;padding:17px 18px;border-bottom:1px solid rgba(243,240,234,.07)}.re-card-main{flex:1;min-width:0}.re-title{font:600 15px 'Space Grotesk',sans-serif;color:#f3f0ea}.re-meta{color:#6e6e73;font:500 10px 'IBM Plex Mono',monospace;margin-top:5px;line-height:1.5}.re-value{font:600 19px 'Space Grotesk',sans-serif;white-space:nowrap}.re-badge{font:500 9px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;padding:5px 8px;border-radius:999px;white-space:nowrap}.re-badge.pendente{color:#c4a574;background:rgba(196,165,116,.1)}.re-badge.aprovado{color:#8fb995;background:rgba(124,174,131,.1)}.re-badge.rejeitado{color:#d98478;background:rgba(201,105,92,.1)}.re-badge.reembolsado{color:#91b7d3;background:rgba(127,168,201,.1)}
+  .re-card-body{padding:17px 18px}.re-details{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:14px;margin-bottom:16px}.re-detail small{display:block;color:#5c5c62;font:500 8.5px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px}.re-detail div{color:#c8c8cc;font-size:12px;line-height:1.45;word-break:break-word}.re-desc{white-space:pre-wrap;color:#b8b8bc;font-size:12.5px;line-height:1.55;padding:12px 13px;background:#0c0c0e;border-radius:10px;margin-bottom:14px}.re-files{display:flex;flex-wrap:wrap;gap:9px}.re-proof{width:118px;min-height:84px;border:1px solid rgba(243,240,234,.09);border-radius:10px;background:#151519;overflow:hidden;cursor:pointer;padding:0;color:#b8b8bc}.re-proof img{display:block;width:100%;height:78px;object-fit:cover}.re-proof span{display:block;padding:7px;font-size:9.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.re-card-actions{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-top:16px;padding-top:15px;border-top:1px solid rgba(243,240,234,.07)}.re-status-box{display:grid;grid-template-columns:150px minmax(180px,1fr) auto;gap:8px;flex:1}.re-note{color:#8c8c91;font-size:11.5px;line-height:1.5;margin-top:12px}.re-deleting{color:#c4a574;font-size:11px;margin-top:10px}
+  @media(max-width:900px){.re-kpis{grid-template-columns:1fr 1fr}.re-kpi:nth-child(2){border-right:0}.re-kpi:nth-child(-n+2){border-bottom:1px solid rgba(243,240,234,.08)}.re-grid{grid-template-columns:1fr 1fr}.re-details{grid-template-columns:1fr 1fr}.re-filters{grid-template-columns:1fr}.re-status-box{grid-template-columns:1fr}.re-card-actions{align-items:stretch;flex-direction:column}}
+  @media(max-width:580px){.re-head{flex-direction:column}.re-head .re-btn{width:100%}.re-grid{grid-template-columns:1fr}.re-field.two{grid-column:auto}.re-kpis{grid-template-columns:1fr}.re-kpi{border-right:0;border-bottom:1px solid rgba(243,240,234,.08)}.re-kpi:last-child{border-bottom:0}.re-details{grid-template-columns:1fr}.re-card-head{flex-wrap:wrap}.re-value{margin-left:auto}}
+</style>
+</head>
+<body>
+<div class="ef-app-shell">
+  <div class="ef-sidebar"></div>
+  <div class="ef-main">
+      <div class="re-head">
+        <div><div class="mono" style="color:#5c5c62;font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;margin-bottom:9px;">Financeiro operacional</div><h1>Notas e reembolsos</h1></div>
+        <button id="btn-novo" type="button" class="re-btn primary">+ Novo reembolso</button>
+      </div>
+
+      <div class="re-kpis">
+        <div class="re-kpi"><small>Pendente</small><strong id="kpi-pendente">R$ 0,00</strong><span id="kpi-pendente-qtd">0 solicitações</span></div>
+        <div class="re-kpi"><small>Aprovado</small><strong id="kpi-aprovado">R$ 0,00</strong><span id="kpi-aprovado-qtd">0 aguardando pagamento</span></div>
+        <div class="re-kpi"><small>Reembolsado</small><strong id="kpi-pago">R$ 0,00</strong><span id="kpi-pago-qtd">0 pagamentos</span></div>
+        <div class="re-kpi"><small>Total exibido</small><strong id="kpi-total">R$ 0,00</strong><span id="kpi-total-qtd">0 lançamentos</span></div>
+      </div>
+
+      <div id="bloco-form-reembolso" class="re-panel" style="display:none;">
+        <h2>Novo pedido de reembolso</h2>
+        <form id="form-reembolso">
+          <div class="re-grid">
+            <div class="re-field two"><label class="re-label" for="f-evento">Evento</label><select id="f-evento" required></select></div>
+            <div class="re-field"><label class="re-label" for="f-categoria">Categoria</label><select id="f-categoria"><option>Alimentação</option><option>Transporte</option><option>Hospedagem</option><option>Pedágio / Estacionamento</option><option>Material / Insumo</option><option>Combustível</option><option>Outros</option></select></div>
+            <div class="re-field"><label class="re-label" for="f-gasto-por">Quem realizou o gasto</label><input id="f-gasto-por" list="pessoas-lista" maxlength="160" required></div>
+            <div class="re-field"><label class="re-label" for="f-recebedor">Quem receberá o reembolso</label><input id="f-recebedor" list="pessoas-lista" maxlength="160" required></div>
+            <div class="re-field"><label class="re-label" for="f-forma">Forma de pagamento</label><select id="f-forma"><option>PIX</option><option>Cartão próprio</option><option>Dinheiro</option><option>Débito</option><option>Crédito</option><option>Transferência</option><option>Outro</option></select></div>
+            <div class="re-field"><label class="re-label" for="f-data">Dia e hora do gasto</label><input id="f-data" type="datetime-local" required></div>
+            <div class="re-field"><label class="re-label" for="f-local">Local</label><input id="f-local" maxlength="240"></div>
+            <div class="re-field"><label class="re-label" for="f-valor">Valor</label><input id="f-valor" type="number" min="0.01" step="0.01" placeholder="0,00" required></div>
+            <div class="re-field full"><label class="re-label" for="f-descricao">Descrição do gasto</label><textarea id="f-descricao" rows="3" maxlength="2000" required></textarea></div>
+            <div class="re-field full"><label class="re-label" for="f-arquivos">Fotos das notas ou comprovantes</label><input id="f-arquivos" type="file" accept="image/jpeg,image/png,image/webp,application/pdf" multiple required><div id="arquivos-selecionados" class="re-file-list"></div></div>
+          </div>
+          <datalist id="pessoas-lista"></datalist>
+          <div id="form-msg" class="re-message"></div>
+          <div class="re-form-actions"><button id="btn-cancelar" type="button" class="re-btn">Cancelar</button><button id="btn-salvar" type="submit" class="re-btn primary">Enviar para análise</button></div>
+        </form>
+      </div>
+
+      <div class="re-filters">
+        <div class="re-filter"><label class="re-label" for="filtro-evento">Evento</label><select id="filtro-evento"><option value="">Todos os eventos</option></select></div>
+        <div class="re-filter"><label class="re-label" for="filtro-status">Status</label><select id="filtro-status"><option value="">Todos</option><option value="pendente">Pendente</option><option value="aprovado">Aprovado</option><option value="rejeitado">Rejeitado</option><option value="reembolsado">Reembolsado</option></select></div>
+        <div class="re-filter"><label class="re-label" for="filtro-busca">Pesquisar</label><input id="filtro-busca" type="search" placeholder="Pessoa, descrição, local ou categoria"></div>
+      </div>
+      <div id="lista-reembolsos" class="re-list"></div>
+      <div id="lista-vazia" class="re-empty" style="display:none;">Nenhum reembolso encontrado.</div>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  var BUCKET='reembolsos-notas', EVENTOS=[], EQUIPE=[], REEMBOLSOS=[], COMPROVANTES={}, EU=null;
+  var STATUS={pendente:'Pendente',aprovado:'Aprovado',rejeitado:'Rejeitado',reembolsado:'Reembolsado'};
+
+  document.addEventListener('DOMContentLoaded',async function(){
+    if(!window.EF||!EF.ready)return;
+    var ok=await EF.init({reembolsosOnly:true}); if(!ok)return;
+    EU=EF.profile; ligarEventos(); preencherDataAtual();
+    await Promise.all([carregarEventos(),carregarEquipe()]);
+    await carregarReembolsos();
+  });
+
+  function ligarEventos(){
+    document.getElementById('btn-novo').addEventListener('click',function(){mostrarFormulario(true);});
+    document.getElementById('btn-cancelar').addEventListener('click',function(){mostrarFormulario(false);});
+    document.getElementById('form-reembolso').addEventListener('submit',salvarReembolso);
+    document.getElementById('f-arquivos').addEventListener('change',mostrarArquivosSelecionados);
+    document.getElementById('f-evento').addEventListener('change',preencherLocalEvento);
+    ['filtro-evento','filtro-status'].forEach(function(id){document.getElementById(id).addEventListener('change',renderizar);});
+    document.getElementById('filtro-busca').addEventListener('input',renderizar);
+  }
+
+  function esc(v){var d=document.createElement('div');d.textContent=v==null?'':String(v);return d.innerHTML;}
+  function dinheiro(v){return Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});}
+  function dataHora(v){return v?new Date(v).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'}):'—';}
+  function nomeEvento(id){var e=EVENTOS.find(function(x){return x.id===id;});return e?e.nome:'Evento removido';}
+  function nomePerfil(id){var p=EQUIPE.find(function(x){return x.id===id;});return p?(p.nome||p.email):'Usuário';}
+  function preencherDataAtual(){var d=new Date(),off=d.getTimezoneOffset();document.getElementById('f-data').value=new Date(d.getTime()-off*60000).toISOString().slice(0,16);}
+
+  function mostrarFormulario(mostrar){
+    document.getElementById('bloco-form-reembolso').style.display=mostrar?'block':'none';
+    if(mostrar){document.getElementById('f-evento').focus();document.getElementById('bloco-form-reembolso').scrollIntoView({behavior:'smooth',block:'start'});}
+    else limparFormulario();
+  }
+
+  async function carregarEventos(){
+    var r=await EF.client.from('eventos').select('id,nome,data_inicio,local,status').eq('empresa_id',EU.empresa_id).order('data_inicio',{ascending:false});
+    if(r.error){alert('Erro ao carregar eventos: '+r.error.message);return;}
+    EVENTOS=r.data||[];
+    var form=document.getElementById('f-evento'),filtro=document.getElementById('filtro-evento'); form.innerHTML='<option value="">Selecione o evento</option>';
+    EVENTOS.forEach(function(e){var texto=e.nome+' · '+new Date(e.data_inicio).toLocaleDateString('pt-BR');form.add(new Option(texto,e.id));filtro.add(new Option(texto,e.id));});
+  }
+
+  async function carregarEquipe(){
+    var r=await EF.client.from('profiles').select('id,nome,email').eq('empresa_id',EU.empresa_id).eq('ativo',true).order('nome');
+    EQUIPE=r.data||[];var dl=document.getElementById('pessoas-lista');dl.innerHTML='';
+    EQUIPE.forEach(function(p){var o=document.createElement('option');o.value=p.nome||p.email;dl.appendChild(o);});
+    var meuNome=EU.nome||EU.email||'';document.getElementById('f-gasto-por').value=meuNome;document.getElementById('f-recebedor').value=meuNome;
+  }
+
+  function preencherLocalEvento(){var e=EVENTOS.find(function(x){return x.id===document.getElementById('f-evento').value;});var campo=document.getElementById('f-local');if(e&&!campo.value)campo.value=e.local||'';}
+
+  function arquivosValidos(){
+    var files=Array.from(document.getElementById('f-arquivos').files||[]),tipos=['image/jpeg','image/png','image/webp','application/pdf'];
+    if(!files.length)throw new Error('Anexe pelo menos uma foto da nota ou comprovante.');
+    if(files.length>10)throw new Error('Envie no máximo 10 comprovantes por lançamento.');
+    files.forEach(function(f){if(tipos.indexOf(f.type)===-1)throw new Error('Formato não aceito: '+f.name);if(f.size>10*1024*1024)throw new Error('O arquivo '+f.name+' ultrapassa 10 MB.');});
+    return files;
+  }
+
+  function mostrarArquivosSelecionados(){
+    var w=document.getElementById('arquivos-selecionados');w.innerHTML='';Array.from(this.files||[]).forEach(function(f){var s=document.createElement('span');s.className='re-file-chip';s.textContent=f.name+' · '+(f.size/1024/1024).toFixed(1)+' MB';w.appendChild(s);});
+  }
+
+  function limparFormulario(){
+    document.getElementById('form-reembolso').reset();document.getElementById('arquivos-selecionados').innerHTML='';document.getElementById('form-msg').textContent='';preencherDataAtual();
+    var meuNome=EU?(EU.nome||EU.email||''):'';document.getElementById('f-gasto-por').value=meuNome;document.getElementById('f-recebedor').value=meuNome;
+  }
+
+  function nomeSeguro(nome){return(nome||'comprovante').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9._-]+/g,'_').slice(-160);}
+
+  async function salvarReembolso(ev){
+    ev.preventDefault();var msg=document.getElementById('form-msg'),btn=document.getElementById('btn-salvar'),files;
+    try{files=arquivosValidos();}catch(e){msg.style.color='#c9695c';msg.textContent=e.message;return;}
+    var valor=Number(String(document.getElementById('f-valor').value).replace(',','.'));
+    if(!valor||valor<=0){msg.style.color='#c9695c';msg.textContent='Informe um valor válido.';return;}
+    btn.disabled=true;msg.style.color='#8c8c91';msg.textContent='Salvando solicitação e comprovantes...';
+    var payload={
+      empresa_id:EU.empresa_id,evento_id:document.getElementById('f-evento').value,criado_por:EU.id,
+      categoria:document.getElementById('f-categoria').value,descricao:document.getElementById('f-descricao').value.trim(),
+      forma_pagamento:document.getElementById('f-forma').value,gasto_por_nome:document.getElementById('f-gasto-por').value.trim(),
+      recebedor_nome:document.getElementById('f-recebedor').value.trim(),ocorrido_em:new Date(document.getElementById('f-data').value).toISOString(),
+      local:document.getElementById('f-local').value.trim(),valor:valor,status:'pendente'
+    };
+    var ins=await EF.client.from('reembolsos').insert(payload).select().maybeSingle();
+    if(ins.error){btn.disabled=false;msg.style.color='#c9695c';msg.textContent='Erro ao salvar: '+ins.error.message;return;}
+    var salvos=0,erros=[];
+    for(var i=0;i<files.length;i++){
+      var file=files[i],path=EU.empresa_id+'/'+ins.data.id+'/'+Date.now()+'-'+i+'-'+nomeSeguro(file.name);
+      var up=await EF.client.storage.from(BUCKET).upload(path,file,{contentType:file.type,upsert:false});
+      if(up.error){erros.push(file.name+': '+up.error.message);continue;}
+      var meta=await EF.client.from('reembolso_comprovantes').insert({reembolso_id:ins.data.id,empresa_id:EU.empresa_id,path:path,nome_original:file.name,mime_type:file.type,tamanho_bytes:file.size,criado_por:EU.id});
+      if(meta.error){await EF.client.storage.from(BUCKET).remove([path]);erros.push(file.name+': '+meta.error.message);}else salvos++;
+    }
+    if(!salvos){await excluirReembolsoInterno(ins.data.id);btn.disabled=false;msg.style.color='#c9695c';msg.textContent='Nenhum comprovante foi salvo. '+erros.join(' | ');return;}
+    btn.disabled=false;mostrarFormulario(false);await carregarReembolsos();
+    if(erros.length)alert('O pedido foi criado, mas alguns arquivos falharam:\n\n'+erros.join('\n'));
+  }
+
+  async function carregarReembolsos(){
+    var r=await EF.client.from('reembolsos').select('*').eq('empresa_id',EU.empresa_id).order('ocorrido_em',{ascending:false});
+    if(r.error){document.getElementById('lista-vazia').style.display='block';document.getElementById('lista-vazia').textContent='Erro ao carregar: '+r.error.message;return;}
+    REEMBOLSOS=r.data||[];COMPROVANTES={};
+    if(REEMBOLSOS.length){var c=await EF.client.from('reembolso_comprovantes').select('*').eq('empresa_id',EU.empresa_id).order('created_at');(c.data||[]).forEach(function(x){(COMPROVANTES[x.reembolso_id]||(COMPROVANTES[x.reembolso_id]=[])).push(x);});}
+    renderizar();
+  }
+
+  function filtrados(){
+    var evento=document.getElementById('filtro-evento').value,status=document.getElementById('filtro-status').value,q=document.getElementById('filtro-busca').value.trim().toLowerCase();
+    return REEMBOLSOS.filter(function(r){if(evento&&r.evento_id!==evento)return false;if(status&&r.status!==status)return false;if(q){var texto=[nomeEvento(r.evento_id),r.categoria,r.descricao,r.gasto_por_nome,r.recebedor_nome,r.local].join(' ').toLowerCase();if(texto.indexOf(q)===-1)return false;}return true;});
+  }
+
+  function atualizarKpis(lista){
+    function soma(st){return lista.filter(function(r){return r.status===st;}).reduce(function(a,r){return a+Number(r.valor||0);},0);}function qtd(st){return lista.filter(function(r){return r.status===st;}).length;}
+    document.getElementById('kpi-pendente').textContent=dinheiro(soma('pendente'));document.getElementById('kpi-pendente-qtd').textContent=qtd('pendente')+' solicitações';
+    document.getElementById('kpi-aprovado').textContent=dinheiro(soma('aprovado'));document.getElementById('kpi-aprovado-qtd').textContent=qtd('aprovado')+' aguardando pagamento';
+    document.getElementById('kpi-pago').textContent=dinheiro(soma('reembolsado'));document.getElementById('kpi-pago-qtd').textContent=qtd('reembolsado')+' pagamentos';
+    document.getElementById('kpi-total').textContent=dinheiro(lista.reduce(function(a,r){return a+Number(r.valor||0);},0));document.getElementById('kpi-total-qtd').textContent=lista.length+' lançamentos';
+  }
+
+  function renderizar(){
+    var lista=filtrados(),wrap=document.getElementById('lista-reembolsos');wrap.innerHTML='';document.getElementById('lista-vazia').style.display=lista.length?'none':'block';atualizarKpis(lista);
+    lista.forEach(function(r){wrap.appendChild(criarCard(r));});
+  }
+
+  function criarCard(r){
+    var card=document.createElement('article');card.className='re-card';
+    card.innerHTML='<div class="re-card-head"><div class="re-card-main"><div class="re-title">'+esc(nomeEvento(r.evento_id))+'</div><div class="re-meta">'+esc(r.categoria)+' · '+esc(dataHora(r.ocorrido_em))+' · solicitado '+esc(dataHora(r.created_at))+'</div></div><span class="re-badge '+esc(r.status)+'">'+esc(STATUS[r.status]||r.status)+'</span><div class="re-value">'+esc(dinheiro(r.valor))+'</div></div><div class="re-card-body"><div class="re-details"><div class="re-detail"><small>Gasto por</small><div>'+esc(r.gasto_por_nome)+'</div></div><div class="re-detail"><small>Receberá</small><div>'+esc(r.recebedor_nome)+'</div></div><div class="re-detail"><small>Solicitado por</small><div>'+esc(nomePerfil(r.criado_por))+'</div></div><div class="re-detail"><small>Pagamento usado</small><div>'+esc(r.forma_pagamento)+'</div></div><div class="re-detail"><small>Local</small><div>'+esc(r.local||'Não informado')+'</div></div></div><div class="re-desc">'+esc(r.descricao)+'</div><div class="re-files"></div></div>';
+    var files=card.querySelector('.re-files'),comps=COMPROVANTES[r.id]||[];
+    if(!comps.length){var vazio=document.createElement('span');vazio.className='re-help';vazio.textContent='Sem comprovante disponível.';files.appendChild(vazio);}else comps.forEach(function(c){files.appendChild(criarComprovante(c));});
+    var body=card.querySelector('.re-card-body');if(r.observacao_gerencia){var obs=document.createElement('div');obs.className='re-note';obs.textContent='Observação da Gerência: '+r.observacao_gerencia;body.appendChild(obs);}
+    if(r.apagando_em){var apag=document.createElement('div');apag.className='re-deleting';apag.textContent='Exclusão iniciada. Use “Excluir” novamente para concluir.';body.appendChild(apag);}
+    var podeExcluir=(EF.isGerencia()&&r.status!=='reembolsado')||(r.criado_por===EU.id&&r.status==='pendente');
+    if(EF.isGerencia()||podeExcluir){var actions=document.createElement('div');actions.className='re-card-actions';
+      if(EF.isGerencia()){var box=document.createElement('div');box.className='re-status-box';var sel=document.createElement('select');var opcoes=r.status==='pendente'?['pendente','aprovado','rejeitado']:r.status==='aprovado'?['aprovado','reembolsado','rejeitado']:r.status==='rejeitado'?['rejeitado','pendente','aprovado']:['reembolsado'];opcoes.forEach(function(s){sel.add(new Option(STATUS[s],s,false,r.status===s));});var note=document.createElement('textarea');note.rows=1;note.maxLength=2000;note.placeholder='Observação da Gerência';note.value=r.observacao_gerencia||'';var save=document.createElement('button');save.className='re-btn';save.type='button';save.textContent='Atualizar status';save.disabled=r.status==='reembolsado';save.addEventListener('click',function(){atualizarStatus(r,sel.value,note.value,save);});box.append(sel,note,save);actions.appendChild(box);}else actions.appendChild(document.createElement('div'));
+      if(podeExcluir){var del=document.createElement('button');del.type='button';del.className='re-btn danger';del.textContent='Excluir';del.addEventListener('click',function(){excluirReembolso(r,del);});actions.appendChild(del);}body.appendChild(actions);}
+    return card;
+  }
+
+  function criarComprovante(c){
+    var b=document.createElement('button');b.type='button';b.className='re-proof';var label=document.createElement('span');label.textContent=c.nome_original;b.appendChild(label);
+    if((c.mime_type||'').indexOf('image/')===0){EF.client.storage.from(BUCKET).createSignedUrl(c.path,3600).then(function(x){if(x.data&&x.data.signedUrl&&b.isConnected){var img=document.createElement('img');img.src=x.data.signedUrl;img.alt=c.nome_original;b.insertBefore(img,label);}});}
+    else{var pdf=document.createElement('div');pdf.style.cssText='height:78px;display:grid;place-items:center;font:600 18px Space Grotesk;color:#c9695c;';pdf.textContent='PDF';b.insertBefore(pdf,label);}
+    b.addEventListener('click',function(){abrirComprovante(c.path);});return b;
+  }
+
+  async function abrirComprovante(path){var r=await EF.client.storage.from(BUCKET).createSignedUrl(path,900);if(r.error){alert('Erro ao abrir comprovante: '+r.error.message);return;}window.open(r.data.signedUrl,'_blank','noopener');}
+
+  async function atualizarStatus(r,status,obs,btn){btn.disabled=true;var x=await EF.client.rpc('atualizar_status_reembolso',{p_reembolso_id:r.id,p_status:status,p_observacao:obs.trim()});btn.disabled=false;if(x.error){alert('Erro ao atualizar: '+x.error.message);return;}await carregarReembolsos();}
+
+  async function listarArquivos(id){
+    var raiz=EU.empresa_id+'/'+id,offset=0,out=[];while(true){var r=await EF.client.storage.from(BUCKET).list(raiz,{limit:100,offset:offset});if(r.error)throw new Error(r.error.message);var itens=r.data||[];itens.forEach(function(i){if(i.id)out.push(raiz+'/'+i.name);});if(itens.length<100)break;offset+=itens.length;}return out;
+  }
+  async function removerLotes(paths){for(var i=0;i<paths.length;i+=100){var r=await EF.client.storage.from(BUCKET).remove(paths.slice(i,i+100));if(r.error)throw new Error(r.error.message);}}
+
+  async function excluirReembolsoInterno(id){
+    var prep=await EF.client.rpc('preparar_exclusao_reembolso',{p_reembolso_id:id});if(prep.error)return{error:prep.error};
+    try{var listados=await listarArquivos(id),paths=Array.from(new Set((prep.data||[]).concat(listados)));await removerLotes(paths);}catch(e){return{error:{message:e.message}};}
+    return EF.client.rpc('finalizar_exclusao_reembolso',{p_reembolso_id:id});
+  }
+
+  async function excluirReembolso(r,btn){
+    if(!confirm('Excluir este pedido e todos os comprovantes? Esta ação não pode ser desfeita.'))return;btn.disabled=true;btn.textContent='Excluindo...';var x=await excluirReembolsoInterno(r.id);if(x.error){btn.disabled=false;btn.textContent='Excluir';alert('A exclusão foi pausada. Clique novamente para continuar.\n\n'+x.error.message);return;}await carregarReembolsos();
+  }
+})();
+</script>
+<script src="ef-ui.js?v=27"></script>
+</body>
+</html>

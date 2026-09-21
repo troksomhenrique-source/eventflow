@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Plataforma — EventFlow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="ef-config.js"></script>
+<script src="ef-auth.js?v=27"></script>
+<style>
+  body{margin:0;background:#0a0a0b;font-family:'Inter',sans-serif;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  .disp{font-family:'Space Grotesk',sans-serif;}
+  select{font-family:'IBM Plex Mono',monospace;background:transparent;border:none;color:inherit;font-size:12.5px;cursor:pointer;color-scheme:dark;}
+  select option{background:#0d0d0f;color:#f3f1ec;}
+  select:focus{outline:none;}
+  input{font-family:'Inter',sans-serif;}
+  input::placeholder{color:#4a4a4e;}
+  input:focus{outline:none;border-color:#3b82c9 !important;}
+  .toggle{width:26px;height:14px;border-radius:8px;position:relative;display:inline-block;cursor:pointer;flex-shrink:0;}
+  .toggle .dot{width:10px;height:10px;border-radius:50%;position:absolute;top:2px;transition:left .12s, right .12s;}
+  .empresa-item{cursor:pointer;}
+  .empresa-item.ativa{color:#f3f1ec !important;}
+  .empresa-card{display:flex;align-items:stretch;background:#101114;border:1px solid #22252a;border-radius:10px;overflow:hidden;transition:border-color .15s,background .15s;}
+  .empresa-card:hover{border-color:#34495a;background:#12161a;}
+  .empresa-card.ativa{background:#121a20;border-color:#36566f;}
+  .empresa-card-main{flex:1;min-width:0;border:0;background:transparent;color:#f3f1ec;padding:14px 15px;text-align:left;cursor:pointer;font:inherit;}
+  .empresa-delete{width:42px;border:0;border-left:1px solid #22252a;background:transparent;color:#6e6e73;cursor:pointer;font-size:17px;transition:color .15s,background .15s;}
+  .empresa-delete:hover,.empresa-delete:focus-visible{color:#e27b6b;background:rgba(201,105,92,.09);outline:none;}
+  .danger-button{border:1px solid rgba(201,105,92,.35);background:rgba(201,105,92,.06);color:#dc796a;border-radius:8px;padding:8px 11px;cursor:pointer;font:600 11.5px 'Inter',sans-serif;}
+  .danger-button:hover{background:rgba(201,105,92,.13);border-color:rgba(201,105,92,.6);}
+</style>
+<link rel="stylesheet" href="ef-ui.css">
+</head>
+<body>
+
+<div style="width: 100%; min-height: 100vh; box-sizing: border-box; display: flex; background: #0a0a0b; color: #f3f1ec;">
+
+  <!-- ============ SIDEBAR ============ -->
+  <div style="width: 240px; flex-shrink: 0; display: flex; flex-direction: column; padding: 36px 24px; box-sizing: border-box; border-right: 1px solid #1c1c1f;">
+
+    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 40px;">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" style="flex-shrink: 0;"><path d="M2 12c2 0 2-6.5 4-6.5S8 12 10 12s2-6.5 4-6.5" stroke="#7fa8c9" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div style="font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 13.5px; letter-spacing: -.01em;">EventFlow <span class="mono" style="color:#6e6e73;font-weight:500;font-size:11px;">/ plataforma</span></div>
+    </div>
+
+    <div class="mono" style="font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: #4a4a4e; margin-bottom: 12px; display:flex; align-items:baseline; justify-content:space-between;">
+      <span>Empresas</span>
+      <span id="empresas-contagem">—</span>
+    </div>
+    <div id="lista-empresas" style="display: flex; flex-direction: column; gap: 4px; margin-bottom: 24px; overflow-y: auto; max-height: 40vh;">Carregando…</div>
+
+    <div style="margin-top: auto; padding-top: 18px; border-top: 1px solid #1c1c1f; display: flex; align-items: center; gap: 10px;">
+      <div id="user-initials" style="width: 26px; height: 26px; border-radius: 50%; background: #1a1a1d; display: flex; align-items: center; justify-content: center; font-family: 'Space Grotesk', sans-serif; font-size: 10.5px; font-weight: 600; color: #b8b8bc; flex-shrink: 0;">··</div>
+      <div style="flex-grow: 1; min-width: 0;">
+        <div id="user-name" style="font-size: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Carregando…</div>
+        <div class="mono" style="font-size: 9px; color: #6e6e73; margin-top: 1px;">Dono da plataforma</div>
+      </div>
+      <span id="logout" title="Sair" style="cursor: pointer; color: #6e6e73; font-size: 11px; flex-shrink: 0;">sair</span>
+    </div>
+  </div>
+
+  <!-- ============ MAIN ============ -->
+  <div style="flex-grow: 1; padding: 36px 48px; box-sizing: border-box; min-width: 0;">
+
+    <div style="margin-bottom: 30px;">
+      <div class="mono" style="color: #6e6e73; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 10px;">Plataforma</div>
+      <h1 style="font-family: 'Space Grotesk', sans-serif; font-size: 24px; font-weight: 600; margin: 0 0 6px; letter-spacing: -.01em;">Empresas</h1>
+    </div>
+
+    <!-- criar empresa -->
+    <div style="padding-bottom: 26px; border-bottom: 1px solid #1c1c1f; margin-bottom: 30px;">
+      <div style="font-family: 'Space Grotesk', sans-serif; font-size: 14px; font-weight: 600; margin-bottom: 14px;">Nova empresa</div>
+      <form id="form-empresa" style="display: flex; gap: 16px; align-items: end;">
+        <div style="flex-grow: 1; max-width: 360px;">
+          <div class="mono" style="font-size: 9.5px; letter-spacing: .05em; text-transform: uppercase; color: #6e6e73; margin-bottom: 7px;">Nome da empresa</div>
+          <input id="empresa-nome-input" required type="text"
+            style="width: 100%; background: transparent; border: none; border-bottom: 1px solid #29292d; color: #f3f1ec; font-size: 13.5px; padding-bottom: 8px; box-sizing: border-box;">
+        </div>
+        <button id="btn-empresa" type="submit" style="background: none; border: none; padding: 0 0 8px; font-size: 13px; color: #7fa8c9; cursor: pointer; border-bottom: 1px solid #2a3d4d;">+ Criar empresa</button>
+      </form>
+      <div id="empresa-msg" style="margin-top: 10px; font-size: 12.5px; min-height: 16px;"></div>
+    </div>
+
+    <!-- empresas cadastradas -->
+    <section style="padding-bottom: 26px; border-bottom: 1px solid #1c1c1f; margin-bottom: 30px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:14px;">
+        <div>
+          <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;">Empresas cadastradas</div>
+        </div>
+        <span id="empresas-contagem-main" class="mono" style="font-size:10.5px;color:#6e6e73;">—</span>
+      </div>
+      <div id="lista-empresas-main" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;">
+        <div style="color:#6e6e73;font-size:12px;">Carregando…</div>
+      </div>
+    </section>
+
+    <!-- empresa selecionada -->
+    <div id="bloco-empresa" style="display:none;">
+      <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom: 6px;">
+        <div style="font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 600;" id="empresa-titulo">—</div>
+        <button id="btn-excluir-empresa" type="button" class="danger-button">Excluir empresa</button>
+      </div>
+
+      <!-- cadastrar pessoa nessa empresa -->
+      <div style="padding-bottom: 26px; border-bottom: 1px solid #1c1c1f; margin-bottom: 26px;">
+        <div style="font-family: 'Space Grotesk', sans-serif; font-size: 13.5px; font-weight: 600; margin-bottom: 6px;">Cadastrar pessoa nessa empresa</div>
+        <form id="form-pessoa" style="display: grid; grid-template-columns: 1fr 1fr 1fr 130px 150px; gap: 20px; align-items: end;">
+          <div>
+            <div class="mono" style="font-size: 9.5px; letter-spacing: .05em; text-transform: uppercase; color: #6e6e73; margin-bottom: 7px;">Nome</div>
+            <input id="pessoa-nome" required type="text" placeholder="Nome completo"
+              style="width: 100%; background: transparent; border: none; border-bottom: 1px solid #29292d; color: #f3f1ec; font-size: 13.5px; padding-bottom: 8px; box-sizing: border-box;">
+          </div>
+          <div>
+            <div class="mono" style="font-size: 9.5px; letter-spacing: .05em; text-transform: uppercase; color: #6e6e73; margin-bottom: 7px;">E-mail</div>
+            <input id="pessoa-email" required type="email" placeholder="email@exemplo.com"
+              style="width: 100%; background: transparent; border: none; border-bottom: 1px solid #29292d; color: #f3f1ec; font-size: 13.5px; padding-bottom: 8px; box-sizing: border-box;">
+          </div>
+          <div>
+            <div class="mono" style="font-size: 9.5px; letter-spacing: .05em; text-transform: uppercase; color: #6e6e73; margin-bottom: 7px;">Senha</div>
+            <input id="pessoa-senha" required type="password" minlength="6" autocomplete="new-password"
+              style="width: 100%; background: transparent; border: none; border-bottom: 1px solid #29292d; color: #f3f1ec; font-size: 13.5px; padding-bottom: 8px; box-sizing: border-box;">
+          </div>
+          <div>
+            <div class="mono" style="font-size: 9.5px; letter-spacing: .05em; text-transform: uppercase; color: #6e6e73; margin-bottom: 7px;">Nível</div>
+            <select id="pessoa-role" style="width: 100%; border-bottom: 1px solid #29292d; padding-bottom: 8px; color: #f3f1ec; font-size: 13.5px;">
+              <option value="gerencia">Gerência</option>
+              <option value="producao">Produção</option>
+              <option value="estoque">Estoque</option>
+            </select>
+          </div>
+          <div style="padding-bottom: 8px;">
+            <button id="btn-pessoa" type="submit" style="background: none; border: none; padding: 0; font-size: 13px; color: #7fa8c9; cursor: pointer; border-bottom: 1px solid #2a3d4d;">+ Criar conta</button>
+          </div>
+        </form>
+        <div id="pessoa-msg" style="margin-top: 12px; font-size: 12.5px; min-height: 16px;"></div>
+      </div>
+
+      <!-- equipe da empresa -->
+      <div>
+        <div style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 18px;">
+          <div style="font-family: 'Space Grotesk', sans-serif; font-size: 14px; font-weight: 600;">Equipe</div>
+          <span id="contagem" class="mono" style="font-size: 10.5px; color: #6e6e73;">—</span>
+        </div>
+        <div style="display: flex; font-size: 10.5px; color: #6e6e73; letter-spacing: .04em; text-transform: uppercase; padding-bottom: 10px; border-bottom: 1px solid #1c1c1f;" class="mono">
+          <div style="flex: 2;">Nome / e-mail</div>
+          <div style="width: 140px;">Nível</div>
+          <div style="width: 140px;">Status</div>
+        </div>
+        <div id="tabela-equipe"></div>
+      </div>
+    </div>
+
+
+  </div>
+</div>
+
+<script>
+(function () {
+  var ROLE_COLOR = { gerencia: '#9b7bd1', producao: '#7fa8c9', estoque: '#a68a52' };
+  var ROLE_LABEL = { gerencia: 'Gerência', producao: 'Produção', estoque: 'Estoque' };
+  var empresaAtual = null; // { id, nome }
+
+  document.addEventListener('DOMContentLoaded', async function () {
+    if (!window.EF || !EF.ready) return;
+    var ok = await EF.init({ ownerOnly: true });
+    if (!ok) return;
+
+    // A sidebar é gerada globalmente pelo ef-ui.js.
+    document.getElementById('form-empresa').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var btn = document.getElementById('btn-empresa');
+      var msg = document.getElementById('empresa-msg');
+      var nomeVal = document.getElementById('empresa-nome-input').value.trim();
+
+      if (!nomeVal) {
+        msg.style.color = '#c9695c';
+        msg.textContent = 'Digite o nome da empresa.';
+        return;
+      }
+
+      btn.disabled = true;
+      msg.style.color = '#8c8c91';
+      msg.textContent = 'Criando...';
+
+      var res;
+      try {
+        res = await EF.criarEmpresa(nomeVal);
+      } catch (err) {
+        res = { error: (err && err.message) ? err.message : String(err) };
+      }
+      if (res.error) {
+        msg.style.color = '#c9695c';
+        msg.textContent = res.error;
+        btn.disabled = false;
+        return;
+      }
+
+      msg.style.color = '#7cae83';
+      msg.textContent = 'Empresa "' + nomeVal + '" criada!';
+      document.getElementById('form-empresa').reset();
+      btn.disabled = false;
+      await carregarEmpresas();
+      selecionarEmpresa(res.empresa);
+    });
+
+    document.getElementById('form-pessoa').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      if (!empresaAtual) return;
+      var btn = document.getElementById('btn-pessoa');
+      var msg = document.getElementById('pessoa-msg');
+      var nomeVal = document.getElementById('pessoa-nome').value.trim();
+      var emailVal = document.getElementById('pessoa-email').value.trim();
+      var senhaVal = document.getElementById('pessoa-senha').value;
+      var roleVal = document.getElementById('pessoa-role').value;
+
+      if (senhaVal.length < 6) {
+        msg.style.color = '#c9695c';
+        msg.textContent = 'A senha precisa ter pelo menos 6 caracteres.';
+        return;
+      }
+
+      btn.disabled = true;
+      msg.style.color = '#8c8c91';
+      msg.textContent = 'Criando conta...';
+
+      var res = await EF.createUser(nomeVal, emailVal, senhaVal, roleVal, empresaAtual.id);
+      if (res.error) {
+        msg.style.color = '#c9695c';
+        msg.textContent = res.error;
+        btn.disabled = false;
+        return;
+      }
+
+      msg.style.color = '#7cae83';
+      msg.textContent = 'Conta criada! Já pode entrar com o e-mail ' + emailVal + ' e a senha cadastrada.';
+      document.getElementById('form-pessoa').reset();
+      btn.disabled = false;
+      await carregarEquipe(empresaAtual.id);
+    });
+
+    document.getElementById('btn-excluir-empresa').addEventListener('click', function () {
+      if (empresaAtual) excluirEmpresa(empresaAtual);
+    });
+
+    // Sem esta chamada a tela permanecia eternamente em “Carregando…”.
+    await carregarEmpresas();
+  });
+
+  async function carregarEmpresas() {
+    var res = await EF.listarEmpresas();
+    var data = res.data || [];
+    var error = res.error;
+    var wrap = document.getElementById('lista-empresas-main');
+    var sidebar = document.getElementById('lista-empresas');
+    var count = document.getElementById('empresas-contagem-main');
+    if (!wrap) return;
+
+    if (error) {
+      var errorText = typeof error === 'string' ? error : (error.message || 'Erro desconhecido.');
+      wrap.innerHTML = '<div style="color:#c9695c;font-size:12px;grid-column:1/-1;">Erro ao carregar empresas: ' + escapeHtml(errorText) + '</div>';
+      if (sidebar) sidebar.innerHTML = '<span style="color:#c9695c;font-size:11px;">Erro ao carregar.</span>';
+      if (count) count.textContent = 'erro';
+      var sideCountError = document.getElementById('empresas-contagem');
+      if (sideCountError) sideCountError.textContent = '!';
+      return;
+    }
+
+    if (count) count.textContent = data.length + (data.length === 1 ? ' empresa' : ' empresas');
+    var sideCount = document.getElementById('empresas-contagem');
+    if (sideCount) sideCount.textContent = String(data.length);
+    wrap.innerHTML = '';
+    if (sidebar) sidebar.innerHTML = '';
+
+    if (!data.length) {
+      wrap.innerHTML = '<div style="color:#4a4a4e;font-size:12px;grid-column:1/-1;padding:12px 0;">Nenhuma empresa cadastrada ainda.</div>';
+      if (sidebar) sidebar.innerHTML = '<span style="color:#4a4a4e;font-size:11px;">Nenhuma empresa</span>';
+      empresaAtual = null;
+      document.getElementById('bloco-empresa').style.display = 'none';
+      return;
+    }
+
+    data.forEach(function (emp) {
+      var card = document.createElement('div');
+      card.className = 'empresa-card empresa-item';
+      card.dataset.empresaId = emp.id;
+      card.innerHTML = '<button type="button" class="empresa-card-main"><strong style="display:block;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escapeHtml(emp.nome) + '</strong><small style="display:block;color:#6e6e73;font-size:10.5px;margin-top:4px;">Gerenciar equipe</small></button><button type="button" class="empresa-delete" aria-label="Excluir ' + escapeHtml(emp.nome) + '" title="Excluir empresa">×</button>';
+      card.querySelector('.empresa-card-main').addEventListener('click', function () { selecionarEmpresa(emp); });
+      card.querySelector('.empresa-delete').addEventListener('click', function () { excluirEmpresa(emp); });
+      wrap.appendChild(card);
+
+      if (sidebar) {
+        var sideItem = document.createElement('button');
+        sideItem.type = 'button';
+        sideItem.className = 'empresa-item';
+        sideItem.dataset.empresaId = emp.id;
+        sideItem.textContent = emp.nome;
+        sideItem.style.cssText = 'width:100%;border:0;border-radius:7px;background:transparent;color:#8c8c91;text-align:left;padding:8px 9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font:500 12px Inter,sans-serif;cursor:pointer;';
+        sideItem.addEventListener('click', function () { selecionarEmpresa(emp); });
+        sidebar.appendChild(sideItem);
+      }
+    });
+
+    if (empresaAtual) {
+      var atualizada = data.find(function (emp) { return emp.id === empresaAtual.id; });
+      if (atualizada) selecionarEmpresa(atualizada);
+    }
+  }
+
+  function selecionarEmpresa(emp) {
+    empresaAtual = emp;
+    document.getElementById('bloco-empresa').style.display = '';
+    document.getElementById('empresa-titulo').textContent = emp.nome;
+    document.querySelectorAll('.empresa-item').forEach(function (el) {
+      var ativa = el.dataset.empresaId === emp.id;
+      el.classList.toggle('ativa', ativa);
+      if (el.closest && el.closest('#lista-empresas')) {
+        el.style.background = ativa ? '#151d23' : 'transparent';
+        el.style.color = ativa ? '#f3f1ec' : '#8c8c91';
+      }
+    });
+    carregarEquipe(emp.id);
+  }
+
+  async function excluirEmpresa(emp) {
+    var aviso = 'Excluir “' + emp.nome + '” permanentemente?\n\nSerão removidos eventos, estoque, veículos, equipe, usuários, conversas, reembolsos e anexos dessa empresa. Esta ação não pode ser desfeita.';
+    if (!window.confirm(aviso)) return;
+    var confirmacao = window.prompt('Para confirmar, digite exatamente o nome da empresa:\n\n' + emp.nome);
+    if (confirmacao === null) return;
+    if (confirmacao !== emp.nome) {
+      window.alert('O nome digitado não corresponde. A empresa não foi excluída.');
+      return;
+    }
+
+    var botao = document.getElementById('btn-excluir-empresa');
+    botao.disabled = true;
+    botao.textContent = 'Excluindo…';
+    var res = await EF.excluirEmpresa(emp.id, confirmacao);
+    botao.disabled = false;
+    botao.textContent = 'Excluir empresa';
+    if (res.error) {
+      window.alert('Não foi possível excluir a empresa: ' + res.error);
+      return;
+    }
+
+    if (empresaAtual && empresaAtual.id === emp.id) {
+      empresaAtual = null;
+      document.getElementById('bloco-empresa').style.display = 'none';
+    }
+    await carregarEmpresas();
+    var detalhes = res.warnings && res.warnings.length ? '\n\nAvisos: ' + res.warnings.join(' | ') : '';
+    window.alert('Empresa excluída permanentemente.' + detalhes);
+  }
+
+  async function carregarEquipe(empresaId) {
+    var { data, error } = await EF.client.from('profiles').select('*').eq('empresa_id', empresaId).order('created_at', { ascending: true });
+    var wrap = document.getElementById('tabela-equipe');
+    if (error) {
+      wrap.innerHTML = '<div style="color:#c9695c;font-size:13px;padding:16px 0;">Erro ao carregar a equipe: ' + escapeHtml(error.message) + '</div>';
+      return;
+    }
+    document.getElementById('contagem').textContent = data.length + (data.length === 1 ? ' pessoa' : ' pessoas');
+    wrap.innerHTML = '';
+    if (!data.length) {
+      wrap.innerHTML = '<div style="color:#4a4a4e;font-size:12.5px;padding:16px 0;">Ninguém cadastrado ainda nessa empresa.</div>';
+      return;
+    }
+    data.forEach(function (u) { wrap.appendChild(linhaUsuario(u)); });
+  }
+
+  function linhaUsuario(u) {
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;padding:15px 0;border-bottom:1px solid #1c1c1f;font-size:13px;';
+
+    var col1 = document.createElement('div');
+    col1.style.flex = '2';
+    col1.innerHTML =
+      '<div style="font-weight:600;">' + escapeHtml(u.nome || '(sem nome)') + '</div>' +
+      '<div style="color:#6e6e73;font-size:11.5px;margin-top:1px;">' + escapeHtml(u.email) + '</div>';
+
+    var col2 = document.createElement('div');
+    col2.style.width = '140px';
+    var select = document.createElement('select');
+    ['gerencia', 'producao', 'estoque'].forEach(function (r) {
+      var opt = document.createElement('option');
+      opt.value = r; opt.textContent = ROLE_LABEL[r];
+      if (r === u.role) opt.selected = true;
+      select.appendChild(opt);
+    });
+    select.style.color = ROLE_COLOR[u.role] || '#8c8c91';
+    select.addEventListener('change', async function () {
+      var novoRole = select.value;
+      select.disabled = true;
+      var { error } = await EF.client.from('profiles').update({ role: novoRole }).eq('id', u.id);
+      select.disabled = false;
+      if (error) { alert('Erro ao mudar o nível: ' + error.message); select.value = u.role; return; }
+      u.role = novoRole;
+      select.style.color = ROLE_COLOR[novoRole] || '#8c8c91';
+    });
+    col2.appendChild(select);
+
+    var col3 = document.createElement('div');
+    col3.style.width = '140px';
+    var toggleWrap = document.createElement('span');
+    toggleWrap.style.cssText = 'display:inline-flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;';
+    var toggle = document.createElement('span');
+    toggle.className = 'toggle';
+    var dot = document.createElement('span');
+    dot.className = 'dot';
+    toggle.appendChild(dot);
+    var label = document.createElement('span');
+
+    function paint(ativo) {
+      if (ativo) {
+        toggle.style.background = 'rgba(124,174,131,0.25)';
+        dot.style.background = '#7cae83'; dot.style.right = '2px'; dot.style.left = 'auto';
+        label.textContent = 'Ativo'; label.style.color = '#7cae83';
+      } else {
+        toggle.style.background = '#1c1c1f';
+        dot.style.background = '#6e6e73'; dot.style.left = '2px'; dot.style.right = 'auto';
+        label.textContent = 'Bloqueado'; label.style.color = '#c9695c';
+      }
+    }
+    paint(u.ativo !== false);
+
+    toggleWrap.addEventListener('click', async function () {
+      var novoAtivo = !(u.ativo !== false);
+      var { error } = await EF.client.from('profiles').update({ ativo: novoAtivo }).eq('id', u.id);
+      if (error) { alert('Erro ao mudar o status: ' + error.message); return; }
+      u.ativo = novoAtivo;
+      paint(u.ativo);
+    });
+
+    toggleWrap.appendChild(toggle);
+    toggleWrap.appendChild(label);
+    col3.appendChild(toggleWrap);
+
+    row.appendChild(col1);
+    row.appendChild(col2);
+    row.appendChild(col3);
+    return row;
+  }
+
+  function escapeHtml(s) {
+    var d = document.createElement('div');
+    d.textContent = s == null ? '' : s;
+    return d.innerHTML;
+  }
+})();
+</script>
+
+<script src="ef-ui.js?v=27"></script>
+</body>
+</html>

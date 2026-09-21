@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Estoque — EventFlow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="ef-config.js"></script>
+<script src="ef-auth.js?v=27"></script>
+<link rel="stylesheet" href="ef-ui.css">
+<style>
+  body{margin:0;background:#09090b;font-family:'IBM Plex Sans',sans-serif;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  .disp{font-family:'Space Grotesk',sans-serif;}
+  body [data-financeiro]{display:none!important;} html[data-financeiro="true"] body [data-financeiro]{display:block!important;}
+  body [data-areas]{display:none!important;} html[data-areas="true"] body [data-areas]{display:block!important;}
+  body [data-usuarios]{display:none!important;} html[data-usuarios="true"] body [data-usuarios]{display:block!important;}
+  .stock-shell{display:flex;flex-direction:column;gap:24px;}
+  .stock-header{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;}
+  .stock-header h1{margin:0 0 8px;font-size:34px;line-height:1.05;letter-spacing:-.03em;}
+  .stock-sub{color:#8c8c91;font-size:14px;max-width:720px;line-height:1.5;}
+  .stock-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+  .stock-button{height:42px;padding:0 16px;border:1px solid rgba(243,240,234,.1);background:#141418;color:#f3f0ea;border-radius:14px;font-size:13px;font-weight:500;cursor:pointer;}
+  .stock-button.primary{background:#a8bbcf;color:#09090b;border-color:#a8bbcf;}
+  .stock-button:hover{filter:brightness(1.05);}
+  .stock-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+  .stock-kpi{background:#101114;border:1px solid rgba(243,240,234,.08);border-radius:18px;padding:18px 18px 16px;}
+  .stock-kpi-label{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#5c5c62;margin-bottom:10px;}
+  .stock-kpi-value{font-family:'Space Grotesk',sans-serif;font-size:28px;line-height:1;font-weight:600;margin-bottom:6px;}
+  .stock-kpi-sub{color:#8c8c91;font-size:12px;}
+  .stock-panel{background:#0f1013;border:1px solid rgba(243,240,234,.08);border-radius:22px;overflow:hidden;}
+  .stock-toolbar{display:grid;grid-template-columns:minmax(280px,1fr) 230px auto;gap:10px;padding:14px 16px 12px;align-items:center;border-bottom:1px solid rgba(243,240,234,.06);background:linear-gradient(180deg,rgba(255,255,255,.01),rgba(255,255,255,0));}
+  .stock-search,.stock-filter{height:46px;border-radius:14px;border:1px solid rgba(243,240,234,.08);background:#121317;color:#f3f0ea;padding:0 14px;font-size:14px;}
+  .stock-search-wrap{position:relative;}
+  .stock-search{width:100%;padding-left:42px;}
+  .stock-search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:#5c5c62;pointer-events:none;}
+  .stock-tabs{display:inline-flex;gap:0;border:1px solid rgba(243,240,234,.08);border-radius:14px;overflow:hidden;background:#0d0d10;justify-self:end;}
+  .stock-tab{height:46px;padding:0 18px;border:0;background:transparent;color:#8c8c91;font-size:14px;font-weight:500;cursor:pointer;}
+  .stock-tab + .stock-tab{border-left:1px solid rgba(243,240,234,.08);} .stock-tab.active{background:#141418;color:#f3f0ea;}
+  .stock-table{width:100%;border-collapse:collapse;table-layout:fixed;}
+  .stock-table thead th{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#5c5c62;text-align:left;padding:15px 16px;border-bottom:1px solid rgba(243,240,234,.06);}
+  .stock-table tbody td{padding:14px 16px;border-bottom:1px solid rgba(243,240,234,.06);vertical-align:middle;font-size:14px;color:#ece8e1;}
+  .stock-table tbody tr:hover{background:rgba(255,255,255,.015);} 
+  .td-item{display:flex;flex-direction:column;gap:3px;min-width:0;}
+  .item-title{font-size:15px;font-weight:600;color:#f3f0ea;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .item-meta{font-size:12px;color:#8c8c91;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .cat-chip{display:inline-flex;align-items:center;gap:8px;color:#d3d0ca;font-size:13px;}
+  .cat-dot{width:8px;height:8px;border-radius:999px;display:inline-block;flex:0 0 8px;}
+  .stock-num{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:500;color:#fff;}
+  .stock-muted{color:#8c8c91;font-size:13px;}
+  .stock-kw{color:#a4b6c9;font-size:13px;}
+  .stock-action{background:transparent;border:0;color:#9ea1a8;font-size:13px;cursor:pointer;padding:0;}
+  .stock-action:hover{color:#f3f0ea;}
+  .stock-table-wrap{overflow:auto;}
+  .stock-empty{padding:28px 18px;color:#8c8c91;font-size:14px;}
+  .form-card{background:#0f1013;border:1px solid rgba(243,240,234,.08);border-radius:22px;padding:18px 18px 16px;display:none;}
+  .form-title{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:600;margin-bottom:14px;}
+  .form-grid{display:grid;grid-template-columns:1.5fr 1fr 110px 110px;gap:14px;}
+  .form-grid-2{display:grid;grid-template-columns:150px 1fr auto;gap:14px;align-items:end;margin-top:14px;}
+  .form-field label{display:block;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#5c5c62;margin-bottom:8px;}
+  .form-field input,.form-field select,.form-field textarea{width:100%;background:#121317;border:1px solid rgba(243,240,234,.08);border-radius:14px;min-height:44px;color:#f3f0ea;padding:10px 12px;font-size:14px;}
+  .form-field textarea{min-height:84px;resize:vertical;}
+  .item-form-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:14px;align-items:end;}
+  .item-form-grid .span-12{grid-column:span 12;} .item-form-grid .span-6{grid-column:span 6;} .item-form-grid .span-4{grid-column:span 4;} .item-form-grid .span-3{grid-column:span 3;} .item-form-grid .span-2{grid-column:span 2;}
+  .item-form-actions{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:14px;padding-top:14px;border-top:1px solid rgba(243,240,234,.06);}
+  .item-form-hint{color:#8c8c91;font-size:12px;}
+  .msg{min-height:16px;margin-top:10px;font-size:12px;}
+  .vehicle-section{background:#0f1013;border:1px solid rgba(243,240,234,.08);border-radius:22px;padding:20px;}
+  .vehicle-list{display:flex;flex-direction:column;margin-top:12px;}
+  .vehicle-row{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid rgba(243,240,234,.06);}
+  .vehicle-row:last-child{border-bottom:none;}
+  .status-pill{display:inline-flex;align-items:center;padding:4px 10px;border-radius:999px;font-size:11px;letter-spacing:.04em;}
+  .status-pill.free{background:rgba(124,174,131,.12);color:#93c79b;}
+  .status-pill.busy{background:rgba(201,105,92,.12);color:#e28d81;}
+  .stock-edit-panel{padding:18px;border-top:1px solid rgba(243,240,234,.06);background:#111217;}
+  .hidden{display:none!important;}
+  html[data-role="producao"] .stock-admin-only,
+  html[data-role="estoque"] .stock-admin-only{display:none!important;}
+  .stock-readonly-note{display:none;padding:11px 14px;border:1px solid rgba(155,180,199,.15);background:rgba(155,180,199,.06);border-radius:14px;color:#9baab7;font-size:12px;line-height:1.45;}
+  html[data-role="producao"] .stock-readonly-note,
+  html[data-role="estoque"] .stock-readonly-note{display:block;}
+
+  @media (max-width:1150px){.stock-kpis{grid-template-columns:repeat(2,1fr)}.form-grid{grid-template-columns:1fr 1fr}.form-grid-2{grid-template-columns:1fr 1fr}.stock-toolbar{grid-template-columns:1fr 1fr}.stock-tabs{justify-self:stretch}.stock-header{flex-direction:column;}.item-form-grid .span-6,.item-form-grid .span-4,.item-form-grid .span-3,.item-form-grid .span-2{grid-column:span 6;}}
+  @media (max-width:760px){.stock-kpis{grid-template-columns:1fr}.stock-toolbar{grid-template-columns:1fr}.form-grid,.form-grid-2{grid-template-columns:1fr}.stock-table{min-width:980px}.stock-header h1{font-size:28px}.item-form-grid .span-6,.item-form-grid .span-4,.item-form-grid .span-3,.item-form-grid .span-2,.item-form-grid .span-12{grid-column:span 12;}}
+</style>
+</head>
+<body>
+<div style="width:100%;min-height:100vh;box-sizing:border-box;display:flex;background:#09090b;color:#f3f0ea;">
+  <div style="width:220px;flex-shrink:0;display:flex;flex-direction:column;padding:36px 24px;box-sizing:border-box;">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:40px;">
+      <a href="dashboard.html" style="text-decoration:none;display:flex;align-items:center;gap:10px;">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" style="flex-shrink:0;"><path d="M2 12c2 0 2-6.5 4-6.5S8 12 10 12s2-6.5 4-6.5" stroke="#9bb4c7" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div style="font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:13.5px;letter-spacing:-.01em;color:#f3f1ec;">EventFlow</div>
+      </a>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:16px;margin-bottom:32px;">
+      <a href="dashboard.html" style="padding-left:13px;text-decoration:none;display:block;"><span style="font-size:13px;color:#8c8c91;">Dashboard</span></a>
+      <a href="agenda.html" style="padding-left:13px;text-decoration:none;display:block;"><span style="font-size:13px;color:#8c8c91;">Agenda</span></a>
+      <div style="display:flex;align-items:center;gap:9px;"><span style="width:4px;height:4px;border-radius:50%;background:#9bb4c7;flex-shrink:0;"></span><span style="font-size:13px;font-weight:600;color:#f3f1ec;">Estoque</span></div>
+      <a href="clientes.html" data-financeiro style="padding-left:13px;text-decoration:none;display:block;"><span style="font-size:13px;color:#8c8c91;">Clientes</span></a>
+      <a href="vendas.html" data-financeiro style="padding-left:13px;text-decoration:none;display:block;"><span style="font-size:13px;color:#8c8c91;">Vendas</span></a>
+      <a href="notas.html" style="padding-left:13px;text-decoration:none;display:block;"><span style="font-size:13px;color:#8c8c91;">Notas</span></a>
+    </div>
+    <div data-areas>
+      <div class="mono" style="font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:#4a4a4e;margin-bottom:12px;">Áreas</div>
+      <div style="display:flex;flex-direction:column;gap:13px;margin-bottom:32px;">
+        <a href="calculadora-som.html" style="text-decoration:none;"><span style="font-size:12.5px;color:#6e6e73;">Som</span></a>
+        <a href="calculadora-luz.html" style="text-decoration:none;"><span style="font-size:12.5px;color:#6e6e73;">Luz</span></a>
+        <a href="video.html" style="text-decoration:none;"><span style="font-size:12.5px;color:#6e6e73;">Vídeo</span></a>
+        <a href="estrutura.html" style="text-decoration:none;"><span style="font-size:12.5px;color:#6e6e73;">Estrutura</span></a>
+        <a href="internet.html" style="text-decoration:none;"><span style="font-size:12.5px;color:#6e6e73;">Internet</span></a>
+        <a href="cenografia.html" style="text-decoration:none;"><span style="font-size:12.5px;color:#6e6e73;">Cenografia</span></a>
+        <a href="extras.html" style="text-decoration:none;"><span style="font-size:12.5px;color:#6e6e73;">Extras</span></a>
+        <a href="servicos.html" style="text-decoration:none;"><span style="font-size:12.5px;color:#6e6e73;">Serviços</span></a>
+      </div>
+    </div>
+    <div data-areas>
+      <div class="mono" style="font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:#4a4a4e;margin-bottom:12px;">Sistema</div>
+      <div style="display:flex;flex-direction:column;gap:13px;">
+        <a data-usuarios href="usuarios-permissoes.html" style="text-decoration:none;display:block;"><span style="font-size:12.5px;color:#6e6e73;">Usuários</span></a>
+      </div>
+    </div>
+    <div style="margin-top:auto;padding-top:18px;border-top:1px solid #1c1c1f;display:flex;align-items:center;gap:10px;">
+      <div id="user-initials" style="width:26px;height:26px;border-radius:50%;background:#1a1a1d;display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-size:10.5px;font-weight:600;color:#b8b8bc;flex-shrink:0;">··</div>
+      <div style="flex-grow:1;min-width:0;"><div id="user-name" style="font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Carregando…</div><div id="user-role" class="mono" style="font-size:9px;color:#6e6e73;margin-top:1px;">—</div></div>
+      <span id="logout" title="Sair" style="cursor:pointer;color:#6e6e73;font-size:11px;flex-shrink:0;">sair</span>
+    </div>
+  </div>
+  <div style="flex-grow:1;padding:32px 38px 40px 0;box-sizing:border-box;min-width:0;">
+    <div class="stock-shell">
+      <div class="stock-header">
+        <div>
+          <div class="mono" id="hoje" style="color:#5c5c62;font-size:11px;letter-spacing:.14em;text-transform:uppercase;margin-bottom:12px;"></div>
+          <h1 class="disp">Estoque</h1>
+          <div class="stock-sub" id="resumo">Carregando…</div>
+        </div>
+        <div class="stock-actions">
+          <button class="stock-button stock-admin-only" id="btn-toggle-veiculo-form" type="button">+ Veículo</button>
+          <button class="stock-button primary stock-admin-only" id="btn-toggle-form" type="button">+ Novo item</button>
+        </div>
+      </div>
+
+
+      <div class="stock-kpis">
+        <div class="stock-kpi"><div class="stock-kpi-label">Itens cadastrados</div><div class="stock-kpi-value" id="kpi-total">—</div><div class="stock-kpi-sub" id="kpi-total-sub">—</div></div>
+        <div class="stock-kpi"><div class="stock-kpi-label">Estoque curto</div><div class="stock-kpi-value" id="kpi-baixo" style="color:#e28d81;">—</div><div class="stock-kpi-sub">Itens com menos de 30% disponível</div></div>
+        <div class="stock-kpi"><div class="stock-kpi-label">Categorias ativas</div><div class="stock-kpi-value" id="kpi-categorias">—</div><div class="stock-kpi-sub">Som, Luz, Vídeo, Estrutura, Internet, Cenografia, Extras e Serviços</div></div>
+        <div class="stock-kpi"><div class="stock-kpi-label">Em uso agora</div><div class="stock-kpi-value" id="kpi-uso">—</div><div class="stock-kpi-sub">Diferença entre total e disponível</div></div>
+      </div>
+
+      <div id="bloco-form" class="form-card stock-admin-only">
+        <div class="form-title">Cadastrar item</div>
+        <form id="form-item">
+          <div class="item-form-grid">
+            <div class="form-field span-6"><label>Nome</label><input id="novo-nome" required type="text"></div>
+            <div class="form-field span-3"><label>Marca</label><input id="novo-marca" type="text" placeholder="L-Acoustics"></div>
+            <div class="form-field span-3"><label>SKU</label><input id="novo-sku" type="text" placeholder="KARA-II"></div>
+
+            <div class="form-field span-2"><label>Qtd. estoque</label><input id="novo-total" required type="number" min="0" step="1" value="1"></div>
+            <div class="form-field span-2"><label>Unidade</label><select id="novo-unidade"><option value="Unidade">Unidade</option><option value="Par">Par</option><option value="Kit">Kit</option><option value="Metro">Metro</option><option value="Caixa">Caixa</option></select></div>
+            <div class="form-field span-2"><label>Preço/dia</label><input id="novo-preco" type="number" min="0" step="0.01" value="0"></div>
+            <div class="form-field span-2"><label>Peso (kg)</label><input id="novo-peso" type="number" min="0" step="0.01" placeholder="—"></div>
+            <div class="form-field span-2"><label>Consumo (W)</label><input id="novo-consumo" type="number" min="0" step="0.01" placeholder="—"></div>
+            <div class="form-field span-2"><label>Un./case</label><input id="novo-case" type="number" min="1" step="1" placeholder="—"></div>
+
+            <div class="form-field span-3"><label>Categoria</label><select id="novo-categoria"><option>Som</option><option>Luz</option><option>Vídeo</option><option>Estrutura</option><option>Internet</option><option>Cenografia</option><option>Extras</option><option>Serviços</option></select></div>
+            <div class="form-field span-3"><label>Disponível agora</label><input id="novo-disponivel" required type="number" min="0" step="1" value="1"></div>
+            <div class="form-field span-6"><label>Descrição</label><input id="novo-descricao" type="text"></div>
+          </div>
+          <div class="item-form-actions">
+            <button id="btn-item" type="submit" class="stock-button primary">Adicionar item</button>
+          </div>
+        </form>
+        <div id="item-msg" class="msg"></div>
+      </div>
+
+      <div class="stock-panel">
+        <div class="stock-toolbar">
+          <div class="stock-search-wrap">
+            <svg class="stock-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+            <input id="busca-estoque" class="stock-search" type="search" placeholder="Buscar nome, marca, SKU...">
+          </div>
+          <select id="filtro-categoria" class="stock-filter"><option value="">Todas as categorias</option></select>
+          <div class="stock-tabs"><button type="button" class="stock-tab active" data-tab="itens">Itens</button><button type="button" class="stock-tab" data-tab="cases">Cases</button></div>
+        </div>
+        <div class="stock-table-wrap">
+          <table class="stock-table">
+            <thead>
+              <tr>
+                <th style="width:29%;">Item</th>
+                <th style="width:15%;">Categoria</th>
+                <th style="width:11%;">Estoque</th>
+                <th class="stock-price-col" style="width:13%;">Preço/dia</th>
+                <th style="width:11%;">Peso</th>
+                <th style="width:9%;">W</th>
+                <th style="width:8%;">Jobs</th>
+                <th class="stock-admin-only" style="width:4%;"></th>
+              </tr>
+            </thead>
+            <tbody id="lista-itens-tabela">
+              <tr><td colspan="8" class="stock-empty">Carregando…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="vehicle-section">
+        <div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start;">
+          <div><h2 class="disp" style="margin:0;font-size:22px;">Frota</h2></div>
+        </div>
+        <div id="bloco-form-veiculo" class="form-card stock-admin-only" style="margin-top:16px;">
+          <div class="form-title">Cadastrar veículo</div>
+          <form id="form-veiculo" class="form-grid" style="grid-template-columns:1.3fr 1fr 1fr 1.4fr 140px;">
+            <div class="form-field"><label>Nome / tipo</label><input id="novo-veiculo-nome" required type="text"></div>
+            <div class="form-field"><label>Placa</label><input id="novo-veiculo-placa" type="text" placeholder="Opcional"></div>
+            <div class="form-field"><label>Tipo</label><input id="novo-veiculo-tipo" type="text" placeholder="Ex: utilitário"></div>
+            <div class="form-field"><label>Observações</label><input id="novo-veiculo-obs" type="text" placeholder="Opcional"></div>
+            <button id="btn-veiculo" type="submit" class="stock-button primary">Cadastrar</button>
+          </form>
+          <div id="veiculo-msg" class="msg"></div>
+        </div>
+        <div id="lista-veiculos" class="vehicle-list"></div>
+        <div id="veiculos-vazio" class="stock-empty hidden">Nenhum veículo cadastrado ainda.</div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  var CATEGORIAS_ESTOQUE=['Som','Luz','Vídeo','Estrutura','Internet','Cenografia','Extras','Serviços'];
+  var COR_CATEGORIA={Som:'#9bb4c7',Luz:'#cdbf9d','Vídeo':'#b1a4c8',Estrutura:'#8ea4ab',Internet:'#7fa7a6',Cenografia:'#c6a699',Extras:'#9eb39f','Serviços':'#8c8c91'};
+  var ITENS=[]; var VEICULOS=[]; var VEICULOS_USO_HOJE={}; var JOBS_POR_ITEM={}; var currentTab='itens'; var ROLE_ATUAL=''; var PODE_ADMIN_ESTOQUE=false;
+  function corCategoria(cat){return COR_CATEGORIA[cat]||'#8c8c91';}
+  function fmtMoeda(v){return (v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});} 
+  function fmtPotencia(v){ if(v==null||v==='') return '—'; var n=Number(v)||0; if(n>=1000) return (Math.round((n/100))/10).toString().replace('.',',')+' kW'; return n.toLocaleString('pt-BR')+' W'; }
+  function esc(s){var d=document.createElement('div');d.textContent=s==null?'':s;return d.innerHTML;}
+  function isCaseItem(it){ var str=((it.nome||'')+' '+(it.marca||'')+' '+(it.descricao||'')).toLowerCase(); return /\bcases?\b|road case|flight case/.test(str); }
+  function inUseCount(it){ return Math.max(0,(Number(it.quantidade_total)||0)-(Number(it.quantidade_disponivel)||0)); }
+  function toggle(id){ var el=document.getElementById(id); if(!el) return; el.style.display=(el.style.display==='none'||!el.style.display)?'block':'none'; }
+
+  function scrollSuavePara(el) {
+    if (!el) return;
+    setTimeout(function () { try { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {} }, 80);
+  }
+
+
+  document.addEventListener('DOMContentLoaded', async function(){
+    if(!window.EF || !EF.ready) return; var ok=await EF.init({}); if(!ok) return; ROLE_ATUAL=(EF.profile&&EF.profile.role)||''; PODE_ADMIN_ESTOQUE=ROLE_ATUAL==='gerencia'||ROLE_ATUAL==='owner'; if(!PODE_ADMIN_ESTOQUE){document.querySelectorAll('.stock-price-col').forEach(function(el){el.remove();});}
+    document.getElementById('hoje').textContent=new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'});
+    var btnNovoItem=document.getElementById('btn-toggle-form'); if(btnNovoItem) btnNovoItem.addEventListener('click',function(){toggle('bloco-form');});
+    var btnNovoVeiculo=document.getElementById('btn-toggle-veiculo-form'); if(btnNovoVeiculo) btnNovoVeiculo.addEventListener('click',function(){toggle('bloco-form-veiculo');});
+    document.getElementById('busca-estoque').addEventListener('input',renderizarTabela);
+    document.getElementById('filtro-categoria').addEventListener('change',renderizarTabela);
+    document.querySelectorAll('.stock-tab').forEach(function(btn){btn.addEventListener('click',function(){document.querySelectorAll('.stock-tab').forEach(function(b){b.classList.toggle('active',b===btn);}); currentTab=btn.dataset.tab; renderizarTabela();});});
+
+    document.getElementById('form-item').addEventListener('submit', async function(e){
+      e.preventDefault(); var btn=document.getElementById('btn-item'); var msg=document.getElementById('item-msg'); if(!PODE_ADMIN_ESTOQUE){msg.style.color='#e28d81';msg.textContent='Seu perfil possui somente consulta do estoque.';return;}
+      var nomeVal=document.getElementById('novo-nome').value.trim(); var categoriaVal=document.getElementById('novo-categoria').value;
+      var totalVal=parseInt(document.getElementById('novo-total').value,10)||0; var dispVal=parseInt(document.getElementById('novo-disponivel').value,10)||0;
+      var precoVal=parseFloat(document.getElementById('novo-preco').value)||0; var marcaVal=document.getElementById('novo-marca').value.trim(); var skuVal=document.getElementById('novo-sku').value.trim(); var unidadeVal=document.getElementById('novo-unidade').value||'Unidade'; var pesoVal=document.getElementById('novo-peso').value === '' ? null : (parseFloat(document.getElementById('novo-peso').value)||0); var consumoVal=document.getElementById('novo-consumo').value === '' ? null : (parseFloat(document.getElementById('novo-consumo').value)||0); var caseVal=document.getElementById('novo-case').value === '' ? null : (parseInt(document.getElementById('novo-case').value,10)||null); var descricaoVal=document.getElementById('novo-descricao').value.trim();
+      if(dispVal>totalVal){msg.style.color='#e28d81';msg.textContent='A quantidade disponível não pode ser maior que o total.';return;}
+      btn.disabled=true; msg.style.color='#8c8c91'; msg.textContent='Salvando...';
+      var p=EF.profile;
+      var res=await EF.client.from('estoque_itens').insert({empresa_id:p.empresa_id,nome:nomeVal,categoria:categoriaVal,marca:marcaVal,sku:skuVal,unidade:unidadeVal,descricao:descricaoVal,quantidade_total:totalVal,quantidade_disponivel:dispVal,preco_unitario:precoVal,peso_kg:pesoVal,consumo_w:consumoVal,unidades_por_case:caseVal});
+      btn.disabled=false; if(res.error){msg.style.color='#e28d81';msg.textContent=res.error.message;return;}
+      msg.style.color='#93c79b'; msg.textContent='Item cadastrado!'; document.getElementById('form-item').reset(); document.getElementById('novo-total').value=1; document.getElementById('novo-disponivel').value=1; await carregarEstoque(); scrollSuavePara(document.getElementById('lista-itens-tabela').lastElementChild);
+    });
+
+    document.getElementById('form-veiculo').addEventListener('submit', async function(e){
+      e.preventDefault(); var btn=document.getElementById('btn-veiculo'); var msg=document.getElementById('veiculo-msg');
+      if(!PODE_ADMIN_ESTOQUE){msg.style.color='#e28d81';msg.textContent='Somente a Gerência pode cadastrar veículos.';return;}
+      btn.disabled=true; msg.style.color='#8c8c91'; msg.textContent='Salvando...';
+      var res=await EF.client.from('estoque_veiculos').insert({empresa_id:EF.profile.empresa_id,nome:document.getElementById('novo-veiculo-nome').value.trim(),placa:document.getElementById('novo-veiculo-placa').value.trim(),tipo:document.getElementById('novo-veiculo-tipo').value.trim(),observacoes:document.getElementById('novo-veiculo-obs').value.trim()});
+      btn.disabled=false; if(res.error){msg.style.color='#e28d81';msg.textContent=res.error.message;return;}
+      msg.style.color='#93c79b'; msg.textContent='Veículo cadastrado!'; document.getElementById('form-veiculo').reset(); await carregarVeiculos(); scrollSuavePara(document.getElementById('lista-veiculos').lastElementChild);
+    });
+
+    await carregarEstoque(); await carregarVeiculos();
+  });
+
+  async function carregarEstoque(){
+    var campos=PODE_ADMIN_ESTOQUE?'*':'id,empresa_id,nome,categoria,marca,descricao,sku,unidade,quantidade_total,quantidade_disponivel,peso_kg,consumo_w,unidades_por_case,especificacoes,observacoes,created_at,updated_at'; var res=await EF.client.from('estoque_itens').select(campos).eq('empresa_id',EF.profile.empresa_id).order('categoria',{ascending:true}).order('nome',{ascending:true});
+    if(res.error){ document.getElementById('resumo').textContent='Erro ao carregar: '+res.error.message; return; }
+    ITENS=res.data||[]; await carregarJobsAtivos(); montarCategorias(); renderizarResumo(); renderizarTabela();
+  }
+
+  async function carregarJobsAtivos(){
+    JOBS_POR_ITEM={};
+    var tabelas=['evento_itens_extras','evento_itens_video','evento_itens_som','evento_itens_luz'];
+    for(var i=0;i<tabelas.length;i++){
+      try{
+        var r=await EF.client.from(tabelas[i]).select('evento_id,estoque_item_id').not('estoque_item_id','is',null);
+        (r.data||[]).forEach(function(row){ if(!row.estoque_item_id) return; if(!JOBS_POR_ITEM[row.estoque_item_id]) JOBS_POR_ITEM[row.estoque_item_id]=new Set(); JOBS_POR_ITEM[row.estoque_item_id].add(row.evento_id); });
+      }catch(err){}
+    }
+  }
+
+  function montarCategorias(){
+    var sel=document.getElementById('filtro-categoria'); if(!sel) return; sel.innerHTML='<option value="">Todas as categorias</option>';
+    CATEGORIAS_ESTOQUE.forEach(function(cat){ var opt=document.createElement('option'); opt.value=cat; opt.textContent=cat; sel.appendChild(opt); });
+  }
+
+  function renderizarResumo(){
+    var cats={}; ITENS.forEach(function(it){cats[it.categoria]=true;});
+    var abaixo=ITENS.filter(function(it){return Number(it.quantidade_total)>0 && (Number(it.quantidade_disponivel)/Number(it.quantidade_total))<0.3;}).length;
+    var emUso=ITENS.reduce(function(acc,it){return acc+inUseCount(it);},0);
+    document.getElementById('resumo').textContent=ITENS.length + (ITENS.length===1?' item cadastrado':' itens cadastrados');
+    document.getElementById('kpi-total').textContent=ITENS.length;
+    document.getElementById('kpi-total-sub').textContent=Object.keys(cats).length + ' categorias com itens';
+    document.getElementById('kpi-baixo').textContent=abaixo;
+    document.getElementById('kpi-categorias').textContent=Object.keys(cats).length;
+    document.getElementById('kpi-uso').textContent=emUso;
+  }
+
+  function getFilteredItems(){
+    var q=(document.getElementById('busca-estoque').value||'').trim().toLowerCase();
+    var cat=document.getElementById('filtro-categoria').value||'';
+    return ITENS.filter(function(it){
+      if(cat && it.categoria!==cat) return false;
+      if(currentTab==='cases' && !isCaseItem(it)) return false;
+      if(currentTab==='itens' && isCaseItem(it)) return false;
+      if(!q) return true;
+      var hay=((it.nome||'')+' '+(it.marca||'')+' '+(it.descricao||'')+' '+(it.sku||'')).toLowerCase();
+      return hay.indexOf(q)!==-1;
+    });
+  }
+
+  function renderizarTabela(){
+    var tbody=document.getElementById('lista-itens-tabela'); if(!tbody) return; var itens=getFilteredItems(); tbody.innerHTML='';
+    if(!itens.length){ tbody.innerHTML='<tr><td colspan="'+(PODE_ADMIN_ESTOQUE?8:6)+'" class="stock-empty">Nenhum item encontrado para este filtro.</td></tr>';  return; }
+    itens.forEach(function(it){ tbody.appendChild(linhaTabelaItem(it)); });
+  }
+
+  function linhaTabelaItem(it){
+    var tr=document.createElement('tr');
+    var jobs=JOBS_POR_ITEM[it.id] ? JOBS_POR_ITEM[it.id].size : 0;
+    tr.innerHTML=''
+      + '<td><div class="td-item"><div class="item-title">'+esc(it.nome)+'</div><div class="item-meta">'+esc((it.marca||'Sem marca') + (it.sku ? ' · '+it.sku : '') + (it.descricao ? ' · '+it.descricao : ''))+'</div></div></td>'
+      + '<td><span class="cat-chip"><span class="cat-dot" style="background:'+corCategoria(it.categoria)+'"></span>'+esc(it.categoria||'—')+'</span></td>'
+      + '<td><span class="stock-num">'+esc(String(it.quantidade_disponivel||0))+'</span><span class="stock-muted" style="display:block;margin-top:2px;">de '+esc(String(it.quantidade_total||0))+' '+esc((it.unidade||'un').toLowerCase())+'</span></td>'
+      + (PODE_ADMIN_ESTOQUE ? '<td class="stock-price-col"><span class="stock-num">'+esc(fmtMoeda(it.preco_unitario||0))+'</span></td>' : '')
+      + '<td><span class="stock-muted">'+esc(it.peso_kg != null ? Number(it.peso_kg).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})+' kg' : '—')+'</span>'+(it.unidades_por_case ? '<span class="stock-muted" style="display:block;margin-top:2px;">'+esc(String(it.unidades_por_case))+' / case</span>' : '')+'</td>'
+      + '<td><span class="stock-kw">'+esc(fmtPotencia(it.consumo_w))+'</span></td>'
+      + '<td><span class="stock-muted">'+(jobs? jobs+' ativo'+(jobs>1?'s':''):'—')+'</span></td>'
+      + (PODE_ADMIN_ESTOQUE ? '<td class="stock-admin-only" style="text-align:right;"><button class="stock-action" data-act="toggle">editar</button> <button class="stock-action" data-act="remove">remover</button></td>' : '');
+    var actions=tr.querySelectorAll('[data-act]');
+    actions.forEach(function(btn){btn.addEventListener('click', async function(){
+      var act=btn.getAttribute('data-act');
+      if(act==='remove'){
+        if(!confirm('Remover "'+it.nome+'" do estoque?')) return;
+        var r=await EF.client.from('estoque_itens').delete().eq('id',it.id);
+        if(r.error){alert('Erro ao remover: '+r.error.message); return;} await carregarEstoque();
+      } else {
+        var next=tr.nextElementSibling;
+        if(next && next.classList.contains('stock-edit-row')){ next.remove(); return; }
+        var panel=document.createElement('tr'); panel.className='stock-edit-row'; var td=document.createElement('td'); td.colSpan=8; td.appendChild(montarPainelEdicaoItem(it)); panel.appendChild(td); tr.parentNode.insertBefore(panel,tr.nextSibling);
+      }
+    });});
+    return tr;
+  }
+
+  function montarPainelEdicaoItem(it){
+    var wrap=document.createElement('div'); wrap.className='stock-edit-panel';
+    wrap.innerHTML=''
+      + '<div class="form-title" style="margin-bottom:12px;">Editar item</div>'
+      + '<div class="form-grid" style="grid-template-columns:1fr;"><div class="form-field"><label>Nome</label><input type="text" id="ed-nome" value="'+esc(it.nome)+'"></div></div>'
+      + '<div class="form-grid" style="margin-top:14px;grid-template-columns:1fr 1fr;"><div class="form-field"><label>Marca</label><input type="text" id="ed-marca" value="'+esc(it.marca||'')+'"></div><div class="form-field"><label>SKU</label><input type="text" id="ed-sku" value="'+esc(it.sku||'')+'"></div></div>'
+      + '<div class="form-grid" style="margin-top:14px;grid-template-columns:1fr 1fr;"><div class="form-field"><label>Quantidade em estoque</label><input type="number" min="0" step="1" id="ed-total" value="'+esc(String(it.quantidade_total||0))+'"></div><div class="form-field"><label>Unidade</label><select id="ed-unidade"><option value="Unidade">Unidade</option><option value="Par">Par</option><option value="Kit">Kit</option><option value="Metro">Metro</option><option value="Caixa">Caixa</option></select></div></div>'
+      + '<div class="form-grid" style="margin-top:14px;grid-template-columns:1fr;"><div class="form-field"><label>Preço de locação / dia</label><input type="number" min="0" step="0.01" id="ed-preco" value="'+esc(String(it.preco_unitario||0))+'"></div></div>'
+      + '<div class="form-grid" style="margin-top:14px;grid-template-columns:1fr 1fr 1fr;"><div class="form-field"><label>Peso (kg)</label><input type="number" min="0" step="0.01" id="ed-peso" value="'+esc(it.peso_kg==null?'':String(it.peso_kg))+'"></div><div class="form-field"><label>Consumo (W)</label><input type="number" min="0" step="0.01" id="ed-consumo" value="'+esc(it.consumo_w==null?'':String(it.consumo_w))+'"></div><div class="form-field"><label>Un. / case</label><input type="number" min="1" step="1" id="ed-case" value="'+esc(it.unidades_por_case==null?'':String(it.unidades_por_case))+'"></div></div>'
+      + '<div class="form-grid" style="margin-top:14px;grid-template-columns:1fr 1fr;"><div class="form-field"><label>Categoria</label><select id="ed-cat"></select></div><div class="form-field"><label>Disponível agora</label><input type="number" min="0" step="1" id="ed-disp" value="'+esc(String(it.quantidade_disponivel||0))+'"></div></div>'
+      + '<div class="form-field" style="margin-top:14px;"><label>Descrição</label><textarea id="ed-desc">'+esc(it.descricao||'')+'</textarea></div>'
+      + '<div style="display:flex;justify-content:flex-end;gap:10px;margin-top:14px;"><button type="button" class="stock-button" id="btn-cancel">Cancelar</button><button type="button" class="stock-button primary" id="btn-save">Salvar</button></div>'
+      + '<div id="ed-msg" class="msg"></div>';
+    var sel=wrap.querySelector('#ed-cat');
+    CATEGORIAS_ESTOQUE.forEach(function(cat){ var opt=document.createElement('option'); opt.value=cat; opt.textContent=cat; if(cat===it.categoria) opt.selected=true; sel.appendChild(opt); });
+    wrap.querySelector('#ed-unidade').value=it.unidade||'Unidade';
+    wrap.querySelector('#btn-cancel').addEventListener('click',function(){ var row=wrap.closest('tr.stock-edit-row'); if(row) row.remove(); });
+    wrap.querySelector('#btn-save').addEventListener('click', async function(){
+      var msg=wrap.querySelector('#ed-msg'); var total=parseInt(wrap.querySelector('#ed-total').value,10)||0; var disp=parseInt(wrap.querySelector('#ed-disp').value,10)||0; if(disp>total){msg.style.color='#e28d81'; msg.textContent='Disponível não pode ser maior que o total.'; return;}
+      var payload={
+        nome:wrap.querySelector('#ed-nome').value.trim(),
+        marca:wrap.querySelector('#ed-marca').value.trim(),
+        sku:wrap.querySelector('#ed-sku').value.trim(),
+        unidade:wrap.querySelector('#ed-unidade').value||'Unidade',
+        categoria:wrap.querySelector('#ed-cat').value,
+        quantidade_total:total,
+        quantidade_disponivel:disp,
+        descricao:wrap.querySelector('#ed-desc').value.trim(),
+        preco_unitario:parseFloat(wrap.querySelector('#ed-preco').value)||0,
+        peso_kg:wrap.querySelector('#ed-peso').value === '' ? null : (parseFloat(wrap.querySelector('#ed-peso').value)||0),
+        consumo_w:wrap.querySelector('#ed-consumo').value === '' ? null : (parseFloat(wrap.querySelector('#ed-consumo').value)||0),
+        unidades_por_case:wrap.querySelector('#ed-case').value === '' ? null : (parseInt(wrap.querySelector('#ed-case').value,10)||null)
+      };
+      msg.style.color='#8c8c91'; msg.textContent='Salvando...';
+      var r=await EF.client.from('estoque_itens').update(payload).eq('id',it.id); if(r.error){msg.style.color='#e28d81'; msg.textContent=r.error.message; return;} await carregarEstoque();
+    });
+    return wrap;
+  }
+
+  async function carregarVeiculos(){
+    var res=await EF.client.from('estoque_veiculos').select('*').eq('empresa_id',EF.profile.empresa_id).order('created_at',{ascending:true}); if(res.error) return; VEICULOS=res.data||[];
+    var hojeISO=new Date(); hojeISO.setMinutes(hojeISO.getMinutes()-hojeISO.getTimezoneOffset()); hojeISO=hojeISO.toISOString().slice(0,10); VEICULOS_USO_HOJE={};
+    if(VEICULOS.length){ var resUso=await EF.client.from('evento_logistica_veiculos').select('veiculo_id, dia, evento_id, eventos(nome)').eq('dia',hojeISO).not('veiculo_id','is',null); (resUso.data||[]).forEach(function(row){VEICULOS_USO_HOJE[row.veiculo_id]={eventoNome:row.eventos ? row.eventos.nome : 'outro evento'};}); }
+    renderizarVeiculos();
+  }
+  function renderizarVeiculos(){
+    var wrap=document.getElementById('lista-veiculos'); var empty=document.getElementById('veiculos-vazio'); wrap.innerHTML=''; empty.classList.toggle('hidden',VEICULOS.length>0);
+    VEICULOS.forEach(function(v){ var uso=VEICULOS_USO_HOJE[v.id]; var row=document.createElement('div'); row.className='vehicle-row'; row.innerHTML=''
+      + '<div style="flex:1;min-width:0;"><div class="item-title" style="font-size:15px;">'+esc(v.nome)+'</div><div class="item-meta">'+esc([v.placa,v.tipo,v.observacoes].filter(Boolean).join(' · ') || 'Sem detalhes')+'</div></div>'
+      + '<div>'+(uso?'<span class="status-pill busy">em uso hoje — '+esc(uso.eventoNome)+'</span>':'<span class="status-pill free">livre hoje</span>')+'</div>'
+      + (PODE_ADMIN_ESTOQUE?'<button class="stock-action" data-rm-veiculo="'+esc(v.id)+'">remover</button>':'');
+      wrap.appendChild(row); var remover=row.querySelector('[data-rm-veiculo]'); if(remover) remover.addEventListener('click', async function(){ if(!confirm('Remover "'+v.nome+'" da frota?')) return; var r=await EF.client.from('estoque_veiculos').delete().eq('id',v.id); if(r.error){alert('Erro ao remover: '+r.error.message); return;} VEICULOS=VEICULOS.filter(function(x){return x.id!==v.id;}); renderizarVeiculos(); });
+    });
+  }
+})();
+</script>
+<script src="ef-ui.js?v=27"></script>
+</body>
+</html>

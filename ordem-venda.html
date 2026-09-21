@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ordens de Venda — EventFlow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="ef-config.js"></script>
+<script src="ef-auth.js?v=27"></script>
+<link rel="stylesheet" href="ef-ui.css">
+<style>
+body{margin:0;background:#09090b;color:#f3f0ea;font-family:'IBM Plex Sans',sans-serif}.mono{font-family:'IBM Plex Mono',monospace}.disp{font-family:'Space Grotesk',sans-serif}
+.ov-wrap{display:flex;flex-direction:column;gap:22px}.ov-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px}.ov-head h1{margin:0 0 8px;font-size:34px}.ov-sub{color:#8c8c91;font-size:14px}.ov-toolbar{display:grid;grid-template-columns:minmax(260px,1fr) 220px;gap:10px}.ov-input,.ov-select{height:46px;background:#111214;border:1px solid rgba(243,240,234,.08);color:#f3f0ea;border-radius:14px;padding:0 14px}.ov-list{display:flex;flex-direction:column;gap:14px}.ov-card{background:#0f1013;border:1px solid rgba(243,240,234,.08);border-radius:20px;overflow:hidden}.ov-card-head{padding:18px 20px;display:flex;justify-content:space-between;gap:20px;align-items:flex-start;border-bottom:1px solid rgba(243,240,234,.06)}.ov-client{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:600}.ov-meta{font-size:12px;color:#8c8c91;margin-top:5px}.ov-status{display:inline-flex;padding:6px 10px;border-radius:999px;border:1px solid rgba(155,180,199,.18);background:rgba(155,180,199,.08);color:#b7c8d5;font-size:11px}.ov-table{width:100%;border-collapse:collapse}.ov-table th{font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:.12em;color:#5c5c62;text-align:left;padding:12px 20px;border-bottom:1px solid rgba(243,240,234,.06)}.ov-table td{padding:13px 20px;border-bottom:1px solid rgba(243,240,234,.05);font-size:13px}.ov-table tr:last-child td{border-bottom:none}.ov-item{font-weight:600}.ov-muted{color:#8c8c91;font-size:12px}.ov-foot{padding:16px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;border-top:1px solid rgba(243,240,234,.06)}.ov-actions{display:flex;gap:10px;flex-wrap:wrap}.ov-btn{height:40px;padding:0 14px;border-radius:12px;border:1px solid rgba(243,240,234,.1);background:#141418;color:#f3f0ea;font-weight:600;cursor:pointer}.ov-btn.primary{background:#9bb4c7;color:#09090b;border-color:#9bb4c7}.ov-empty{padding:30px;border:1px dashed rgba(243,240,234,.1);border-radius:18px;color:#8c8c91}.ov-note{color:#8c8c91;font-size:12px;max-width:760px;line-height:1.5}.ov-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.ov-kpi{background:#0f1013;border:1px solid rgba(243,240,234,.08);border-radius:16px;padding:16px}.ov-kpi span{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.13em;text-transform:uppercase;color:#5c5c62}.ov-kpi strong{display:block;font-family:'Space Grotesk',sans-serif;font-size:25px;margin-top:8px}@media(max-width:800px){.ov-toolbar{grid-template-columns:1fr}.ov-kpis{grid-template-columns:1fr}.ov-card-head{flex-direction:column}.ov-table{min-width:720px}.ov-card{overflow:auto}}
+</style>
+</head>
+<body>
+<div style="width:100%;min-height:100vh;display:flex;background:#09090b;color:#f3f0ea;"><div style="width:220px;flex-shrink:0"></div><main style="flex:1;min-width:0;padding:34px 42px 48px"><div class="ov-wrap">
+<div class="ov-head"><div><div class="mono" id="hoje" style="font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:#5c5c62;margin-bottom:10px"></div><h1 class="disp">Ordens de Venda</h1></div></div>
+<div class="ov-kpis"><div class="ov-kpi"><span>Ordens abertas</span><strong id="kpi-abertas">—</strong></div><div class="ov-kpi"><span>Em produção</span><strong id="kpi-producao">—</strong></div><div class="ov-kpi"><span>Itens vendidos</span><strong id="kpi-itens">—</strong></div></div>
+<div class="ov-toolbar"><input id="busca" class="ov-input" type="search" placeholder="Buscar cliente, evento, item..."><select id="filtro-status" class="ov-select"><option value="">Todos os status</option><option value="nova">Nova</option><option value="em_producao">Em produção</option><option value="concluida">Concluída</option><option value="cancelada">Cancelada</option></select></div>
+<div id="lista" class="ov-list"><div class="ov-empty">Carregando ordens de venda…</div></div>
+</div></main></div>
+<script>
+(function(){
+var ORDENS=[], ITENS=[], EVENTOS=[];
+var LABEL={nova:'Nova',em_producao:'Em produção',concluida:'Concluída',cancelada:'Cancelada'};
+function esc(s){var d=document.createElement('div');d.textContent=s==null?'':s;return d.innerHTML}
+function fmtData(v){if(!v)return '—';return new Date(v+'T00:00:00').toLocaleDateString('pt-BR')}
+function normalize(s){return (s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()}
+document.addEventListener('DOMContentLoaded',async function(){
+ if(!window.EF||!EF.ready)return; var ok=await EF.init({}); if(!ok)return;
+ if(['gerencia','producao'].indexOf(EF.profile.role)===-1){location.href='dashboard.html';return;}
+ document.getElementById('hoje').textContent=new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'});
+ document.getElementById('busca').addEventListener('input',render);
+ document.getElementById('filtro-status').addEventListener('change',render);
+ await carregar();
+});
+async function carregar(){
+ var r=await EF.client.from('ordens_venda').select('*').eq('empresa_id',EF.profile.empresa_id).order('created_at',{ascending:false});
+ if(r.error){document.getElementById('lista').innerHTML='<div class="ov-empty">Erro ao carregar: '+esc(r.error.message)+'</div>';return}
+ ORDENS=r.data||[];
+ var ids=ORDENS.map(function(o){return o.id});
+ if(ids.length){var ri=await EF.client.from('ordem_venda_itens').select('*').in('ordem_venda_id',ids).order('ordem',{ascending:true});ITENS=ri.data||[]}else ITENS=[];
+ var evIds=ORDENS.map(function(o){return o.evento_id}).filter(Boolean); EVENTOS=[];
+ if(evIds.length){var re=await EF.client.from('eventos').select('id,nome,data_inicio').in('id',evIds);EVENTOS=re.data||[]}
+ render();
+}
+function render(){
+ var q=normalize(document.getElementById('busca').value), st=document.getElementById('filtro-status').value;
+ var filtradas=ORDENS.filter(function(o){if(st&&o.status!==st)return false; if(!q)return true; var ev=EVENTOS.find(function(e){return e.id===o.evento_id}); var itens=ITENS.filter(function(i){return i.ordem_venda_id===o.id}); var hay=[o.cliente,o.contato,o.vendedor,o.observacoes,ev&&ev.nome].concat(itens.map(function(i){return i.descricao+' '+i.categoria})).join(' ');return normalize(hay).indexOf(q)!==-1});
+ document.getElementById('kpi-abertas').textContent=ORDENS.filter(function(o){return o.status==='nova'}).length;
+ document.getElementById('kpi-producao').textContent=ORDENS.filter(function(o){return o.status==='em_producao'}).length;
+ document.getElementById('kpi-itens').textContent=ITENS.reduce(function(a,i){return a+Number(i.quantidade||0)},0).toLocaleString('pt-BR');
+ var wrap=document.getElementById('lista');wrap.innerHTML=''; if(!filtradas.length){wrap.innerHTML='<div class="ov-empty">Nenhuma Ordem de Venda encontrada.</div>';return}
+ filtradas.forEach(function(o){wrap.appendChild(card(o))});
+}
+function card(o){
+ var ev=EVENTOS.find(function(e){return e.id===o.evento_id}); var itens=ITENS.filter(function(i){return i.ordem_venda_id===o.id}); var c=document.createElement('section');c.className='ov-card';
+ var rows=itens.map(function(i){return '<tr><td><div class="ov-item">'+esc(i.descricao)+'</div>'+(i.observacoes?'<div class="ov-muted">'+esc(i.observacoes)+'</div>':'')+'</td><td><span class="ov-muted">'+esc(i.categoria||'Geral')+'</span></td><td>'+Number(i.quantidade||0).toLocaleString('pt-BR')+'</td></tr>'}).join('');
+ c.innerHTML='<div class="ov-card-head"><div><div class="ov-client">'+esc(o.cliente)+'</div><div class="ov-meta">OV · '+fmtData(o.data)+(ev?' · '+esc(ev.nome):' · sem evento vinculado')+(o.vendedor?' · vendedor: '+esc(o.vendedor):'')+'</div></div><span class="ov-status">'+esc(LABEL[o.status]||o.status)+'</span></div><div style="overflow:auto"><table class="ov-table"><thead><tr><th>Item vendido</th><th>Área</th><th>Qtd.</th></tr></thead><tbody>'+rows+'</tbody></table></div><div class="ov-foot"><div class="ov-note">'+(o.observacoes?esc(o.observacoes):'Sem observações comerciais.')+'</div><div class="ov-actions"></div></div>';
+ var acts=c.querySelector('.ov-actions');
+ var sel=document.createElement('select');sel.className='ov-select';sel.style.height='40px';['nova','em_producao','concluida','cancelada'].forEach(function(s){var op=new Option(LABEL[s],s,false,o.status===s);sel.add(op)});sel.addEventListener('change',async function(){var r=await EF.client.from('ordens_venda').update({status:sel.value}).eq('id',o.id);if(r.error){alert(r.error.message);return}o.status=sel.value;render()});acts.appendChild(sel);
+ if(o.evento_id){var b=document.createElement('button');b.className='ov-btn primary';b.textContent='Montar Ordem de Serviço';b.addEventListener('click',function(){location.href='ordem-servico.html?evento='+encodeURIComponent(o.evento_id)});acts.appendChild(b)} else {var s=document.createElement('span');s.className='ov-muted';s.textContent='Vincule um evento no Comercial para montar a OS.';acts.appendChild(s)}
+ return c;
+}
+})();
+</script>
+<script src="ef-ui.js?v=27"></script>
+</body></html>

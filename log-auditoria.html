@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Log de auditoria — EventFlow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="ef-config.js"></script>
+<script src="ef-auth.js?v=27"></script>
+<link rel="stylesheet" href="ef-ui.css">
+<style>
+  body{margin:0;background:#0a0a0b;color:#f3f1ec;font-family:'Inter',sans-serif}
+  .mono{font-family:'IBM Plex Mono',monospace}.disp{font-family:'Space Grotesk',sans-serif}
+  .audit-head{display:flex;gap:16px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;margin-bottom:24px}
+  .audit-title h1{margin:0 0 6px;font-size:25px}.audit-title p{margin:0;color:#85858b;font-size:13px;max-width:760px;line-height:1.55}
+  .live{display:flex;align-items:center;gap:8px;font-size:11px;color:#8ea896;border:1px solid #20352a;background:#0d1711;border-radius:999px;padding:8px 11px}.dot{width:7px;height:7px;border-radius:50%;background:#70a982}
+  .cards{display:grid;grid-template-columns:repeat(4,minmax(150px,1fr));gap:10px;margin-bottom:16px}.card{border:1px solid #202024;background:#101012;border-radius:13px;padding:14px 15px}.card small{display:block;color:#73737a;font-size:10px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:7px}.card strong{font:600 22px 'Space Grotesk',sans-serif}
+  .filters{display:grid;grid-template-columns:180px 180px 190px 1fr auto;gap:10px;padding:13px;border:1px solid #202024;background:#101012;border-radius:13px;margin-bottom:16px}
+  input,select{box-sizing:border-box;width:100%;height:38px;border:1px solid #29292e;border-radius:9px;background:#0c0c0e;color:#eee;padding:0 11px;font:12px 'Inter',sans-serif;color-scheme:dark}button{height:38px;border:1px solid #313138;border-radius:9px;background:#17171a;color:#eee;padding:0 14px;cursor:pointer;font-weight:600}
+  .group{margin-top:22px}.group-title{display:flex;align-items:center;gap:10px;color:#85858b;font:500 10px 'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}.group-title:after{content:"";height:1px;background:#202024;flex:1}
+  .entry{border:1px solid #202024;background:#0e0e10;border-radius:12px;margin-bottom:8px;overflow:hidden}.entry-main{display:grid;grid-template-columns:108px minmax(160px,1fr) minmax(150px,1.2fr) 110px;gap:15px;padding:13px 14px;align-items:center;cursor:pointer}.time{font:500 11px 'IBM Plex Mono',monospace;color:#888}.who strong{font-size:12.5px;display:block}.who span,.what span{font-size:10.5px;color:#777;display:block;margin-top:3px}.what strong{font-size:12.5px}.badge{justify-self:end;font:500 9.5px 'IBM Plex Mono',monospace;border:1px solid #303038;border-radius:999px;padding:5px 8px;text-transform:uppercase;letter-spacing:.04em}.badge.ins{color:#8fb7a0;border-color:#274232}.badge.upd{color:#9fb6cf;border-color:#2b3b4d}.badge.del{color:#d38f85;border-color:#54312c}
+  .details{display:none;border-top:1px solid #202024;padding:12px 14px 14px}.entry.open .details{display:block}.changes{display:grid;gap:7px}.change{display:grid;grid-template-columns:160px 1fr 28px 1fr;gap:8px;align-items:start;font-size:11px}.field{font-family:'IBM Plex Mono',monospace;color:#8f8f96}.before,.after{background:#121215;border:1px solid #25252a;border-radius:7px;padding:8px;word-break:break-word;white-space:pre-wrap}.arrow{text-align:center;color:#555;padding-top:7px}.empty{border:1px dashed #2a2a2e;border-radius:12px;padding:40px;text-align:center;color:#777}.warn{font-size:10.5px;color:#6f6f76;margin-top:12px;line-height:1.5}
+  @media(max-width:1000px){.cards{grid-template-columns:1fr 1fr}.filters{grid-template-columns:1fr 1fr}.entry-main{grid-template-columns:100px 1fr}.badge{justify-self:start}.change{grid-template-columns:1fr}.arrow{display:none}}
+</style>
+</head>
+<body>
+<div style="width:100%;min-height:100vh;box-sizing:border-box;display:flex;background:#0a0a0b;color:#f3f1ec">
+  <div style="width:220px;flex-shrink:0"></div>
+  <div style="flex-grow:1;padding:36px 48px 50px 0;box-sizing:border-box;min-width:0">
+    <div class="audit-head">
+      <div class="audit-title"><div class="mono" style="font-size:10px;color:#666;margin-bottom:9px;text-transform:uppercase;letter-spacing:.08em">Sistema / Segurança</div><h1 class="disp">Log de auditoria</h1></div>
+      <div class="live"><span class="dot"></span>registro imediato no banco</div>
+    </div>
+
+    <div class="cards">
+      <div class="card"><small>ações no período</small><strong id="c-total">—</strong></div>
+      <div class="card"><small>usuários ativos</small><strong id="c-users">—</strong></div>
+      <div class="card"><small>alterações</small><strong id="c-updates">—</strong></div>
+      <div class="card"><small>exclusões</small><strong id="c-deletes">—</strong></div>
+    </div>
+
+    <div class="filters">
+      <select id="periodo"><option value="12">Últimas 12 horas</option><option value="24">Últimas 24 horas</option><option value="168">Últimos 7 dias</option><option value="720">Últimos 30 dias</option></select>
+      <select id="acao"><option value="">Todas as ações</option><option value="INSERT">Cadastros</option><option value="UPDATE">Alterações</option><option value="DELETE">Exclusões</option></select>
+      <select id="usuario"><option value="">Todos os usuários</option></select>
+      <input id="busca" type="search" placeholder="Buscar módulo, item, usuário…">
+      <button id="recarregar">Atualizar</button>
+    </div>
+
+    <div id="lista"><div class="empty">Carregando auditoria…</div></div>
+  </div>
+</div>
+<script>
+(function(){
+  var rows=[];
+  var labels={
+    profiles:'Usuários',eventos:'Eventos',clientes:'Clientes',estoque_itens:'Equipamentos',estoque_cases:'Cases',estoque_case_itens:'Itens de case',estoque_veiculos:'Veículos',
+    orcamentos:'Comercial',orcamento_itens:'Itens de venda',ordens_venda:'Ordens de Venda',ordem_venda_itens:'Itens da OV',
+    evento_itens_extras:'Planejamento das áreas',evento_varas:'Aéreos / Solos',evento_vara_itens:'Itens Aéreo / Solo',evento_equipamentos:'Equipamentos do evento',
+    evento_servicos_avulsos:'Serviços do evento',evento_video_casas:'Vídeo',evento_cenografia_pecas:'Cenografia',evento_logistica_dias:'Logística',evento_logistica_veiculos:'Veículos da logística',
+    ordens_servico:'Ordem de Serviço',ordem_servico_itens:'Itens da OS',notas:'Notas',tarefas:'Tarefas'
+  };
+  var fieldLabels={nome:'Nome',titulo:'Título',descricao:'Descrição',quantidade:'Quantidade',quantidade_total:'Quantidade total',quantidade_disponivel:'Disponível',preco_diaria:'Preço/dia',valor_unitario:'Valor unitário',status:'Status',role:'Nível',ativo:'Ativo',cliente:'Cliente',contato:'Contato',vendedor:'Vendedor',observacoes:'Observações',categoria:'Categoria',evento_id:'Evento',endereco_id:'Endereço',peso_kg:'Peso (kg)',consumo_w:'Consumo (W)',placa:'Placa',data:'Data',area_m2:'Área (m²)',peso_por_ponto_manual:'Peso/ponto'};
+
+  document.addEventListener('DOMContentLoaded',async function(){
+    if(!window.EF||!EF.ready)return;
+    var ok=await EF.init({gerenciaOnly:true}); if(!ok)return;
+    bind(); await load();
+  });
+
+  function bind(){
+    ['periodo','acao','usuario'].forEach(function(id){document.getElementById(id).addEventListener('change',render)});
+    document.getElementById('busca').addEventListener('input',render);
+    document.getElementById('recarregar').addEventListener('click',load);
+  }
+
+  async function load(){
+    var hours=Number(document.getElementById('periodo').value||12);
+    var since=new Date(Date.now()-hours*3600000).toISOString();
+    var q=EF.client.from('audit_logs').select('id,empresa_id,actor_user_id,actor_nome,actor_email,actor_role,acao,tabela,registro_id,registro_label,campos_alterados,ocorrido_em').eq('empresa_id',EF.profile.empresa_id).gte('ocorrido_em',since).order('ocorrido_em',{ascending:false}).limit(2000);
+    var res=await q;
+    if(res.error){document.getElementById('lista').innerHTML='<div class="empty">Erro ao carregar o log: '+esc(res.error.message)+'</div>';return;}
+    rows=res.data||[]; fillUsers(); render();
+  }
+
+  function fillUsers(){
+    var sel=document.getElementById('usuario'),cur=sel.value;
+    var m={}; rows.forEach(function(r){var k=r.actor_user_id||r.actor_nome||'sistema';m[k]=r.actor_nome||r.actor_email||'Sistema';});
+    sel.innerHTML='<option value="">Todos os usuários</option>'+Object.keys(m).sort(function(a,b){return m[a].localeCompare(m[b]);}).map(function(k){return '<option value="'+escAttr(k)+'">'+esc(m[k])+'</option>';}).join('');
+    sel.value=cur;
+  }
+
+  function render(){
+    var ac=document.getElementById('acao').value, us=document.getElementById('usuario').value, q=(document.getElementById('busca').value||'').toLowerCase().trim();
+    var data=rows.filter(function(r){
+      if(ac&&r.acao!==ac)return false;
+      var uk=r.actor_user_id||r.actor_nome||'sistema'; if(us&&uk!==us)return false;
+      if(q){var hay=[r.actor_nome,r.actor_email,r.tabela,r.registro_label,labels[r.tabela]].join(' ').toLowerCase();if(hay.indexOf(q)<0)return false;}
+      return true;
+    });
+    document.getElementById('c-total').textContent=data.length;
+    document.getElementById('c-users').textContent=new Set(data.map(function(r){return r.actor_user_id||r.actor_nome||'sistema';})).size;
+    document.getElementById('c-updates').textContent=data.filter(function(r){return r.acao==='UPDATE';}).length;
+    document.getElementById('c-deletes').textContent=data.filter(function(r){return r.acao==='DELETE';}).length;
+    if(!data.length){document.getElementById('lista').innerHTML='<div class="empty">Nenhuma ação encontrada nesse período.</div>';return;}
+    var groups={}; data.forEach(function(r){var k=window12(r.ocorrido_em);(groups[k]||(groups[k]=[])).push(r);});
+    document.getElementById('lista').innerHTML=Object.keys(groups).sort().reverse().map(function(k){return '<section class="group"><div class="group-title">'+esc(k)+'</div>'+groups[k].map(entry).join('')+'</section>';}).join('');
+    document.querySelectorAll('.entry-main').forEach(function(el){el.addEventListener('click',function(){el.parentElement.classList.toggle('open');});});
+  }
+
+  function entry(r){
+    var a=r.acao, cls=a==='INSERT'?'ins':a==='DELETE'?'del':'upd', al=a==='INSERT'?'Cadastrou':a==='DELETE'?'Excluiu':'Alterou';
+    var mod=labels[r.tabela]||r.tabela, label=r.registro_label||('#'+(r.registro_id||'registro'));
+    return '<article class="entry"><div class="entry-main"><div class="time">'+fmtTime(r.ocorrido_em)+'<span style="display:block;margin-top:4px;color:#555">'+fmtDate(r.ocorrido_em)+'</span></div><div class="who"><strong>'+esc(r.actor_nome||'Sistema')+'</strong><span>'+esc(r.actor_role||r.actor_email||'')+'</span></div><div class="what"><strong>'+esc(mod)+' · '+esc(label)+'</strong><span>'+countChanges(r.campos_alterados)+' campo(s) registrado(s)</span></div><div class="badge '+cls+'">'+al+'</div></div><div class="details">'+changeHtml(r.campos_alterados)+'</div></article>';
+  }
+  function changeHtml(obj){
+    obj=obj||{}; var ks=Object.keys(obj); if(!ks.length)return '<div style="color:#777;font-size:11px">Sem diferenças detalhadas.</div>';
+    return '<div class="changes">'+ks.map(function(k){var v=obj[k]||{};return '<div class="change"><div class="field">'+esc(fieldLabels[k]||k)+'</div><div class="before">'+esc(val(v.antes))+'</div><div class="arrow">→</div><div class="after">'+esc(val(v.depois))+'</div></div>';}).join('')+'</div>';
+  }
+  function countChanges(o){return Object.keys(o||{}).length}
+  function val(v){if(v===null||typeof v==='undefined')return '—';if(typeof v==='object')return JSON.stringify(v);if(v===true)return 'Sim';if(v===false)return 'Não';return String(v)}
+  function window12(iso){var d=new Date(iso),start=new Date(d);start.setMinutes(0,0,0);start.setHours(d.getHours()<12?0:12);var end=new Date(start.getTime()+12*3600000);return fmtDate(start)+' · '+pad(start.getHours())+':00–'+pad(end.getHours()%24)+':00'}
+  function fmtTime(x){var d=new Date(x);return pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds())}
+  function fmtDate(x){var d=x instanceof Date?x:new Date(x);return pad(d.getDate())+'/'+pad(d.getMonth()+1)+'/'+d.getFullYear()}
+  function pad(n){return String(n).padStart(2,'0')}
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+  function escAttr(s){return esc(s)}
+})();
+</script>
+<script src="ef-ui.js?v=27"></script>
+</body>
+</html>

@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Equipe — EventFlow</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="ef-config.js"></script>
+<script src="ef-auth.js?v=27"></script>
+<link rel="stylesheet" href="ef-ui.css">
+<style>
+  .fr-head{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:26px}.fr-head h1{margin:0 0 7px}.fr-sub{color:#8c8c91;font-size:13px;line-height:1.5;max-width:650px}.fr-btn{min-height:40px;padding:0 14px;border:1px solid rgba(243,240,234,.12);border-radius:10px;background:#17181c;color:#f3f0ea;cursor:pointer}.fr-btn.primary{background:#9bb4c7!important;color:#0a0a0b!important;border-color:#9bb4c7!important}.fr-btn.small{min-height:32px;padding:0 10px;font-size:11px}.fr-btn.warn{color:#d4b475;border-color:rgba(212,180,117,.25);background:rgba(212,180,117,.06)}
+  .fr-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid rgba(243,240,234,.08);border-radius:16px;overflow:hidden;background:#111113;margin-bottom:22px}.fr-kpi{padding:17px 20px;border-right:1px solid rgba(243,240,234,.08)}.fr-kpi:last-child{border-right:0}.fr-kpi small{display:block;color:#5c5c62;font:500 9px 'IBM Plex Mono',monospace;letter-spacing:.13em;text-transform:uppercase;margin-bottom:8px}.fr-kpi strong{font:600 22px 'Space Grotesk',sans-serif}.fr-kpi span{display:block;color:#78787d;font-size:10.5px;margin-top:4px}
+  .fr-panel{display:block!important;border:1px solid rgba(243,240,234,.08);border-radius:16px;background:linear-gradient(180deg,#111113,#0f1013);padding:18px;margin-bottom:22px}.fr-panel.ef-section-heading{display:block!important}.fr-panel h2{margin:0 0 14px;font-size:17px}.fr-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.fr-field.full{grid-column:1/-1}.fr-field.two{grid-column:span 2}.fr-field.three{grid-column:span 3}.fr-label{display:block;color:#6e6e73;font:500 9px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px}.fr-field input,.fr-field select,.fr-field textarea,.fr-filters input,.fr-filters select{width:100%;box-sizing:border-box}.fr-field textarea{min-height:76px!important}.fr-check{display:flex;align-items:center;gap:9px;min-height:39px;color:#c8c8cc;font-size:12px}.fr-check input{width:auto}.fr-help{color:#64646a;font-size:10.5px;line-height:1.4;margin-top:5px}.fr-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:12px}.fr-msg{font-size:12px;min-height:16px;margin-top:8px}
+  .fr-filters{display:grid;grid-template-columns:1.8fr 1fr;gap:12px;margin-bottom:14px}.fr-list{border:1px solid rgba(243,240,234,.08);border-radius:15px;background:#101012;overflow:hidden}.fr-table-head,.fr-card{display:grid;grid-template-columns:minmax(210px,1.35fr) minmax(160px,1fr) minmax(130px,.8fr) 110px minmax(170px,1fr) 150px;gap:14px;align-items:center}.fr-table-head{padding:10px 14px;background:#0e0f12;border-bottom:1px solid rgba(243,240,234,.08);color:#5c5c62;font:500 9px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase}.fr-card{padding:12px 14px;border-bottom:1px solid rgba(243,240,234,.07)}.fr-card:last-child{border-bottom:0}.fr-card:hover{background:rgba(255,255,255,.015)}.fr-card.inativo{opacity:.58}.fr-name{font:600 13.5px 'Space Grotesk',sans-serif;color:#f3f0ea}.fr-doc{color:#68686e;font:500 9.5px 'IBM Plex Mono',monospace;margin-top:4px}.fr-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}.fr-tag{font:500 8.5px 'IBM Plex Mono',monospace;border-radius:999px;padding:4px 7px;background:#18191d;color:#9b9ba0}.fr-tag.ok{background:rgba(127,168,201,.1);color:#91b7d3}.fr-tag.off{background:rgba(201,105,92,.1);color:#d98478}.fr-cell{min-width:0;color:#bdbdc1;font-size:11.5px;line-height:1.4;word-break:break-word}.fr-cell.muted{color:#797980}.fr-cache{font:600 13px 'Space Grotesk',sans-serif;white-space:nowrap}.fr-note{color:#898990;font-size:11px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.fr-card-actions{display:flex;justify-content:flex-end;gap:6px}.fr-empty{padding:36px 20px;text-align:center;color:#6e6e73}.fr-privacy{font-size:10.5px;color:#66666c;margin:0 0 16px;line-height:1.5}
+  @media(max-width:1100px){.fr-table-head,.fr-card{grid-template-columns:minmax(190px,1.3fr) minmax(140px,1fr) 110px 100px 130px}.fr-table-head>div:nth-child(3),.fr-card>.fr-cell.vehicle{display:none}}
+  @media(max-width:900px){.fr-kpis{grid-template-columns:1fr 1fr}.fr-kpi:nth-child(2){border-right:0}.fr-kpi:nth-child(-n+2){border-bottom:1px solid rgba(243,240,234,.08)}.fr-grid{grid-template-columns:1fr 1fr}.fr-field.three{grid-column:span 1}.fr-table-head{display:none}.fr-list{border:0;background:transparent;overflow:visible}.fr-card{grid-template-columns:1fr auto;border:1px solid rgba(243,240,234,.08);border-radius:13px;margin-bottom:9px;background:#101012}.fr-card>.fr-cell{grid-column:1/-1}.fr-card>.fr-cell.vehicle{display:block}.fr-card-actions{grid-column:2;grid-row:1;align-self:start}}
+  @media(max-width:580px){.fr-head{flex-direction:column}.fr-head .fr-btn{width:100%}.fr-kpis,.fr-grid,.fr-filters{grid-template-columns:1fr}.fr-kpi{border-right:0;border-bottom:1px solid rgba(243,240,234,.08)}.fr-kpi:last-child{border-bottom:0}.fr-field.two{grid-column:auto}.fr-data{grid-template-columns:1fr}.fr-actions{flex-direction:column-reverse}.fr-actions .fr-btn{width:100%}}
+</style>
+</head>
+<body>
+<div class="ef-app-shell">
+  <div class="ef-sidebar"></div>
+  <main class="ef-main">
+    <div class="fr-head">
+      <div><div class="mono" style="color:#5c5c62;font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;margin-bottom:9px">Pessoas e disponibilidade</div><h1>Equipe</h1></div>
+      <button id="btn-novo" class="fr-btn primary" type="button">+ Nova pessoa</button>
+    </div>
+
+    <div class="fr-kpis">
+      <div class="fr-kpi"><small>Equipe interna</small><strong id="kpi-internos">0</strong><span>profissionais ativos</span></div>
+      <div class="fr-kpi"><small>Freelancers</small><strong id="kpi-freelancers">0</strong><span>profissionais ativos</span></div>
+      <div class="fr-kpi"><small>Com veículo</small><strong id="kpi-veiculos">0</strong><span>profissionais ativos</span></div>
+      <div class="fr-kpi"><small>Cachê médio</small><strong id="kpi-cache">R$ 0,00</strong><span>entre os ativos</span></div>
+    </div>
+
+    <section id="bloco-form-freelancer" class="fr-panel" style="display:none">
+      <h2 id="form-titulo">Nova pessoa</h2>
+      <form id="form-freelancer">
+        <input id="f-id" type="hidden">
+        <div class="fr-grid">
+          <div class="fr-field"><label class="fr-label" for="f-tipo">Tipo de vínculo</label><select id="f-tipo" required><option value="interno">Equipe interna</option><option value="freelancer">Freelancer</option></select></div>
+          <div id="campo-profile" class="fr-field three"><label class="fr-label" for="f-profile">Conta do sistema (opcional)</label><select id="f-profile"><option value="">— sem conta vinculada —</option></select></div>
+          <div class="fr-field two"><label class="fr-label" for="f-nome">Nome completo</label><input id="f-nome" maxlength="160" autocomplete="name" required></div>
+          <div class="fr-field"><label class="fr-label" for="f-cache">Preço do cachê</label><input id="f-cache" type="number" min="0" step="0.01" placeholder="0,00" required></div>
+          <div class="fr-field"><label class="fr-label" for="f-cpf">CPF</label><input id="f-cpf" inputmode="numeric" maxlength="14" placeholder="000.000.000-00" required></div>
+          <div class="fr-field"><label class="fr-label" for="f-rg">RG</label><input id="f-rg" maxlength="30" required></div>
+          <div class="fr-field"><label class="fr-label">Veículo próprio</label><label class="fr-check"><input id="f-veiculo" type="checkbox"> Possui veículo</label></div>
+          <div id="campo-veiculo-desc" class="fr-field two" style="display:none"><label class="fr-label" for="f-veiculo-desc">Qual veículo?</label><input id="f-veiculo-desc" maxlength="200"></div>
+          <div class="fr-field two"><label class="fr-label" for="f-funcoes">O que faz / funções</label><textarea id="f-funcoes" rows="2" maxlength="1000" required></textarea></div>
+          <div class="fr-field two"><label class="fr-label" for="f-nota">Nota interna para os produtores</label><textarea id="f-nota" rows="2" maxlength="3000"></textarea></div>
+        </div>
+        <div id="form-msg" class="fr-msg"></div>
+        <div class="fr-actions"><button id="btn-cancelar" class="fr-btn" type="button">Cancelar</button><button id="btn-salvar" class="fr-btn primary" type="submit">Salvar pessoa</button></div>
+      </form>
+    </section>
+
+    <div class="fr-filters">
+      <div><label class="fr-label" for="filtro-busca">Pesquisar</label><input id="filtro-busca" type="search" placeholder="Nome, função, veículo ou nota"></div>
+      <div><label class="fr-label" for="filtro-status">Situação</label><select id="filtro-status"><option value="ativos">Ativos</option><option value="todos">Todos</option><option value="inativos">Inativos</option></select></div>
+    </div>
+    <div id="lista-freelancers" class="fr-list"></div>
+  </main>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  var EQUIPE=[],PROFILES=[];
+  var money=new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'});
+
+  function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  function digits(v){return String(v||'').replace(/\D/g,'');}
+  function cpfMask(v){var d=digits(v).slice(0,11);return d.replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d{1,2})$/,'$1-$2');}
+  function cpfValido(v){var d=digits(v);if(d.length!==11||/^(\d)\1{10}$/.test(d))return false;for(var t=9;t<11;t++){var soma=0;for(var i=0;i<t;i++)soma+=Number(d[i])*(t+1-i);var ver=(soma*10)%11;if(ver===10)ver=0;if(ver!==Number(d[t]))return false;}return true;}
+  function normal(v){return String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();}
+  function cpfOculto(v){var d=digits(v);return d.length===11?'***.'+d.slice(3,6)+'.'+d.slice(6,9)+'-**':'—';}
+
+  document.addEventListener('DOMContentLoaded',async function(){
+    if(!window.EF||!EF.ready)return;
+    var ok=await EF.init({equipeOnly:true});if(!ok)return;
+    ligarEventos();await Promise.all([carregarProfiles(),carregar()]);
+  });
+
+  function ligarEventos(){
+    document.getElementById('btn-novo').addEventListener('click',function(){abrirForm();});
+    document.getElementById('btn-cancelar').addEventListener('click',fecharForm);
+    document.getElementById('f-veiculo').addEventListener('change',alternarVeiculo);
+    document.getElementById('f-tipo').addEventListener('change',alternarTipo);
+    document.getElementById('f-profile').addEventListener('change',function(){var p=PROFILES.find(function(x){return x.id===this.value;},this);if(p&&!document.getElementById('f-nome').value.trim())document.getElementById('f-nome').value=p.nome||'';});
+    document.getElementById('f-cpf').addEventListener('input',function(){this.value=cpfMask(this.value);});
+    document.getElementById('form-freelancer').addEventListener('submit',salvar);
+    document.getElementById('filtro-busca').addEventListener('input',renderizar);
+    document.getElementById('filtro-status').addEventListener('change',renderizar);
+  }
+
+  async function carregarProfiles(){
+    var res=await EF.client.from('profiles').select('id,nome,email,ativo').eq('empresa_id',EF.profile.empresa_id).order('nome',{ascending:true});
+    PROFILES=(res.data||[]).filter(function(p){return p.ativo!==false;});
+    var sel=document.getElementById('f-profile');
+    PROFILES.forEach(function(p){var o=document.createElement('option');o.value=p.id;o.textContent=(p.nome||p.email)+(p.email?' — '+p.email:'');sel.appendChild(o);});
+  }
+
+  async function carregar(){
+    var res=await EF.client.from('equipe_profissionais').select('*').eq('empresa_id',EF.profile.empresa_id).order('nome',{ascending:true});
+    if(res.error){
+      var msg=/does not exist|schema cache|42P01/i.test((res.error.code||'')+' '+res.error.message)?'Execute primeiro o arquivo database/MIGRAR_EVENTFLOW_REV5_EQUIPE.sql no Supabase.':res.error.message;
+      document.getElementById('lista-freelancers').innerHTML='<div class="fr-empty">Não foi possível carregar: '+esc(msg)+'</div>';return;
+    }
+    EQUIPE=res.data||[];atualizarKpis();renderizar();
+  }
+
+  function atualizarKpis(){
+    var ativos=EQUIPE.filter(function(f){return f.ativo!==false;});
+    var total=ativos.reduce(function(s,f){return s+Number(f.valor_cache||0);},0);
+    document.getElementById('kpi-internos').textContent=ativos.filter(function(f){return f.tipo==='interno';}).length;
+    document.getElementById('kpi-freelancers').textContent=ativos.filter(function(f){return f.tipo==='freelancer';}).length;
+    document.getElementById('kpi-veiculos').textContent=ativos.filter(function(f){return f.possui_veiculo;}).length;
+    document.getElementById('kpi-cache').textContent=money.format(ativos.length?total/ativos.length:0);
+  }
+
+  function renderizar(){
+    var q=normal(document.getElementById('filtro-busca').value),status=document.getElementById('filtro-status').value;
+    var lista=EQUIPE.filter(function(f){
+      if(status==='ativos'&&f.ativo===false)return false;if(status==='inativos'&&f.ativo!==false)return false;
+      return !q||normal([f.nome,f.tipo,f.funcoes,f.veiculo_descricao,f.nota_produtores].join(' ')).indexOf(q)!==-1;
+    });
+    var wrap=document.getElementById('lista-freelancers');wrap.innerHTML='';
+    if(!lista.length){wrap.innerHTML='<div class="fr-empty">Nenhuma pessoa encontrada.</div>';return;}
+    wrap.innerHTML='<div class="fr-table-head"><div>Pessoa</div><div>Funções</div><div>Veículo</div><div>Cachê</div><div>Nota interna</div><div style="text-align:right">Ações</div></div>';
+    lista.forEach(function(f){
+      var card=document.createElement('article');card.className='fr-card'+(f.ativo===false?' inativo':'');
+      card.innerHTML='<div><div class="fr-name">'+esc(f.nome)+'</div><div class="fr-doc">CPF '+cpfOculto(f.cpf)+' · RG '+esc(f.rg||'—')+'</div><div class="fr-tags"><span class="fr-tag '+(f.ativo===false?'off':'ok')+'">'+(f.ativo===false?'Inativo':'Ativo')+'</span><span class="fr-tag">'+(f.tipo==='interno'?'Interno':'Freelancer')+'</span></div></div>'+
+        '<div class="fr-cell">'+esc(f.funcoes||'—')+'</div>'+
+        '<div class="fr-cell vehicle">'+esc(f.possui_veiculo?(f.veiculo_descricao||'Possui veículo'):'Sem veículo')+'</div>'+
+        '<div class="fr-cache">'+money.format(Number(f.valor_cache||0))+'</div>'+
+        '<div class="fr-note">'+esc(f.nota_produtores||'Sem observações')+'</div>'+
+        '<div class="fr-card-actions"><button class="fr-btn small" data-editar type="button">Editar</button><button class="fr-btn small warn" data-status type="button">'+(f.ativo===false?'Reativar':'Desativar')+'</button></div>';
+      card.querySelector('[data-editar]').addEventListener('click',function(){abrirForm(f);});
+      card.querySelector('[data-status]').addEventListener('click',function(){alterarStatus(f);});
+      wrap.appendChild(card);
+    });
+  }
+
+  function alternarVeiculo(){
+    var tem=document.getElementById('f-veiculo').checked;
+    document.getElementById('campo-veiculo-desc').style.display=tem?'':'none';
+    document.getElementById('f-veiculo-desc').required=tem;
+    if(!tem)document.getElementById('f-veiculo-desc').value='';
+  }
+
+  function alternarTipo(){
+    var interno=document.getElementById('f-tipo').value==='interno';
+    document.getElementById('campo-profile').style.display=interno?'':'none';
+    if(!interno)document.getElementById('f-profile').value='';
+  }
+
+  function abrirForm(f){
+    f=f||null;document.getElementById('form-freelancer').reset();document.getElementById('f-id').value=f?f.id:'';
+    document.getElementById('form-titulo').textContent=f?'Editar pessoa':'Nova pessoa';
+    if(f){document.getElementById('f-tipo').value=f.tipo||'freelancer';document.getElementById('f-profile').value=f.profile_id||'';document.getElementById('f-nome').value=f.nome||'';document.getElementById('f-cache').value=Number(f.valor_cache||0).toFixed(2);document.getElementById('f-cpf').value=cpfMask(f.cpf);document.getElementById('f-rg').value=f.rg||'';document.getElementById('f-veiculo').checked=!!f.possui_veiculo;document.getElementById('f-veiculo-desc').value=f.veiculo_descricao||'';document.getElementById('f-funcoes').value=f.funcoes||'';document.getElementById('f-nota').value=f.nota_produtores||'';}
+    alternarTipo();alternarVeiculo();document.getElementById('form-msg').textContent='';document.getElementById('bloco-form-freelancer').style.display='';document.getElementById('f-nome').focus();document.getElementById('bloco-form-freelancer').scrollIntoView({behavior:'smooth',block:'start'});
+  }
+  function fecharForm(){document.getElementById('bloco-form-freelancer').style.display='none';document.getElementById('form-freelancer').reset();}
+
+  async function salvar(ev){
+    ev.preventDefault();var msg=document.getElementById('form-msg'),btn=document.getElementById('btn-salvar');var cpf=digits(document.getElementById('f-cpf').value);
+    if(!cpfValido(cpf)){msg.style.color='#d98478';msg.textContent='Informe um CPF válido.';return;}
+    var temVeiculo=document.getElementById('f-veiculo').checked;
+    var tipo=document.getElementById('f-tipo').value;
+    var dados={empresa_id:EF.profile.empresa_id,tipo:tipo,profile_id:tipo==='interno'?(document.getElementById('f-profile').value||null):null,nome:document.getElementById('f-nome').value.trim(),cpf:cpf,rg:document.getElementById('f-rg').value.trim(),possui_veiculo:temVeiculo,veiculo_descricao:temVeiculo?document.getElementById('f-veiculo-desc').value.trim():'',valor_cache:Number(document.getElementById('f-cache').value||0),funcoes:document.getElementById('f-funcoes').value.trim(),nota_produtores:document.getElementById('f-nota').value.trim()};
+    btn.disabled=true;msg.style.color='#8c8c91';msg.textContent='Salvando…';var id=document.getElementById('f-id').value,res;
+    if(id)res=await EF.client.from('equipe_profissionais').update(dados).eq('id',id).eq('empresa_id',EF.profile.empresa_id).select().single();
+    else res=await EF.client.from('equipe_profissionais').insert(dados).select().single();
+    btn.disabled=false;
+    if(res.error){var erroTexto=(res.error.message||'')+' '+(res.error.details||'');msg.style.color='#d98478';msg.textContent=String(res.error.code)==='23505'?(/profile/i.test(erroTexto)?'Essa conta do sistema já está vinculada a outra pessoa.':'Já existe uma pessoa com este CPF.'):'Erro ao salvar: '+res.error.message;return;}
+    msg.style.color='#8fb995';msg.textContent='Pessoa salva.';await carregar();setTimeout(fecharForm,500);
+  }
+
+  async function alterarStatus(f){
+    var novo=f.ativo===false;if(!confirm((novo?'Reativar ':'Desativar ')+f.nome+'?'))return;
+    var res=await EF.client.from('equipe_profissionais').update({ativo:novo}).eq('id',f.id).eq('empresa_id',EF.profile.empresa_id).select().single();
+    if(res.error){alert('Erro ao alterar: '+res.error.message);return;}await carregar();
+  }
+})();
+</script>
+<script src="ef-ui.js?v=27"></script>
+</body>
+</html>

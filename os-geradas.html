@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>OS Geradas — EventFlow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="ef-config.js"></script>
+<script src="ef-auth.js?v=27"></script>
+<style>
+body{margin:0;background:#0a0a0b;color:#f3f1ec;font-family:'Inter',sans-serif}.mono{font-family:'IBM Plex Mono',monospace}.disp{font-family:'Space Grotesk',sans-serif}
+.toolbar{display:flex;gap:12px;align-items:center;margin:20px 0 24px}.search{flex:1;background:#111113;border:1px solid #26262a;border-radius:9px;color:#f3f1ec;padding:11px 13px;font-size:13px}.search:focus{outline:none;border-color:#526b7e}
+.card{border:1px solid #202024;border-radius:12px;margin-bottom:12px;background:#0d0d0f;overflow:hidden}.card-head{display:flex;gap:18px;align-items:center;padding:16px 18px;cursor:pointer}.card-head:hover{background:#111113}.grow{flex:1;min-width:0}.event-name{font-family:'Space Grotesk';font-size:15px;font-weight:600}.muted{color:#6e6e73;font-size:11.5px;margin-top:4px}.badge{font:10px 'IBM Plex Mono';padding:5px 8px;border:1px solid #28402e;background:#142019;color:#8fbf9c;border-radius:999px;white-space:nowrap}.badge.closed{border-color:#34343a;background:#17171a;color:#8c8c91}.detail{display:none;border-top:1px solid #1c1c1f;padding:15px 18px}.detail.open{display:block}.tbl{width:100%;border-collapse:collapse;font-size:12.5px}.tbl th{text-align:left;font:9.5px 'IBM Plex Mono';text-transform:uppercase;letter-spacing:.05em;color:#6e6e73;padding:8px 6px;border-bottom:1px solid #242428}.tbl td{padding:9px 6px;border-bottom:1px solid #18181b}.tbl td.num,.tbl th.num{text-align:right}.actions{display:flex;gap:8px;margin-top:14px}.btn{border:1px solid #2a2a2e;background:#141416;color:#ddd;border-radius:7px;padding:8px 11px;font-size:12px;cursor:pointer;text-decoration:none}.btn:hover{border-color:#515158}.btn-close{background:#1a2a1f;color:#9bc7a5;border-color:#2a4a33}.btn-close:disabled{opacity:.55;cursor:not-allowed}.stock-note{margin-top:12px;padding:10px 12px;border:1px solid #202024;border-radius:8px;background:#111113;color:#8c8c91;font-size:11.5px}.empty{padding:30px 0;color:#6e6e73;font-size:13px}
+</style>
+<link rel="stylesheet" href="ef-ui.css">
+</head>
+<body>
+<div style="width:100%;min-height:100vh;display:flex;background:#0a0a0b;color:#f3f1ec;box-sizing:border-box">
+  <div style="width:220px;flex-shrink:0"></div>
+  <main style="flex-grow:1;padding:36px 48px 60px 0;min-width:0">
+    <div class="mono" style="color:#6e6e73;font-size:10px;letter-spacing:.07em;text-transform:uppercase;margin-bottom:10px">Documentos / Produção</div>
+    <h1 class="disp" style="font-size:24px;margin:0 0 6px;font-weight:600">OS Geradas</h1>
+    <div class="toolbar"><input id="busca" class="search" placeholder="Buscar evento, número da OS ou data…"></div>
+    <div id="lista"></div>
+  </main>
+</div>
+<script>
+(function(){
+  var OSS=[], EVENTOS={};
+  document.addEventListener('DOMContentLoaded',async function(){
+    if(!window.EF||!EF.ready)return;
+    var ok=await EF.init({}); if(!ok)return;
+    document.getElementById('busca').addEventListener('input',render);
+    await carregar();
+  });
+  function fmtData(v){if(!v)return '—';try{return new Date(v).toLocaleString('pt-BR')}catch(e){return v}}
+  function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+  async function carregar(){
+    var ro=await EF.client.from('ordens_servico').select('*').eq('status','gerada').order('gerada_em',{ascending:false});
+    if(ro.error){document.getElementById('lista').innerHTML='<div class="empty">Erro ao carregar OS: '+esc(ro.error.message)+'</div>';return}
+    OSS=ro.data||[];
+    var ids=[...new Set(OSS.map(function(x){return x.evento_id}).filter(Boolean))];
+    if(ids.length){var re=await EF.client.from('eventos').select('id,nome,data_inicio,data_fim,estoque_finalizado_em').in('id',ids);(re.data||[]).forEach(function(e){EVENTOS[e.id]=e})}
+    for(var i=0;i<OSS.length;i++){
+      var ri=await EF.client.from('ordem_servico_itens').select('*').eq('os_id',OSS[i].id).order('area',{ascending:true}).order('ordem',{ascending:true});
+      OSS[i].itens=ri.data||[];
+    }
+    render();
+    var alvo=new URLSearchParams(location.search).get('os');
+    if(alvo){setTimeout(function(){var el=document.querySelector('[data-os="'+CSS.escape(alvo)+'"]');if(el){el.querySelector('.detail').classList.add('open');el.scrollIntoView({behavior:'smooth',block:'center'})}},80)}
+  }
+  function render(){
+    var q=document.getElementById('busca').value.trim().toLowerCase();
+    var lista=OSS.filter(function(os){var ev=EVENTOS[os.evento_id]||{};var txt=[ev.nome,os.id,os.gerada_em].join(' ').toLowerCase();return !q||txt.indexOf(q)>=0});
+    var wrap=document.getElementById('lista');
+    if(!lista.length){wrap.innerHTML='<div class="empty">Nenhuma OS gerada encontrada.</div>';return}
+    wrap.innerHTML='';
+    lista.forEach(function(os){
+      var ev=EVENTOS[os.evento_id]||{};var card=document.createElement('section');card.className='card';card.dataset.os=os.id;
+      var itens=os.itens||[];var qtd=itens.reduce(function(a,b){return a+(Number(b.quantidade)||0)},0);
+      var encerrado=!!ev.estoque_finalizado_em;
+      card.innerHTML='<div class="card-head"><div class="grow"><div class="event-name">'+esc(ev.nome||'Evento')+'</div><div class="muted">OS '+esc(os.id.slice(0,8).toUpperCase())+' · gerada '+esc(fmtData(os.gerada_em))+' · '+qtd+' item(ns)</div></div><span class="badge '+(encerrado?'closed':'')+'">'+(encerrado?'ENCERRADO':'GERADA')+'</span></div><div class="detail"><table class="tbl"><thead><tr><th>Área</th><th>Item</th><th class="num">Qtd</th><th class="num">Peso un.</th></tr></thead><tbody>'+itens.map(function(it){return '<tr><td>'+esc(it.area||'Geral')+'</td><td>'+esc(it.nome||it.nome_manual||'Item')+'</td><td class="num">'+esc(it.quantidade)+'</td><td class="num">'+(it.peso_manual!=null?esc(Number(it.peso_manual).toLocaleString('pt-BR'))+' kg':'—')+'</td></tr>'}).join('')+'</tbody></table><div class="stock-note">'+(encerrado?('Evento encerrado e material devolvido ao estoque em '+esc(fmtData(ev.estoque_finalizado_em))+'.'):'Quando o evento terminar e o material voltar ao barracão, use o botão abaixo para devolver ao estoque tudo que foi reservado por esta OS.')+'</div><div class="actions"><a class="btn" href="ordem-servico.html?evento='+encodeURIComponent(os.evento_id)+'">Abrir OS</a><button class="btn" type="button" data-print>Imprimir</button>'+(encerrado?'':'<button class="btn btn-close" type="button" data-finalizar>Encerrar evento / dar baixa</button>')+'</div></div>';
+      card.querySelector('.card-head').onclick=function(){card.querySelector('.detail').classList.toggle('open')};
+      card.querySelector('[data-print]').onclick=function(){location.href='ordem-servico.html?evento='+encodeURIComponent(os.evento_id)+'&print=1'};
+      var finalizar=card.querySelector('[data-finalizar]');
+      if(finalizar) finalizar.onclick=async function(){
+        if(!confirm('Encerrar este evento e devolver ao estoque todos os equipamentos reservados por esta OS? Faça isso somente depois que o material físico voltar ao barracão.')) return;
+        finalizar.disabled=true; finalizar.textContent='Devolvendo ao estoque…';
+        var res=await EF.client.rpc('finalizar_estoque_evento',{p_evento_id:os.evento_id});
+        if(res.error){alert('Erro ao encerrar evento: '+res.error.message);finalizar.disabled=false;finalizar.textContent='Encerrar evento / dar baixa';return}
+        ev.estoque_finalizado_em=new Date().toISOString();
+        alert('Evento encerrado. '+(res.data||0)+' item(ns) devolvido(s) ao estoque.');
+        render();
+      };
+      wrap.appendChild(card);
+    })
+  }
+})();
+</script>
+<script src="ef-ui.js?v=27"></script>
+</body>
+</html>

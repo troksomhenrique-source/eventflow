@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Serviços — EventFlow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="ef-config.js"></script>
+<script src="ef-auth.js?v=27"></script>
+<style>
+  body{margin:0;background:#0a0a0b;font-family:'Inter',sans-serif;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  .disp{font-family:'Space Grotesk',sans-serif;}
+  select{font-family:'IBM Plex Mono',monospace;background:transparent;border:none;color:inherit;font-size:12.5px;cursor:pointer;color-scheme:dark;}
+  select option{background:#0d0d0f;color:#f3f1ec;}
+  select:focus{outline:none;}
+  input, textarea{font-family:'Inter',sans-serif;}
+  input::placeholder, textarea::placeholder{color:#4a4a4e;}
+  input:focus, textarea:focus{outline:none;border-color:#3b82c9 !important;}
+  body [data-financeiro]{display:none !important;}
+  html[data-financeiro="true"] body [data-financeiro]{display:block !important;}
+  body [data-areas]{display:none !important;}
+  html[data-areas="true"] body [data-areas]{display:block !important;}
+  body [data-usuarios]{display:none !important;}
+  html[data-usuarios="true"] body [data-usuarios]{display:block !important;}
+  .icone-acao{cursor:pointer;color:#6e6e73;font-size:11px;}
+  .icone-acao:hover{color:#c9695c;}
+  .secao{padding: 26px 0; border-bottom: 1px solid #1c1c1f;}
+  .secao:last-child{border-bottom:none;}
+  .rotulo-mini{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:#6e6e73;margin-bottom:7px;}
+  .campo{width:100%;background:transparent;border:none;border-bottom:1px solid #29292d;color:#f3f1ec;font-size:13.5px;padding-bottom:8px;box-sizing:border-box;}
+  .add-form-card{background:#131315;border:1px solid #1c1c1f;border-radius:8px;padding:14px 16px;}
+  .add-form-titulo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:#6e6e73;margin-bottom:12px;}
+  .add-form-label{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.05em;text-transform:uppercase;color:#6e6e73;margin-bottom:6px;}
+  .add-form-input{width:100%;background:transparent;border:none;border-bottom:1px solid #29292d;color:#f3f1ec;font-size:13px;padding-bottom:8px;box-sizing:border-box;}
+  .add-form-link{background:none;border:none;padding:0 0 8px;font-size:13px;color:#7fa8c9;cursor:pointer;border-bottom:1px solid #2a3d4d;white-space:nowrap;}
+  .seg-toggle{display:inline-flex;border:1px solid #29292d;border-radius:6px;overflow:hidden;margin-bottom:12px;}
+  .seg-toggle span{font-family:'IBM Plex Mono',monospace;padding:6px 14px;font-size:10.5px;letter-spacing:.03em;text-transform:uppercase;cursor:pointer;user-select:none;}
+  .seg-toggle span.ativo{background:#1c2a35;color:#7fa8c9;}
+  .seg-toggle span.inativo{background:transparent;color:#6e6e73;}
+</style>
+<link rel="stylesheet" href="ef-ui.css">
+</head>
+<body>
+
+<div style="width: 100%; min-height: 100vh; box-sizing: border-box; display: flex; background: #0a0a0b; color: #f3f1ec;">
+
+  <!-- ============ SIDEBAR ============ -->
+  <div style="width: 220px; flex-shrink: 0; display: flex; flex-direction: column; padding: 36px 24px; box-sizing: border-box;">
+
+    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 40px;">
+      <a href="dashboard.html" style="text-decoration: none; display: flex; align-items: center; gap: 10px;">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" style="flex-shrink: 0;"><path d="M2 12c2 0 2-6.5 4-6.5S8 12 10 12s2-6.5 4-6.5" stroke="#7fa8c9" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div style="font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 13.5px; letter-spacing: -.01em; color: #f3f1ec;">EventFlow</div>
+      </a>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 32px;">
+      <a href="dashboard.html" style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Dashboard</span></a>
+      <a href="agenda.html" style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Agenda</span></a>
+      <a href="estoque.html" style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Estoque</span></a>
+      <a href="clientes.html" data-financeiro style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Clientes</span></a>
+      <a href="vendas.html" data-financeiro style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Vendas</span></a>
+      <a href="chat.html" style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Chat</span></a>
+      <a href="notas.html" style="padding-left: 13px; text-decoration: none; display: block;"><span style="font-size: 13px; color: #8c8c91;">Notas</span></a>
+    </div>
+
+    <div data-areas>
+      <div class="mono" style="font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: #4a4a4e; margin-bottom: 12px;">Áreas do projeto</div>
+      <div style="display: flex; flex-direction: column; gap: 13px; margin-bottom: 32px;">
+        <a href="calculadora-som.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Som</span></a>
+        <a href="calculadora-luz.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Luz</span></a>
+        <a href="video.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Vídeo</span></a>
+        <a href="estrutura.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Estrutura</span></a>
+        <a href="internet.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Internet</span></a>
+        <a href="cenografia.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Cenografia</span></a>
+        <a href="extras.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Extras</span></a>
+        <div style="display: flex; align-items: center; gap: 9px;">
+          <span style="width: 4px; height: 4px; border-radius: 50%; background: #7fa8c9; flex-shrink: 0;"></span>
+          <span style="font-size: 12.5px; color: #f3f1ec; font-weight: 600;">Serviços</span>
+        </div>
+        <a href="logistica.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Logística</span></a>
+        <a href="descritivo-geral.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Descritivo Geral</span></a>
+        <a href="ordem-servico.html" style="text-decoration: none;"><span style="font-size: 12.5px; color: #6e6e73;">Ordem de Serviço</span></a>
+      </div>
+    </div>
+
+    <div data-areas>
+      <div class="mono" style="font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: #4a4a4e; margin-bottom: 12px;">Sistema</div>
+      <div style="display: flex; flex-direction: column; gap: 13px;">
+        <a data-usuarios href="usuarios-permissoes.html" style="text-decoration: none; display: block;"><span style="font-size: 12.5px; color: #6e6e73;">Usuários e permissões</span></a>
+      </div>
+    </div>
+
+    <div style="margin-top: auto; padding-top: 18px; border-top: 1px solid #1c1c1f; display: flex; align-items: center; gap: 10px;">
+      <div id="user-initials" style="width: 26px; height: 26px; border-radius: 50%; background: #1a1a1d; display: flex; align-items: center; justify-content: center; font-family: 'Space Grotesk', sans-serif; font-size: 10.5px; font-weight: 600; color: #b8b8bc; flex-shrink: 0;">··</div>
+      <div style="flex-grow: 1; min-width: 0;">
+        <div id="user-name" style="font-size: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Carregando…</div>
+        <div id="user-role" class="mono" style="font-size: 9px; color: #6e6e73; margin-top: 1px;">—</div>
+      </div>
+      <span id="logout" title="Sair" style="cursor: pointer; color: #6e6e73; font-size: 11px; flex-shrink: 0;">sair</span>
+    </div>
+  </div>
+
+  <!-- ============ MAIN ============ -->
+  <div style="flex-grow: 1; padding: 36px 48px 36px 0; box-sizing: border-box; min-width: 0;">
+
+    <div style="margin-bottom: 8px;">
+      <div class="mono" style="color: #6e6e73; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 10px;" id="hoje"></div>
+      <h1 style="font-family: 'Space Grotesk', sans-serif; font-size: 24px; font-weight: 600; margin: 0 0 6px; letter-spacing: -.01em;">Serviços</h1>
+      <div style="color: #8c8c91; font-size: 13px;" id="resumo"></div>
+    </div>
+
+    <div class="secao">
+      <div style="max-width: 360px; margin-top: 14px; margin-bottom: 4px;">
+        <div class="rotulo-mini">Evento</div>
+        <select id="select-evento" style="width: 100%; border-bottom: 1px solid #29292d; padding-bottom: 8px; color: #f3f1ec; font-size: 13.5px;">
+          <option value="">— selecione um evento —</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="bloco-sem-evento" class="secao" style="color: #4a4a4e; font-size: 13px;">Selecione um evento pra montar os serviços.</div>
+
+    <div id="bloco-com-evento" style="display:none;">
+
+      <!-- ============ SERVIÇOS DO ESTOQUE ============ -->
+      <div class="secao">
+        <h2 style="font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 600; margin: 0 0 4px;">Serviços do Estoque</h2>
+        <div class="add-form-card">
+          <div class="add-form-titulo">Adicionar serviço do estoque</div>
+          <div id="serv-tabs" style="display:flex; gap:14px; margin-bottom:12px; border-bottom:1px solid #1c1c1f; padding-bottom:9px; flex-wrap:wrap;"></div>
+          <div style="display:flex; gap:16px; align-items:end; flex-wrap:wrap;">
+            <div style="flex:1; min-width:180px;"><div class="add-form-label">Item</div><select id="serv-select" class="add-form-input"></select></div>
+            <div style="width:90px;"><div class="add-form-label">Qtd.</div><input type="number" min="1" step="1" id="serv-qtd" class="add-form-input" value="1"></div>
+            <div><button type="button" class="add-form-link" id="serv-add">+ Adicionar</button></div>
+          </div>
+          <div id="serv-specs" style="color:#6e6e73; font-size:11px; margin-top:8px; line-height:1.5;"></div>
+        </div>
+        <div id="serv-lista" style="margin-top:14px;"></div>
+        <div style="display:flex; justify-content:flex-end; margin-top:10px;"><span id="sync-status" style="font-size:11.5px; color:#6e6e73;"></span></div>
+      </div>
+
+      <!-- ============ SERVIÇOS AVULSOS / TERCEIRIZADOS ============ -->
+      <div class="secao">
+        <h2 style="font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 600; margin: 0 0 4px;">Serviços avulsos / terceirizados</h2>
+        <div class="add-form-card" style="margin-bottom:14px;">
+          <div class="add-form-titulo">Adicionar serviço avulso</div>
+          <div style="display:flex; gap:16px; align-items:end; flex-wrap:wrap;">
+            <div style="flex:1.4; min-width:180px;"><div class="add-form-label">Serviço</div><input type="text" id="avulso-nome" class="add-form-input"></div>
+            <div style="flex:1; min-width:160px;"><div class="add-form-label">Fornecedor</div><input type="text" id="avulso-fornecedor" class="add-form-input"></div>
+            <div style="width:130px;"><div class="add-form-label">Valor (R$)</div><input type="text" inputmode="decimal" id="avulso-valor" class="add-form-input"></div>
+            <div><button type="button" class="add-form-link" id="avulso-add">+ Adicionar</button></div>
+          </div>
+        </div>
+        <div id="avulso-lista"></div>
+        <div id="avulso-vazio" style="display:none; color:#4a4a4e; font-size:13px; padding:8px 0;">Nenhum serviço avulso adicionado ainda.</div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function () {
+  var ROLE_LABEL = { gerencia: 'Gerência', producao: 'Produção', estoque: 'Estoque' };
+  var EVENTOS = [];
+  var ESTOQUE_SERVICOS = [];
+  var EQUIPAMENTOS_SERVICOS = [];
+  var SERVICOS_LINHA = { itens: [], reservados: {} }; // lista local dos itens do Estoque adicionados a este evento
+
+  function scrollSuavePara(el) {
+    if (!el) return;
+    setTimeout(function () { try { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {} }, 80);
+  }
+
+  var AVULSOS = [];
+  var _marcaSelServ = null;
+  var eventoSelecionadoId = '';
+
+  document.addEventListener('DOMContentLoaded', async function () {
+    if (!window.EF || !EF.ready) return;
+    var ok = await EF.init({ areasOnly: true });
+    if (!ok) return;
+
+    document.getElementById('hoje').textContent = new Date().toLocaleDateString('pt-BR', {
+      weekday: 'long', day: '2-digit', month: 'long'
+    });
+
+    var p = EF.profile;
+    var nome = p.nome || p.email || 'Usuário';
+    var iniciais = nome.split(' ').filter(Boolean).slice(0, 2).map(function (s) { return s[0].toUpperCase(); }).join('');
+    document.getElementById('resumo').textContent = '';
+
+    document.getElementById('select-evento').addEventListener('change', async function () {
+      EF.setEventoSelecionado(this.value);
+      await selecionarEvento(this.value);
+    });
+
+    document.getElementById('avulso-add').addEventListener('click', adicionarAvulso);
+
+    await carregarEventos();
+    await carregarEstoqueServicos();
+  });
+
+  function numBR(v) {
+    if (v == null || v === '') return null;
+    var n = parseFloat(String(v).trim().replace(',', '.'));
+    return isNaN(n) ? null : n;
+  }
+
+  function marcaDoItem(it) { return String(it.marca || '').trim(); }
+  function agruparPorMarca(lista) {
+    var algumaMarca = lista.some(function (it) { return !!marcaDoItem(it); });
+    var grupos = {};
+    lista.forEach(function (it) {
+      var chave = marcaDoItem(it) || (algumaMarca ? 'Outras' : 'Todas');
+      if (!grupos[chave]) grupos[chave] = [];
+      grupos[chave].push(it);
+    });
+    return grupos;
+  }
+  function ordenarMarcas(grupos) {
+    return Object.keys(grupos).sort(function (a, b) {
+      if (a === 'Outras') return 1;
+      if (b === 'Outras') return -1;
+      return a.localeCompare(b, 'pt-BR');
+    });
+  }
+
+  async function selecionarEvento(id) {
+    eventoSelecionadoId = id;
+    if (!eventoSelecionadoId) {
+      document.getElementById('bloco-sem-evento').style.display = '';
+      document.getElementById('bloco-com-evento').style.display = 'none';
+      return;
+    }
+    document.getElementById('bloco-sem-evento').style.display = 'none';
+    document.getElementById('bloco-com-evento').style.display = '';
+    await carregarServicosDoEvento();
+    await carregarAvulsos();
+  }
+
+  async function carregarEventos() {
+    var res = await EF.client.from('eventos').select('id, nome, data_inicio').eq('empresa_id', EF.profile.empresa_id).order('data_inicio', { ascending: false });
+    EVENTOS = res.data || [];
+    var select = document.getElementById('select-evento');
+    EVENTOS.forEach(function (ev) {
+      var opt = document.createElement('option');
+      opt.value = ev.id;
+      opt.textContent = ev.nome + (ev.data_inicio ? ' — ' + new Date(ev.data_inicio).toLocaleDateString('pt-BR') : '');
+      select.appendChild(opt);
+    });
+    var lembrado = EF.getEventoSelecionado();
+    if (lembrado && EVENTOS.some(function (ev) { return ev.id === lembrado; })) {
+      select.value = lembrado;
+      await selecionarEvento(lembrado);
+    }
+  }
+
+  async function carregarEstoqueServicos() {
+    var res = await EF.client.from('estoque_itens').select('*').eq('empresa_id', EF.profile.empresa_id).eq('categoria', 'Serviços').order('nome', { ascending: true });
+    ESTOQUE_SERVICOS = res.data || [];
+  }
+
+  // ---------------- SERVIÇOS DO ESTOQUE (mesmo padrão "Adicionar" do resto do app) ----------------
+
+  async function carregarServicosDoEvento() {
+    await carregarEstoqueServicos();
+    var res = await EF.client.from('evento_equipamentos').select('*').eq('evento_id', eventoSelecionadoId).order('ordem', { ascending: true });
+    var todos = res.data || [];
+    EQUIPAMENTOS_SERVICOS = todos.filter(function (eq) {
+      return ESTOQUE_SERVICOS.some(function (it) { return it.id === eq.estoque_item_id; });
+    });
+    montarAddServico();
+    renderizarServicos();
+  }
+
+  function montarAddServico() {
+    var tabsEl = document.getElementById('serv-tabs');
+    var selectEl = document.getElementById('serv-select');
+
+    if (!ESTOQUE_SERVICOS.length) {
+      tabsEl.innerHTML = '';
+      selectEl.innerHTML = '<option value="">Nenhum item em "Serviços" cadastrado no Estoque</option>';
+      atualizarSpecsAddServico();
+      return;
+    }
+
+    var grupos = agruparPorMarca(ESTOQUE_SERVICOS);
+    var marcas = ordenarMarcas(grupos);
+    if (!_marcaSelServ || !grupos[_marcaSelServ]) _marcaSelServ = marcas[0];
+
+    tabsEl.innerHTML = marcas.map(function (m) {
+      var ativo = m === _marcaSelServ;
+      return '<span data-marca="' + m.replace(/"/g, '&quot;') + '" style="font-size:11.5px; cursor:pointer; padding-bottom:8px; margin-bottom:-10px; ' +
+        (ativo ? 'color:#f3f1ec; font-weight:600; border-bottom:2px solid #7fa8c9;' : 'color:#6e6e73;') + '">' + m + '</span>';
+    }).join('');
+
+    tabsEl.querySelectorAll('[data-marca]').forEach(function (el) {
+      el.addEventListener('click', function () { _marcaSelServ = el.dataset.marca; montarAddServico(); });
+    });
+
+    var itensDoGrupo = grupos[_marcaSelServ] || [];
+    selectEl.innerHTML = itensDoGrupo.map(function (it) {
+      return '<option value="' + it.id + '">' + it.nome + ' (' + it.quantidade_disponivel + ' disponível)</option>';
+    }).join('');
+    selectEl.onchange = atualizarSpecsAddServico;
+    document.getElementById('serv-qtd').value = 1;
+    atualizarSpecsAddServico();
+
+    document.getElementById('serv-add').onclick = async function () {
+      var itemId = selectEl.value;
+      var qtd = parseInt(document.getElementById('serv-qtd').value, 10) || 0;
+      if (!itemId || qtd < 1) { alert('Escolha um serviço e uma quantidade válida.'); return; }
+      var item = ESTOQUE_SERVICOS.find(function (it) { return it.id === itemId; });
+      var existente = EQUIPAMENTOS_SERVICOS.find(function (e) { return e.estoque_item_id === itemId; });
+      var novaQtd = (existente ? existente.quantidade : 0) + qtd;
+      var msg = document.getElementById('sync-status');
+      msg.style.color = '#8c8c91'; msg.textContent = 'Sincronizando...';
+      var ok = await syncEquipamento(itemId, novaQtd);
+      if (ok) {
+        document.getElementById('serv-qtd').value = 1;
+        msg.style.color = '#7cae83'; msg.textContent = 'Sincronizado com o Estoque.';
+      } else {
+        msg.style.color = '#c9695c'; msg.textContent = 'Não deu pra sincronizar — veja o aviso acima.';
+      }
+      montarAddServico();
+      renderizarServicos();
+      if (ok) scrollSuavePara(document.getElementById('serv-lista').lastElementChild);
+    };
+  }
+
+  function atualizarSpecsAddServico() {
+    var specsEl = document.getElementById('serv-specs');
+    var selectEl = document.getElementById('serv-select');
+    var item = ESTOQUE_SERVICOS.find(function (it) { return it.id === (selectEl ? selectEl.value : null); });
+    if (!item) { specsEl.textContent = ''; return; }
+    specsEl.textContent = item.quantidade_disponivel + ' disponível no Estoque';
+  }
+
+  function renderizarServicos() {
+    var wrap = document.getElementById('serv-lista');
+    if (!EQUIPAMENTOS_SERVICOS.length) {
+      wrap.innerHTML = '<div style="color:#4a4a4e; font-size:12px; padding:6px 0;">Nenhum serviço do Estoque adicionado ainda.</div>';
+      return;
+    }
+    wrap.innerHTML = EQUIPAMENTOS_SERVICOS.map(function (eq) {
+      var item = ESTOQUE_SERVICOS.find(function (it) { return it.id === eq.estoque_item_id; });
+      var nome = item ? item.nome : '(item removido do estoque)';
+      return '<div data-eq="' + eq.id + '" style="display:flex; align-items:center; padding:8px 0; border-bottom:1px solid #1c1c1f; font-size:12.5px;">' +
+        '<div style="flex:1;">' + nome + '</div>' +
+        '<div class="mono" style="width:40px; text-align:right;">' + eq.quantidade + '×</div>' +
+        '<span class="icone-acao" data-remover-eq="' + eq.id + '" style="margin-left:14px;">remover</span>' +
+      '</div>';
+    }).join('');
+    EQUIPAMENTOS_SERVICOS.forEach(function (eq) {
+      wrap.querySelector('[data-remover-eq="' + eq.id + '"]').addEventListener('click', async function () {
+        await syncEquipamento(eq.estoque_item_id, 0);
+        montarAddServico();
+        renderizarServicos();
+      });
+    });
+  }
+
+  async function syncEquipamento(itemId, novaQtdTotal) {
+    var item = ESTOQUE_SERVICOS.find(function (it) { return it.id === itemId; });
+    if (!item) return true;
+    var existente = EQUIPAMENTOS_SERVICOS.find(function (e) { return e.estoque_item_id === itemId; });
+
+    // V18: esta tela apenas planeja. O estoque físico só é baixado quando a OS
+    // é gerada. Ainda mostramos a disponibilidade atual para evitar surpresas.
+    if (!novaQtdTotal || novaQtdTotal <= 0) {
+      if (existente) {
+        var del = await EF.client.from('evento_equipamentos').delete().eq('id', existente.id);
+        if (del.error) { alert('Erro ao remover: ' + del.error.message); return false; }
+        EQUIPAMENTOS_SERVICOS = EQUIPAMENTOS_SERVICOS.filter(function (e) { return e.id !== existente.id; });
+      }
+      return true;
+    }
+
+    if (novaQtdTotal > Number(item.quantidade_disponivel || 0)) {
+      alert('Só há ' + Number(item.quantidade_disponivel || 0) + ' disponível(is) de "' + item.nome + '" no estoque neste momento. A baixa definitiva será validada ao gerar a OS.');
+      return false;
+    }
+
+    if (existente) {
+      var upd = await EF.client.from('evento_equipamentos').update({ quantidade: novaQtdTotal }).eq('id', existente.id);
+      if (upd.error) { alert('Erro ao salvar: ' + upd.error.message); return false; }
+      existente.quantidade = novaQtdTotal;
+    } else {
+      var ins = await EF.client.from('evento_equipamentos').insert({
+        evento_id: eventoSelecionadoId, estoque_item_id: itemId, quantidade: novaQtdTotal, ordem: EQUIPAMENTOS_SERVICOS.length
+      }).select().maybeSingle();
+      if (ins.error) { alert('Erro ao adicionar: ' + ins.error.message); return false; }
+      EQUIPAMENTOS_SERVICOS.push(ins.data);
+    }
+    return true;
+  }
+
+  // ---------------- SERVIÇOS AVULSOS / TERCEIRIZADOS ----------------
+
+  async function carregarAvulsos() {
+    var res = await EF.client.from('evento_servicos_avulsos').select('*').eq('evento_id', eventoSelecionadoId).order('ordem', { ascending: true });
+    if (res.error) {
+      alert('Erro ao carregar os serviços avulsos deste evento: ' + res.error.message + '\n\nSe você acabou de atualizar o sistema, confira se rodou o schema-servicos-logistica.sql mais recente no Supabase.');
+      return;
+    }
+    AVULSOS = res.data || [];
+    renderizarAvulsos();
+  }
+
+  async function adicionarAvulso() {
+    var nome = document.getElementById('avulso-nome').value.trim();
+    if (!nome) { alert('Descreva o serviço.'); return; }
+    var fornecedor = document.getElementById('avulso-fornecedor').value.trim();
+    var valor = numBR(document.getElementById('avulso-valor').value);
+    var ins = await EF.client.from('evento_servicos_avulsos').insert({
+      evento_id: eventoSelecionadoId, nome: nome, fornecedor: fornecedor, valor: valor, ordem: AVULSOS.length
+    }).select().maybeSingle();
+    if (ins.error) { alert('Erro ao adicionar: ' + ins.error.message); return; }
+    AVULSOS.push(ins.data);
+    document.getElementById('avulso-nome').value = '';
+    document.getElementById('avulso-fornecedor').value = '';
+    document.getElementById('avulso-valor').value = '';
+    renderizarAvulsos();
+    scrollSuavePara(document.getElementById('avulso-lista').lastElementChild);
+  }
+
+  function renderizarAvulsos() {
+    var wrap = document.getElementById('avulso-lista');
+    document.getElementById('avulso-vazio').style.display = AVULSOS.length ? 'none' : '';
+    wrap.innerHTML = AVULSOS.map(function (a) {
+      var partes = [];
+      if (a.fornecedor) partes.push(a.fornecedor);
+      if (a.valor != null) partes.push('R$ ' + Number(a.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 }));
+      return '<div style="display:flex; align-items:center; padding:8px 0; border-bottom:1px solid #1c1c1f; font-size:12.5px;">' +
+        '<div style="flex:1;">' + a.nome + (partes.length ? '<span style="color:#6e6e73; font-size:11px;"> — ' + partes.join(' · ') + '</span>' : '') + '</div>' +
+        '<span class="icone-acao" data-remover-avulso="' + a.id + '" style="margin-left:14px;">remover</span>' +
+      '</div>';
+    }).join('');
+    AVULSOS.forEach(function (a) {
+      wrap.querySelector('[data-remover-avulso="' + a.id + '"]').addEventListener('click', async function () {
+        await EF.client.from('evento_servicos_avulsos').delete().eq('id', a.id);
+        AVULSOS = AVULSOS.filter(function (x) { return x.id !== a.id; });
+        renderizarAvulsos();
+      });
+    });
+  }
+})();
+</script>
+
+<script src="ef-ui.js?v=27"></script>
+</body>
+</html>
