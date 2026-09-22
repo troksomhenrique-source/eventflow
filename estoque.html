@@ -7,9 +7,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="ef-config.js"></script>
-<script src="ef-auth.js?v=33"></script>
-<link rel="stylesheet" href="ef-ui.css?v=33">
+<script src="ef-auth.js?v=35"></script>
+<link rel="stylesheet" href="ef-ui.css?v=35">
 <style>
   body{margin:0;background:#09090b;font-family:'IBM Plex Sans',sans-serif;}
   .mono{font-family:'IBM Plex Mono',monospace;}
@@ -25,6 +26,8 @@
   .stock-button{height:42px;padding:0 16px;border:1px solid rgba(243,240,234,.1);background:#141418;color:#f3f0ea;border-radius:14px;font-size:13px;font-weight:500;cursor:pointer;}
   .stock-button.primary{background:#a8bbcf;color:#09090b;border-color:#a8bbcf;}
   .stock-button:hover{filter:brightness(1.05);}
+  .stock-button:disabled{opacity:.55;cursor:wait;}
+  .stock-file-input{display:none;}
   .stock-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
   .stock-kpi{background:#101114;border:1px solid rgba(243,240,234,.08);border-radius:18px;padding:18px 18px 16px;}
   .stock-kpi-label{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#5c5c62;margin-bottom:10px;}
@@ -81,9 +84,28 @@
   .stock-readonly-note{display:none;padding:11px 14px;border:1px solid rgba(155,180,199,.15);background:rgba(155,180,199,.06);border-radius:14px;color:#9baab7;font-size:12px;line-height:1.45;}
   html[data-role="producao"] .stock-readonly-note,
   html[data-role="estoque"] .stock-readonly-note{display:block;}
+  .import-overlay{position:fixed;inset:0;z-index:1200;display:none;align-items:center;justify-content:center;padding:22px;background:rgba(0,0,0,.72);backdrop-filter:blur(8px);}
+  .import-overlay.open{display:flex;}
+  .import-modal{width:min(940px,100%);max-height:min(760px,calc(100vh - 44px));display:flex;flex-direction:column;background:#101114;border:1px solid rgba(243,240,234,.12);border-radius:22px;box-shadow:0 24px 80px rgba(0,0,0,.55);overflow:hidden;}
+  .import-modal-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;padding:20px 22px;border-bottom:1px solid rgba(243,240,234,.08);}
+  .import-modal-title{font-family:'Space Grotesk',sans-serif;font-size:21px;font-weight:600;}
+  .import-modal-sub{font-size:12px;color:#8c8c91;margin-top:5px;line-height:1.45;}
+  .import-close{border:0;background:transparent;color:#8c8c91;font-size:24px;line-height:1;cursor:pointer;}
+  .import-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:16px 22px 0;}
+  .import-stat{padding:12px 14px;border:1px solid rgba(243,240,234,.08);border-radius:14px;background:#0d0e11;}
+  .import-stat strong{display:block;font-family:'Space Grotesk',sans-serif;font-size:22px;}
+  .import-stat span{font-size:11px;color:#8c8c91;}
+  .import-table-wrap{overflow:auto;margin:16px 22px;border:1px solid rgba(243,240,234,.08);border-radius:14px;min-height:180px;}
+  .import-table{width:100%;border-collapse:collapse;min-width:720px;}
+  .import-table th,.import-table td{padding:10px 12px;border-bottom:1px solid rgba(243,240,234,.06);text-align:left;font-size:12px;vertical-align:top;}
+  .import-table th{position:sticky;top:0;background:#141519;color:#8c8c91;font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;}
+  .import-ok{color:#93c79b}.import-error{color:#e28d81}.import-update{color:#cdbf9d}
+  .import-footer{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:16px 22px 20px;border-top:1px solid rgba(243,240,234,.08);flex-wrap:wrap;}
+  .import-mode{height:42px;border-radius:12px;border:1px solid rgba(243,240,234,.1);background:#121317;color:#f3f0ea;padding:0 12px;}
+  .import-msg{font-size:12px;color:#8c8c91;min-height:18px;flex:1;}
 
   @media (max-width:1150px){.stock-kpis{grid-template-columns:repeat(2,1fr)}.form-grid{grid-template-columns:1fr 1fr}.form-grid-2{grid-template-columns:1fr 1fr}.stock-toolbar{grid-template-columns:1fr 1fr}.stock-tabs{justify-self:stretch}.stock-header{flex-direction:column;}.item-form-grid .span-6,.item-form-grid .span-4,.item-form-grid .span-3,.item-form-grid .span-2{grid-column:span 6;}}
-  @media (max-width:760px){.stock-kpis{grid-template-columns:1fr}.stock-toolbar{grid-template-columns:1fr}.form-grid,.form-grid-2{grid-template-columns:1fr}.stock-table{min-width:980px}.stock-header h1{font-size:28px}.item-form-grid .span-6,.item-form-grid .span-4,.item-form-grid .span-3,.item-form-grid .span-2,.item-form-grid .span-12{grid-column:span 12;}}
+  @media (max-width:760px){.stock-kpis{grid-template-columns:1fr}.stock-toolbar{grid-template-columns:1fr}.form-grid,.form-grid-2{grid-template-columns:1fr}.stock-table{min-width:980px}.stock-header h1{font-size:28px}.item-form-grid .span-6,.item-form-grid .span-4,.item-form-grid .span-3,.item-form-grid .span-2,.item-form-grid .span-12{grid-column:span 12;}.import-summary{grid-template-columns:1fr 1fr}.import-overlay{padding:10px}.import-modal{max-height:calc(100vh - 20px)}.import-footer{align-items:stretch}.import-mode{width:100%}}
 </style>
 </head>
 <body>
@@ -137,8 +159,12 @@
           <div class="stock-sub" id="resumo">Carregando…</div>
         </div>
         <div class="stock-actions">
+          <button class="stock-button" id="btn-exportar-csv" type="button">Exportar CSV</button>
+          <button class="stock-button" id="btn-exportar-xlsx" type="button">Exportar Excel</button>
+          <button class="stock-button stock-admin-only" id="btn-importar" type="button">Importar planilha</button>
           <button class="stock-button stock-admin-only" id="btn-toggle-veiculo-form" type="button">+ Veículo</button>
           <button class="stock-button primary stock-admin-only" id="btn-toggle-form" type="button">+ Novo item</button>
+          <input class="stock-file-input" id="arquivo-importacao" type="file" accept=".csv,.xlsx,.xls">
         </div>
       </div>
 
@@ -227,11 +253,32 @@
     </div>
   </div>
 </div>
+<div class="import-overlay" id="import-overlay" aria-hidden="true">
+  <div class="import-modal" role="dialog" aria-modal="true" aria-labelledby="import-title">
+    <div class="import-modal-head">
+      <div><div class="import-modal-title" id="import-title">Conferir importação</div><div class="import-modal-sub" id="import-arquivo">Confira os dados antes de gravar no estoque.</div></div>
+      <button class="import-close" id="import-fechar" type="button" aria-label="Fechar">×</button>
+    </div>
+    <div class="import-summary">
+      <div class="import-stat"><strong id="import-total">0</strong><span>linhas lidas</span></div>
+      <div class="import-stat"><strong id="import-novos">0</strong><span>novos itens</span></div>
+      <div class="import-stat"><strong id="import-atualizacoes">0</strong><span>atualizações</span></div>
+      <div class="import-stat"><strong id="import-erros">0</strong><span>linhas com erro</span></div>
+    </div>
+    <div class="import-table-wrap"><table class="import-table"><thead><tr><th>Linha</th><th>Item</th><th>Categoria</th><th>SKU</th><th>Qtd.</th><th>Situação</th></tr></thead><tbody id="import-preview"></tbody></table></div>
+    <div class="import-footer">
+      <select id="import-modo" class="import-mode"><option value="upsert">Adicionar novos e atualizar existentes</option><option value="novos">Adicionar somente itens novos</option></select>
+      <div class="import-msg" id="import-msg"></div>
+      <button class="stock-button" id="import-cancelar" type="button">Cancelar</button>
+      <button class="stock-button primary" id="import-confirmar" type="button">Importar dados válidos</button>
+    </div>
+  </div>
+</div>
 <script>
 (function(){
   var CATEGORIAS_ESTOQUE=['Som','Luz','Vídeo','Estrutura','Internet','Cenografia','Extras','Serviços'];
   var COR_CATEGORIA={Som:'#9bb4c7',Luz:'#cdbf9d','Vídeo':'#b1a4c8',Estrutura:'#8ea4ab',Internet:'#7fa7a6',Cenografia:'#c6a699',Extras:'#9eb39f','Serviços':'#8c8c91'};
-  var ITENS=[]; var VEICULOS=[]; var VEICULOS_USO_HOJE={}; var JOBS_POR_ITEM={}; var currentTab='itens'; var ROLE_ATUAL=''; var PODE_ADMIN_ESTOQUE=false;
+  var ITENS=[]; var VEICULOS=[]; var VEICULOS_USO_HOJE={}; var JOBS_POR_ITEM={}; var currentTab='itens'; var ROLE_ATUAL=''; var PODE_ADMIN_ESTOQUE=false; var IMPORTACAO_ATUAL=null;
   function corCategoria(cat){return COR_CATEGORIA[cat]||'#8c8c91';}
   function fmtMoeda(v){return (v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});} 
   function fmtPotencia(v){ if(v==null||v==='') return '—'; var n=Number(v)||0; if(n>=1000) return (Math.round((n/100))/10).toString().replace('.',',')+' kW'; return n.toLocaleString('pt-BR')+' W'; }
@@ -245,12 +292,110 @@
     setTimeout(function () { try { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {} }, 80);
   }
 
+  function textoNormalizado(valor){
+    return String(valor==null?'':valor).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+  }
+  function chaveItem(item){
+    var sku=textoNormalizado(item.sku);
+    if(sku) return 'sku:'+sku;
+    return 'item:'+textoNormalizado(item.nome)+'|'+textoNormalizado(item.marca)+'|'+textoNormalizado(item.categoria);
+  }
+  function numeroPlanilha(valor, inteiro){
+    if(valor==null || valor==='') return null;
+    if(typeof valor==='number') return inteiro?Math.trunc(valor):valor;
+    var limpo=String(valor).trim().replace(/\s/g,'').replace(/^R\$/i,'');
+    if(limpo.indexOf(',')>=0) limpo=limpo.replace(/\./g,'').replace(',','.');
+    var n=Number(limpo); return Number.isFinite(n)?(inteiro?Math.trunc(n):n):NaN;
+  }
+  function valorColuna(obj, aliases){
+    var mapa={}; Object.keys(obj||{}).forEach(function(k){mapa[textoNormalizado(k)]=obj[k];});
+    for(var i=0;i<aliases.length;i++){var chave=textoNormalizado(aliases[i]);if(Object.prototype.hasOwnProperty.call(mapa,chave)) return mapa[chave];}
+    return '';
+  }
+  function categoriaOficial(valor){
+    var chave=textoNormalizado(valor); for(var i=0;i<CATEGORIAS_ESTOQUE.length;i++){if(textoNormalizado(CATEGORIAS_ESTOQUE[i])===chave) return CATEGORIAS_ESTOQUE[i];} return '';
+  }
+  function lerLinhaImportacao(raw, indice){
+    var nome=String(valorColuna(raw,['Nome','Item','Equipamento'])).trim();
+    var categoriaEntrada=valorColuna(raw,['Categoria','Área','Area']); var categoria=categoriaOficial(categoriaEntrada);
+    var total=numeroPlanilha(valorColuna(raw,['Quantidade total','Qtd. estoque','Quantidade estoque','quantidade_total','Total']),true);
+    var disponivel=numeroPlanilha(valorColuna(raw,['Quantidade disponível','Qtd. disponível','Disponível agora','quantidade_disponivel','Disponivel']),true);
+    var preco=numeroPlanilha(valorColuna(raw,['Preço/dia','Preco/dia','Preço unitário','preco_unitario','Valor diária']),false);
+    var peso=numeroPlanilha(valorColuna(raw,['Peso kg','Peso (kg)','peso_kg','Peso']),false);
+    var consumo=numeroPlanilha(valorColuna(raw,['Consumo W','Consumo (W)','consumo_w','Potência W','Potencia W']),false);
+    var porCase=numeroPlanilha(valorColuna(raw,['Unidades por case','Un./case','unidades_por_case']),true);
+    if(total===null) total=0; if(disponivel===null) disponivel=total; if(preco===null) preco=0;
+    var payload={nome:nome,marca:String(valorColuna(raw,['Marca','Fabricante'])).trim(),sku:String(valorColuna(raw,['SKU','Código','Codigo','Modelo'])).trim(),categoria:categoria,unidade:String(valorColuna(raw,['Unidade','Un.'])).trim()||'Unidade',quantidade_total:total,quantidade_disponivel:disponivel,preco_unitario:preco,peso_kg:peso,consumo_w:consumo,unidades_por_case:porCase,descricao:String(valorColuna(raw,['Descrição','Descricao'])).trim(),especificacoes:String(valorColuna(raw,['Especificações','Especificacoes','Ficha técnica','Ficha tecnica'])).trim(),observacoes:String(valorColuna(raw,['Observações','Observacoes','Notas'])).trim()};
+    var erros=[];
+    if(!nome) erros.push('nome ausente');
+    if(!categoria) erros.push('categoria inválida: '+String(categoriaEntrada||'vazia'));
+    [['quantidade total',total],['quantidade disponível',disponivel],['preço',preco],['peso',peso],['consumo',consumo],['unidades/case',porCase]].forEach(function(par){if(Number.isNaN(par[1])) erros.push(par[0]+' inválido'); else if(par[1]!=null && par[1]<0) erros.push(par[0]+' negativo');});
+    if(Number.isFinite(total)&&Number.isFinite(disponivel)&&disponivel>total) erros.push('disponível maior que o total');
+    return {linha:indice+2,payload:payload,erros:erros,existente:null};
+  }
+  function indiceItensExistentes(){var mapa={}; ITENS.forEach(function(item){mapa[chaveItem(item)]=item;}); return mapa;}
+  function abrirModalImportacao(){var modal=document.getElementById('import-overlay');modal.classList.add('open');modal.setAttribute('aria-hidden','false');}
+  function fecharModalImportacao(){var modal=document.getElementById('import-overlay');modal.classList.remove('open');modal.setAttribute('aria-hidden','true');document.getElementById('import-msg').textContent='';}
+  function prepararImportacao(rows,nomeArquivo){
+    var existentes=indiceItensExistentes(); var vistos={}; var processadas=[];
+    rows.forEach(function(raw,idx){
+      var temValor=Object.keys(raw||{}).some(function(k){return String(raw[k]==null?'':raw[k]).trim()!=='';}); if(!temValor) return;
+      var linha=lerLinhaImportacao(raw,idx); var chave=chaveItem(linha.payload);
+      if(vistos[chave]) linha.erros.push('item repetido na planilha'); else vistos[chave]=true;
+      linha.existente=existentes[chave]||null; processadas.push(linha);
+    });
+    IMPORTACAO_ATUAL={arquivo:nomeArquivo,linhas:processadas}; renderizarPreviaImportacao(); abrirModalImportacao();
+  }
+  function renderizarPreviaImportacao(){
+    var linhas=(IMPORTACAO_ATUAL&&IMPORTACAO_ATUAL.linhas)||[]; var validas=linhas.filter(function(l){return !l.erros.length;});
+    var novos=validas.filter(function(l){return !l.existente;}).length; var atualizacoes=validas.length-novos; var erros=linhas.length-validas.length;
+    document.getElementById('import-arquivo').textContent=(IMPORTACAO_ATUAL.arquivo||'Planilha')+' · confira os dados antes de gravar no estoque.';
+    document.getElementById('import-total').textContent=linhas.length; document.getElementById('import-novos').textContent=novos; document.getElementById('import-atualizacoes').textContent=atualizacoes; document.getElementById('import-erros').textContent=erros;
+    var tbody=document.getElementById('import-preview'); tbody.innerHTML='';
+    linhas.slice(0,80).forEach(function(l){var tr=document.createElement('tr');var situacao=l.erros.length?'<span class="import-error">'+esc(l.erros.join('; '))+'</span>':(l.existente?'<span class="import-update">atualizar existente</span>':'<span class="import-ok">novo item</span>');tr.innerHTML='<td>'+l.linha+'</td><td>'+esc(l.payload.nome||'—')+'</td><td>'+esc(l.payload.categoria||'—')+'</td><td>'+esc(l.payload.sku||'—')+'</td><td>'+esc(String(l.payload.quantidade_total))+'</td><td>'+situacao+'</td>';tbody.appendChild(tr);});
+    if(linhas.length>80){var tr=document.createElement('tr');tr.innerHTML='<td colspan="6" class="stock-muted">Prévia limitada às primeiras 80 linhas. Todas as '+linhas.length+' linhas serão validadas.</td>';tbody.appendChild(tr);}
+    document.getElementById('import-confirmar').disabled=validas.length===0;
+  }
+  async function selecionarArquivoImportacao(file){
+    if(!PODE_ADMIN_ESTOQUE){alert('Somente a Gerência pode importar itens.');return;}
+    if(!window.XLSX){alert('O leitor de planilhas não carregou. Verifique a internet e tente novamente.');return;}
+    try{var buffer=await file.arrayBuffer();var workbook=XLSX.read(buffer,{type:'array',cellDates:false});var nomeAba=workbook.SheetNames[0];if(!nomeAba) throw new Error('A planilha não possui abas.');var rows=XLSX.utils.sheet_to_json(workbook.Sheets[nomeAba],{defval:'',raw:true});if(!rows.length) throw new Error('A primeira aba está vazia.');prepararImportacao(rows,file.name);}catch(err){alert('Não foi possível ler a planilha: '+(err.message||err));}
+  }
+  function dadosExportacao(){
+    return ITENS.map(function(it){return {'Nome':it.nome||'','Marca':it.marca||'','SKU':it.sku||'','Categoria':it.categoria||'','Unidade':it.unidade||'Unidade','Quantidade total':Number(it.quantidade_total)||0,'Quantidade disponível':Number(it.quantidade_disponivel)||0,'Preço/dia':PODE_ADMIN_ESTOQUE?(Number(it.preco_unitario)||0):'','Peso kg':it.peso_kg==null?'':Number(it.peso_kg),'Consumo W':it.consumo_w==null?'':Number(it.consumo_w),'Unidades por case':it.unidades_por_case==null?'':Number(it.unidades_por_case),'Descrição':it.descricao||'','Especificações':it.especificacoes||'','Observações':it.observacoes||''};});
+  }
+  function nomeArquivoExportacao(ext){var d=new Date();var stamp=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');return 'estoque-eventflow-'+stamp+'.'+ext;}
+  function baixarBlob(blob,nome){var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.download=nome;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(url);},1000);}
+  function exportarCSV(){
+    var rows=dadosExportacao(); if(!rows.length){alert('Não há itens para exportar.');return;}
+    var headers=Object.keys(rows[0]); var csv=[headers].concat(rows.map(function(r){return headers.map(function(h){return r[h];});})).map(function(row){return row.map(function(v){var s=String(v==null?'':v);if(/^[=+\-@]/.test(s)) s="'"+s;return '"'+s.replace(/"/g,'""')+'"';}).join(';');}).join('\r\n');
+    baixarBlob(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}),nomeArquivoExportacao('csv'));
+  }
+  function exportarExcel(){
+    if(!window.XLSX){alert('O gerador de Excel não carregou. Verifique a internet e tente novamente.');return;} var rows=dadosExportacao(); if(!rows.length){alert('Não há itens para exportar.');return;}
+    var ws=XLSX.utils.json_to_sheet(rows); ws['!autofilter']={ref:ws['!ref']}; ws['!cols']=[{wch:34},{wch:18},{wch:17},{wch:14},{wch:12},{wch:18},{wch:22},{wch:14},{wch:12},{wch:13},{wch:19},{wch:42},{wch:54},{wch:42}];var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Estoque');XLSX.writeFile(wb,nomeArquivoExportacao('xlsx'),{compression:true});
+  }
+  async function confirmarImportacao(){
+    if(!PODE_ADMIN_ESTOQUE||!IMPORTACAO_ATUAL) return; var modo=document.getElementById('import-modo').value; var linhas=IMPORTACAO_ATUAL.linhas.filter(function(l){return !l.erros.length && !(modo==='novos'&&l.existente);});
+    var btn=document.getElementById('import-confirmar');var cancelar=document.getElementById('import-cancelar');var msg=document.getElementById('import-msg');btn.disabled=true;cancelar.disabled=true;var inseridos=0,atualizados=0,falhas=[];
+    for(var i=0;i<linhas.length;i++){msg.textContent='Importando '+(i+1)+' de '+linhas.length+'...';var linha=linhas[i];var payload=Object.assign({},linha.payload);if(linha.existente){var rUp=await EF.client.from('estoque_itens').update(payload).eq('id',linha.existente.id).eq('empresa_id',EF.profile.empresa_id);if(rUp.error) falhas.push('linha '+linha.linha+': '+rUp.error.message);else atualizados++;}else{payload.empresa_id=EF.profile.empresa_id;var rIn=await EF.client.from('estoque_itens').insert(payload);if(rIn.error) falhas.push('linha '+linha.linha+': '+rIn.error.message);else inseridos++;}}
+    btn.disabled=false;cancelar.disabled=false;await carregarEstoque();msg.textContent=inseridos+' inserido(s), '+atualizados+' atualizado(s)'+(falhas.length?' · '+falhas.length+' falha(s).':' · importação concluída.');msg.style.color=falhas.length?'#e28d81':'#93c79b';if(falhas.length) console.warn('Falhas na importação do estoque:',falhas);else setTimeout(fecharModalImportacao,900);
+  }
+
 
   document.addEventListener('DOMContentLoaded', async function(){
     if(!window.EF || !EF.ready) return; var ok=await EF.init({}); if(!ok) return; ROLE_ATUAL=(EF.profile&&EF.profile.role)||''; PODE_ADMIN_ESTOQUE=ROLE_ATUAL==='gerencia'||ROLE_ATUAL==='owner'; if(!PODE_ADMIN_ESTOQUE){document.querySelectorAll('.stock-price-col').forEach(function(el){el.remove();});}
     document.getElementById('hoje').textContent=new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'});
     var btnNovoItem=document.getElementById('btn-toggle-form'); if(btnNovoItem) btnNovoItem.addEventListener('click',function(){toggle('bloco-form');});
     var btnNovoVeiculo=document.getElementById('btn-toggle-veiculo-form'); if(btnNovoVeiculo) btnNovoVeiculo.addEventListener('click',function(){toggle('bloco-form-veiculo');});
+    document.getElementById('btn-exportar-csv').addEventListener('click',exportarCSV);
+    document.getElementById('btn-exportar-xlsx').addEventListener('click',exportarExcel);
+    document.getElementById('btn-importar').addEventListener('click',function(){document.getElementById('arquivo-importacao').click();});
+    document.getElementById('arquivo-importacao').addEventListener('change',function(){var file=this.files&&this.files[0];this.value='';if(file) selecionarArquivoImportacao(file);});
+    document.getElementById('import-fechar').addEventListener('click',fecharModalImportacao);
+    document.getElementById('import-cancelar').addEventListener('click',fecharModalImportacao);
+    document.getElementById('import-confirmar').addEventListener('click',confirmarImportacao);
+    document.getElementById('import-overlay').addEventListener('click',function(e){if(e.target===this) fecharModalImportacao();});
     document.getElementById('busca-estoque').addEventListener('input',renderizarTabela);
     document.getElementById('filtro-categoria').addEventListener('change',renderizarTabela);
     document.querySelectorAll('.stock-tab').forEach(function(btn){btn.addEventListener('click',function(){document.querySelectorAll('.stock-tab').forEach(function(b){b.classList.toggle('active',b===btn);}); currentTab=btn.dataset.tab; renderizarTabela();});});
@@ -417,6 +562,6 @@
   }
 })();
 </script>
-<script src="ef-ui.js?v=33"></script>
+<script src="ef-ui.js?v=35"></script>
 </body>
 </html>

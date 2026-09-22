@@ -160,9 +160,9 @@ html[data-theme="light"] select{color-scheme:light}
 
 /* Superficies novas de colaboracao e CRM. */
 html[data-theme="light"] body{background:var(--ef-bg)!important;color:var(--ef-text)!important}
-html[data-theme="light"] :where(.composer,.post,.side-card,.crm-main .kpis,.crm-main .kpi,.crm-main .column,.crm-main .lead,.crm-main .modal,.crm-main .file-row,.crm-main .upload,.crm-main .stage-editor,.participants-panel,.my-profile,.comment-copy,.linked,.attachment){background:var(--ef-panel)!important;border-color:var(--ef-border)!important;color:var(--ef-text)!important}
+html[data-theme="light"] :where(.composer,.post,.side-card,.crm-main .kpis,.crm-main .kpi,.crm-main .column,.crm-main .lead,.crm-main .modal,.crm-main .file-row,.crm-main .upload,.crm-main .stage-editor,.crm-main .stage-history-item,.participants-panel,.my-profile,.comment-copy,.linked,.attachment){background:var(--ef-panel)!important;border-color:var(--ef-border)!important;color:var(--ef-text)!important}
 html[data-theme="light"] :where(.composer-title,.composer-text,.feed-search,.select,.comment-input,.crm-main .field){background:#fff!important;border-color:var(--ef-border)!important;color:var(--ef-text)!important}
-html[data-theme="light"] :where(.composer-tabs,.post-actions,.side-item,.crm-main .tabs,.crm-main .activity,.tasks-table-head,.linha-tarefa){border-color:var(--ef-border)!important}
+html[data-theme="light"] :where(.composer-tabs,.post-actions,.side-item,.crm-main .tabs,.crm-main .activity,.crm-main .stage-history,.tasks-table-head,.linha-tarefa){border-color:var(--ef-border)!important}
 html[data-theme="light"] .crm-main .column.drag-over{background:#edf5fa!important;border-color:#527c99!important}
 html[data-theme="light"] .crm-main .file-preview{background:var(--ef-panel-2)!important}
 html[data-theme="light"] .post.pinned{border-color:#7194ac!important}
