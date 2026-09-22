@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="ef-config.js"></script>
-<script src="ef-auth.js?v=32"></script>
+<script src="ef-auth.js?v=33"></script>
 <style>
   html,body{margin:0;height:100%;background:#0a0a0b;font-family:'Inter',sans-serif;}
   .mono{font-family:'IBM Plex Mono',monospace;}
@@ -29,7 +29,7 @@
   .icone-acao:hover{color:#c9695c;}
   .icone-acao.neutro:hover{color:#7fa8c9;}
 
-  .item-conversa{display:flex; align-items:center; gap:11px; padding:11px 10px; border-radius:7px; cursor:pointer;}
+  .item-conversa{display:flex;align-items:center;gap:12px;padding:13px 12px;min-height:64px;border-radius:11px;cursor:pointer;box-sizing:border-box;}
   .item-conversa:hover{background:#131315;}
   .item-conversa.ativo{background:#15171c;}
   .avatar-conversa{width:34px;height:34px;border-radius:50%;background:#1a1a1d;display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-size:11.5px;font-weight:600;color:#b8b8bc;flex-shrink:0;}
@@ -39,7 +39,7 @@
   .chat-back{display:none;width:38px;height:38px;border:0;background:transparent;color:#c8c8cc;border-radius:10px;font-size:22px;line-height:1;cursor:pointer;align-items:center;justify-content:center;flex:0 0 38px;}
   .btn-menu-grupo{display:none;width:34px;height:34px;border:1px solid #29292d;border-radius:50%;background:transparent;color:#b8b8bc;font-size:20px;line-height:1;cursor:pointer;}
   .btn-menu-grupo:hover{color:#f3f1ec;background:#15171c;border-color:#3a3a40;}
-  .chat-action{width:auto;min-width:34px;height:34px;border:1px solid #29292d;border-radius:9px;background:transparent;color:#a9abb1;padding:0 9px;font-size:10px;cursor:pointer}.chat-action:hover{color:#e9eef2;border-color:#496579}.msg-actions{display:flex;gap:8px;margin-top:4px;opacity:0;transition:.15s}.msg-row:hover .msg-actions,.msg-actions:focus-within{opacity:1}.msg-link{border:0;background:transparent;color:#666970;padding:0;font-size:9px;cursor:pointer}.msg-link:hover{color:#91b5cf}.chat-search{width:100%;margin-top:12px;background:#111214;border:1px solid #24262b;border-radius:9px;color:#f3f1ec;padding:9px 10px;box-sizing:border-box;font-size:12px}
+  .chat-action{width:auto;min-width:34px;height:34px;border:1px solid #29292d;border-radius:9px;background:transparent;color:#a9abb1;padding:0 9px;font-size:10px;cursor:pointer}.chat-action:hover{color:#e9eef2;border-color:#496579}.msg-actions{display:flex;gap:8px;margin-top:4px;opacity:0;transition:.15s}.msg-row:hover .msg-actions,.msg-actions:focus-within{opacity:1}.msg-link{border:0;background:transparent;color:#666970;padding:0;font-size:9px;cursor:pointer}.msg-link:hover{color:#91b5cf}.chat-search{width:100%;margin-top:12px;background:#111214;border:1px solid #24262b;border-radius:10px;color:#f3f1ec;padding:11px 12px;min-height:44px;box-sizing:border-box;font-size:12px}.my-profile{display:flex;align-items:center;gap:11px;width:100%;border:0;border-bottom:1px solid #1c1c1f;background:#101114;color:#f3f1ec;padding:13px 20px;text-align:left;cursor:pointer}.my-profile:hover{background:#15171b}.my-profile-copy{min-width:0;flex:1}.my-profile-copy b{display:block;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.my-profile-copy small{display:block;color:#71808b;font-size:9px;margin-top:3px}.profile-edit{color:#8fb4cc;font-size:10px}
 
   .modal-fundo{position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.72);display:none;align-items:center;justify-content:center;padding:18px;box-sizing:border-box;}
   .modal-fundo.aberto{display:flex;}
@@ -67,11 +67,11 @@
 
   #painel-nova-conversa, #painel-novo-grupo{padding:16px; background:#131315; border:1px solid #1c1c1f; border-radius:8px; margin-bottom:12px;}
   .chat-workspace{flex:1;min-width:0;height:100vh;display:flex!important;padding:0!important;overflow:hidden;background:#09090b;}
-  .chat-conversations{width:300px;min-width:300px;border-right:1px solid #1c1c1f;display:flex;flex-direction:column;box-sizing:border-box;background:#0d0d0f;}
+  .chat-conversations{width:350px;min-width:350px;border-right:1px solid #1c1c1f;display:flex;flex-direction:column;box-sizing:border-box;background:#0d0d0f;}
   .chat-thread{flex:1;display:flex;flex-direction:column;min-width:0;background:#09090b;}
-  .participants-panel{width:280px;min-width:280px;border-left:1px solid #1c1c1f;background:#0d0d0f;padding:18px;overflow:auto;display:none}.participants-panel.open{display:block}.participant{display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid #1d1e22}.participant .avatar-conversa{width:32px;height:32px}.participant b{font-size:11px;display:block}.participant small{font-size:9px;color:#707178}.copy-chat{width:100%;border:1px solid #31506a;background:#12202b;color:#9dc4df;border-radius:9px;padding:9px;font-size:10px;cursor:pointer;margin:12px 0}
-  @media(max-width:900px){.chat-workspace{height:100dvh}.chat-conversations{width:280px;min-width:280px}}
-  @media(max-width:680px){
+  .participants-panel{width:310px;min-width:310px;border-left:1px solid #1c1c1f;background:#0d0d0f;padding:18px;overflow:auto;display:none}.participants-panel.open{display:block}.participant{display:flex;align-items:center;gap:9px;padding:10px 0;border-bottom:1px solid #1d1e22}.participant .avatar-conversa{width:34px;height:34px}.participant b{font-size:11px;display:block}.participant small{font-size:9px;color:#707178}.copy-chat{width:100%;border:1px solid #31506a;background:#12202b;color:#9dc4df;border-radius:9px;padding:10px;font-size:10px;cursor:pointer;margin:12px 0}
+  @media(max-width:1100px){.chat-workspace{height:100dvh}.chat-conversations{width:310px;min-width:310px}}
+  @media(max-width:780px){
     .chat-workspace{display:flex!important;overflow:hidden!important;position:relative;}
     .chat-conversations{display:flex!important;width:100%!important;min-width:0!important;height:100%!important;border:0!important;}
     .chat-thread{display:none!important;width:100%;height:100%!important;min-height:0;}
@@ -82,14 +82,14 @@
     .chat-conversations>div:first-child{padding:16px 16px 13px!important;}
     #btn-nova-conversa,#btn-novo-grupo{min-height:38px;display:inline-flex;align-items:center;padding:0 10px;border:1px solid rgba(155,180,199,.16);border-radius:10px;background:rgba(155,180,199,.06);}
     #lista-conversas{padding:6px 8px 16px!important;}
-    .item-conversa{min-height:58px;padding:10px 11px;border-radius:12px;}
+    .item-conversa{min-height:70px;padding:12px 13px;border-radius:12px;}
     .avatar-conversa{width:40px;height:40px;}
     .thread-head{padding:9px 10px!important;min-height:58px;}
     #lista-mensagens{padding:14px 12px!important;overscroll-behavior:contain;}
     .chat-composer{padding:10px 10px max(10px,env(safe-area-inset-bottom))!important;}
     .chat-compose-row{gap:5px!important;align-items:center!important;}
     .chat-compose-row .btn-icone{font-size:19px;padding:7px 5px;}
-    #input-mensagem{min-width:0;max-height:96px!important;font-size:16px!important;}
+    #input-mensagem{min-width:0;min-height:48px!important;max-height:120px!important;font-size:16px!important;}
     #btn-enviar{font-size:0!important;padding:8px!important;width:40px;height:40px;display:grid;place-items:center;border-radius:12px;background:#203952!important;}
     #btn-enviar::after{content:'➤';font-size:17px;color:#dceaf4;}
     .bolha{max-width:88%;font-size:14px;}
@@ -99,7 +99,7 @@
   .lista-check{max-height:180px; overflow-y:auto; display:flex; flex-direction:column; gap:9px; margin: 10px 0;}
   .lista-check label{display:flex; align-items:center; gap:9px; font-size:12.5px; color:#c8c8cc; cursor:pointer;}
 </style>
-<link rel="stylesheet" href="ef-ui.css?v=32">
+<link rel="stylesheet" href="ef-ui.css?v=33">
 </head>
 <body>
 
@@ -173,6 +173,12 @@
       <input id="busca-conversas" class="chat-search" type="search" placeholder="Buscar conversa">
     </div>
 
+    <button id="btn-meu-perfil" class="my-profile" type="button">
+      <div id="meu-avatar" class="avatar-conversa" style="width:42px;height:42px;">?</div>
+      <div class="my-profile-copy"><b id="meu-perfil-nome">Meu perfil</b><small>Foto exibida no Chat e no Feed</small></div>
+      <span class="profile-edit">Editar</span>
+    </button>
+
     <div style="padding: 14px 16px 0; overflow-y: auto;">
       <div id="painel-nova-conversa" style="display:none;">
         <div class="rotulo-mini mono" style="font-size:9.5px; letter-spacing:.05em; text-transform:uppercase; color:#6e6e73; margin-bottom:8px;">Conversar com</div>
@@ -240,6 +246,25 @@
   </div><!-- /chat-workspace -->
 </div>
 
+<div id="modal-perfil" class="modal-fundo" role="dialog" aria-modal="true" aria-labelledby="modal-perfil-titulo">
+  <div class="modal-grupo">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+      <div><div id="modal-perfil-titulo" class="disp" style="font-size:17px;font-weight:600;">Minha foto</div></div>
+      <button id="btn-fechar-perfil" type="button" class="btn-secundario" style="padding:5px 9px;" aria-label="Fechar">✕</button>
+    </div>
+    <div id="perfil-foto-preview" class="grupo-foto-preview">?</div>
+    <input id="perfil-foto-arquivo" type="file" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none;">
+    <div style="display:flex;justify-content:center;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+      <button id="btn-trocar-foto-perfil" type="button" class="btn-secundario">Escolher foto</button>
+      <button id="btn-remover-foto-perfil" type="button" class="btn-secundario">Remover foto</button>
+    </div>
+    <div id="perfil-config-msg" style="font-size:12px;min-height:17px;text-align:center;"></div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px;">
+      <button id="btn-salvar-perfil" type="button" class="btn-salvar">Salvar foto</button>
+    </div>
+  </div>
+</div>
+
 <div id="modal-grupo" class="modal-fundo" role="dialog" aria-modal="true" aria-labelledby="modal-grupo-titulo">
   <div class="modal-grupo">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
@@ -291,6 +316,8 @@
   var timerGravacao = null;
   var fotoGrupoPendente = null;
   var removerFotoGrupo = false;
+  var fotoPerfilPendente = null;
+  var removerFotoPerfil = false;
 
   document.addEventListener('DOMContentLoaded', async function () {
     if (!window.EF || !EF.ready) return;
@@ -300,6 +327,8 @@
     EU = EF.profile;
     var nome = EU.nome || EU.email || 'Usuário';
     var iniciais = nome.split(' ').filter(Boolean).slice(0, 2).map(function (s) { return s[0].toUpperCase(); }).join('');
+    document.getElementById('meu-perfil-nome').textContent = nome;
+    preencherAvatarPerfil(document.getElementById('meu-avatar'), EU);
 
     montarEmojiPicker();
     ligarEventos();
@@ -308,6 +337,7 @@
     await carregarConversas();
     var abrirId=new URLSearchParams(location.search).get('conversa');
     if(abrirId&&CONVERSAS.some(function(c){return c.id===abrirId}))await abrirConversa(abrirId);
+    else if(CONVERSAS.length&&(!window.matchMedia||!window.matchMedia('(max-width: 780px)').matches))await abrirConversa(CONVERSAS[0].id);
   });
 
   function iniciaisDe(nome) {
@@ -345,6 +375,13 @@
     document.getElementById('copy-chat-link').addEventListener('click',copiarLinkChat);
     document.getElementById('busca-conversas').addEventListener('input',renderizarListaConversas);
     document.getElementById('btn-video-call').addEventListener('click', criarChamadaMeet);
+    document.getElementById('btn-meu-perfil').addEventListener('click', abrirPerfil);
+    document.getElementById('btn-fechar-perfil').addEventListener('click', fecharPerfil);
+    document.getElementById('modal-perfil').addEventListener('click',function(e){if(e.target===e.currentTarget)fecharPerfil()});
+    document.getElementById('btn-trocar-foto-perfil').addEventListener('click',function(){document.getElementById('perfil-foto-arquivo').click()});
+    document.getElementById('perfil-foto-arquivo').addEventListener('change',selecionarFotoPerfil);
+    document.getElementById('btn-remover-foto-perfil').addEventListener('click',marcarRemocaoFotoPerfil);
+    document.getElementById('btn-salvar-perfil').addEventListener('click',salvarFotoPerfil);
     document.getElementById('btn-fechar-grupo').addEventListener('click', fecharConfiguracoesGrupo);
     document.getElementById('modal-grupo').addEventListener('click', function (e) {
       if (e.target === e.currentTarget) fecharConfiguracoesGrupo();
@@ -357,7 +394,7 @@
     document.getElementById('btn-salvar-grupo').addEventListener('click', salvarConfiguracoesGrupo);
     document.getElementById('btn-apagar-grupo').addEventListener('click', apagarGrupo);
     document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape') fecharConfiguracoesGrupo();
+      if (e.key === 'Escape') { fecharConfiguracoesGrupo(); fecharPerfil(); }
     });
 
     document.getElementById('btn-emoji').addEventListener('click', function () {
@@ -399,8 +436,8 @@
 
   async function criarDoChat(tipo,texto){
     if(!conversaAtivaId)return;
-    var fn=tipo==='tarefa'?'chat_criar_tarefa':'chat_criar_nota',args=tipo==='tarefa'?{p_conversa_id:conversaAtivaId,p_texto:texto||null,p_responsavel_id:EU.id,p_prazo:null}:{p_conversa_id:conversaAtivaId,p_conteudo:texto||null};
-    var r=await EF.client.rpc(fn,args);if(r.error){alert('Execute a migração REV11: '+r.error.message);return}
+    var fn=tipo==='tarefa'?'comunicacao_criar_tarefa':'comunicacao_criar_nota',args=tipo==='tarefa'?{p_texto:texto||null,p_categoria:'Comunicação',p_prazo:null,p_prioridade:'normal',p_descricao:null,p_responsavel_id:EU.id,p_evento_id:null,p_lead_id:null,p_conversa_id:conversaAtivaId}:{p_titulo:'Nota do chat',p_conteudo:texto||null,p_evento_id:null,p_lead_id:null,p_conversa_id:conversaAtivaId,p_fixada:false};
+    var r=await EF.client.rpc(fn,args);if(r.error){alert('Execute a migração REV13: '+r.error.message);return}
     document.getElementById('input-mensagem').value='';var sub=document.getElementById('thread-sub'),old=sub.textContent;sub.textContent=tipo==='tarefa'?'Tarefa criada ✓':'Nota criada ✓';sub.style.color='#7cae83';setTimeout(function(){sub.textContent=old;sub.style.color=''},1800);
   }
   async function copiarLinkChat(){var url=location.origin+location.pathname+'?conversa='+encodeURIComponent(conversaAtivaId);try{await navigator.clipboard.writeText(url);document.getElementById('copy-chat-link').textContent='Link copiado ✓';setTimeout(function(){document.getElementById('copy-chat-link').textContent='Copiar link do bate-papo'},1600)}catch(e){prompt('Copie o link:',url)}}
@@ -423,7 +460,7 @@
   // ---------------- PESSOAS / CONVERSAS ----------------
 
   async function carregarPessoas() {
-    var res = await EF.client.from('profiles').select('id, nome, email, role').eq('empresa_id', EU.empresa_id).eq('ativo', true).order('nome', { ascending: true });
+    var res = await EF.client.from('profiles').select('id, nome, email, role, avatar_path').eq('empresa_id', EU.empresa_id).eq('ativo', true).order('nome', { ascending: true });
     if(res.error){console.error('Erro ao carregar pessoas:',res.error); alert('Erro ao carregar equipe do chat: '+res.error.message); return;} PESSOAS = (res.data || []).filter(function (p) { return p.id !== EU.id; });
 
     var selectPessoa = document.getElementById('select-pessoa');
@@ -513,7 +550,13 @@
     el.innerHTML = '';
     var fallback = c && c.tipo === 'grupo' ? '#' : iniciaisDe(nome);
     el.textContent = fallback;
-    if (!c || c.tipo !== 'grupo' || !c.avatar_path) return;
+    if (!c) return;
+    if(c.tipo!=='grupo'){
+      var ids=PARTICIPANTES[c.id]||[],outroId=ids.find(function(id){return id!==EU.id}),p=PESSOAS.find(function(x){return x.id===outroId});
+      if(p)preencherAvatarPerfil(el,p);
+      return;
+    }
+    if(!c.avatar_path)return;
     EF.client.storage.from(BUCKET).createSignedUrl(c.avatar_path, 3600).then(function (res) {
       if (res.error || !res.data || !res.data.signedUrl || !el.isConnected) return;
       var img = document.createElement('img');
@@ -522,6 +565,14 @@
       img.addEventListener('error', function () { el.innerHTML = ''; el.textContent = fallback; });
       el.innerHTML = '';
       el.appendChild(img);
+    });
+  }
+
+  function preencherAvatarPerfil(el,p){
+    if(!el||!p)return;var nome=p.nome||p.email||'Usuário',fallback=iniciaisDe(nome);el.innerHTML='';el.textContent=fallback;
+    if(!p.avatar_path)return;
+    EF.client.storage.from('eventflow-avatars').createSignedUrl(p.avatar_path,3600).then(function(res){
+      if(res.error||!res.data||!res.data.signedUrl||!el.isConnected)return;var img=document.createElement('img');img.alt='Foto de '+nome;img.src=res.data.signedUrl;img.addEventListener('error',function(){el.innerHTML='';el.textContent=fallback});el.innerHTML='';el.appendChild(img)
     });
   }
 
@@ -626,6 +677,15 @@
     await carregarConversas();
     await abrirConversa(conversa.id);
   }
+
+  // ---------------- FOTO DO PERFIL ----------------
+
+  function abrirPerfil(){fotoPerfilPendente=null;removerFotoPerfil=false;document.getElementById('perfil-foto-arquivo').value='';document.getElementById('perfil-config-msg').textContent='';preencherAvatarPerfil(document.getElementById('perfil-foto-preview'),EU);document.getElementById('btn-remover-foto-perfil').disabled=!EU.avatar_path;document.getElementById('modal-perfil').classList.add('aberto')}
+  function fecharPerfil(){document.getElementById('modal-perfil').classList.remove('aberto');fotoPerfilPendente=null;removerFotoPerfil=false}
+  function selecionarFotoPerfil(e){var file=e.target.files&&e.target.files[0];if(!file)return;if(!/^image\/(jpeg|png|webp|gif)$/i.test(file.type||'')){alert('Escolha uma imagem JPG, PNG, WEBP ou GIF.');e.target.value='';return}if(file.size>5*1024*1024){alert('A foto pode ter no máximo 5 MB.');e.target.value='';return}fotoPerfilPendente=file;removerFotoPerfil=false;document.getElementById('btn-remover-foto-perfil').disabled=false;var reader=new FileReader();reader.onload=function(){var el=document.getElementById('perfil-foto-preview');el.innerHTML='<img src="'+reader.result+'" alt="Nova foto de perfil">'};reader.readAsDataURL(file)}
+  function marcarRemocaoFotoPerfil(){fotoPerfilPendente=null;removerFotoPerfil=true;document.getElementById('perfil-foto-arquivo').value='';var el=document.getElementById('perfil-foto-preview');el.innerHTML='';el.textContent=iniciaisDe(EU.nome||EU.email);document.getElementById('btn-remover-foto-perfil').disabled=true}
+  function botoesPerfil(ocupado){['btn-trocar-foto-perfil','btn-remover-foto-perfil','btn-salvar-perfil','btn-fechar-perfil'].forEach(function(id){document.getElementById(id).disabled=ocupado})}
+  async function salvarFotoPerfil(){var msg=document.getElementById('perfil-config-msg'),antigo=EU.avatar_path||null,novo=removerFotoPerfil?null:antigo,enviado=null;botoesPerfil(true);msg.style.color='#8c8c91';msg.textContent='Salvando...';if(fotoPerfilPendente){enviado=EU.empresa_id+'/'+EU.id+'/avatar/'+Date.now()+'.'+extensaoFoto(fotoPerfilPendente);var up=await EF.client.storage.from('eventflow-avatars').upload(enviado,fotoPerfilPendente,{contentType:fotoPerfilPendente.type,cacheControl:'3600',upsert:false});if(up.error){botoesPerfil(false);msg.style.color='#c9695c';msg.textContent=up.error.message;return}novo=enviado}var r=await EF.client.rpc('atualizar_minha_foto',{p_avatar_path:novo});if(r.error){if(enviado)await EF.client.storage.from('eventflow-avatars').remove([enviado]);botoesPerfil(false);msg.style.color='#c9695c';msg.textContent='Execute a migração REV13: '+r.error.message;return}EU.avatar_path=novo;EF.profile.avatar_path=novo;if(antigo&&antigo!==novo)await EF.client.storage.from('eventflow-avatars').remove([antigo]);fotoPerfilPendente=null;removerFotoPerfil=false;botoesPerfil(false);msg.style.color='#7cae83';msg.textContent='Foto atualizada.';preencherAvatarPerfil(document.getElementById('meu-avatar'),EU);preencherAvatarPerfil(document.getElementById('perfil-foto-preview'),EU);renderizarListaConversas();if(conversaAtivaId)renderParticipantes(CONVERSAS.find(function(c){return c.id===conversaAtivaId}))}
 
   // ---------------- CONFIGURAÇÕES DO GRUPO ----------------
 
@@ -846,7 +906,7 @@
     conversaAtivaId = conversaId;
     renderizarListaConversas();
 
-    if (window.matchMedia && window.matchMedia('(max-width: 680px)').matches) {
+    if (window.matchMedia && window.matchMedia('(max-width: 780px)').matches) {
       document.querySelector('.chat-workspace').classList.add('mobile-thread-open');
     }
 
@@ -877,7 +937,7 @@
     renderParticipantes(c);
   }
 
-  function renderParticipantes(c){var ids=c?(PARTICIPANTES[c.id]||[]):[],all=[EU].concat(PESSOAS),list=ids.map(function(id){return all.find(function(p){return p.id===id})}).filter(Boolean);document.getElementById('participant-count').textContent=list.length;document.getElementById('participants-list').innerHTML=list.map(function(p){var n=p.nome||p.email||'Usuário';return'<div class="participant"><div class="avatar-conversa">'+iniciaisDe(n)+'</div><div><b>'+escapeHtml(n)+(p.id===EU.id?' (você)':'')+'</b><small>'+escapeHtml(ROLE_LABEL[p.role]||p.role||'Equipe')+'</small></div></div>'}).join('')}
+  function renderParticipantes(c){var ids=c?(PARTICIPANTES[c.id]||[]):[],all=[EU].concat(PESSOAS),list=ids.map(function(id){return all.find(function(p){return p.id===id})}).filter(Boolean),box=document.getElementById('participants-list');document.getElementById('participant-count').textContent=list.length;box.innerHTML=list.map(function(p){var n=p.nome||p.email||'Usuário';return'<div class="participant"><div class="avatar-conversa" data-participant-avatar="'+p.id+'">'+iniciaisDe(n)+'</div><div><b>'+escapeHtml(n)+(p.id===EU.id?' (você)':'')+'</b><small>'+escapeHtml(ROLE_LABEL[p.role]||p.role||'Equipe')+'</small></div></div>'}).join('');Array.prototype.forEach.call(box.querySelectorAll('[data-participant-avatar]'),function(el){var p=all.find(function(x){return x.id===el.dataset.participantAvatar});if(p)preencherAvatarPerfil(el,p)})}
 
   async function carregarMensagens(conversaId) {
     var res = await EF.client.from('mensagens').select('*').eq('conversa_id', conversaId).order('created_at', { ascending: true });
@@ -1058,6 +1118,6 @@
 })();
 </script>
 
-<script src="ef-ui.js?v=32"></script>
+<script src="ef-ui.js?v=33"></script>
 </body>
 </html>

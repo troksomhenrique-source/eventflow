@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="ef-config.js"></script>
-<script src="ef-auth.js?v=32"></script>
+<script src="ef-auth.js?v=33"></script>
 <style>
   body{margin:0;background:#0a0a0b;font-family:'Inter',sans-serif;}
   .mono{font-family:'IBM Plex Mono',monospace;}
@@ -48,7 +48,7 @@
   .comm-filters{display:grid;grid-template-columns:minmax(220px,1fr) 180px 180px;gap:10px;margin-bottom:22px}.comm-field{width:100%;background:#111214;border:1px solid #25272c;border-radius:10px;color:#f3f1ec;padding:10px 11px;box-sizing:border-box;min-height:41px}.comm-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 16px}.comm-meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}.comm-pill{font:500 8.5px 'IBM Plex Mono',monospace;letter-spacing:.04em;text-transform:uppercase;color:#929399;background:#18191c;border:1px solid #25262b;border-radius:999px;padding:3px 6px}.comm-pill.urgent{color:#e59a90;border-color:#58312d}.nota-fixada{border-left:2px solid #90b6d1;padding-left:12px}.nota-titulo{font:600 12.5px 'Space Grotesk',sans-serif;margin-bottom:5px}
   @media(max-width:900px){.tasks-table-head{display:none}.linha-tarefa{grid-template-columns:24px minmax(0,1fr) 20px;align-items:start}.linha-tarefa .task-cell,.linha-tarefa .tag-tarefa{display:none}.del-tarefa{grid-column:3;grid-row:1}.texto-tarefa{grid-column:2;grid-row:1}}@media(max-width:760px){.comm-filters,.comm-grid{grid-template-columns:1fr}.notes-header{gap:14px}.notes-actions{gap:8px!important}.notes-actions span{padding:8px;border:1px solid #26313a;border-radius:9px}}
 </style>
-<link rel="stylesheet" href="ef-ui.css?v=32">
+<link rel="stylesheet" href="ef-ui.css?v=33">
 </head>
 <body>
 
@@ -263,25 +263,22 @@
       msg.style.color = '#8c8c91';
       msg.textContent = 'Salvando...';
 
-      var { error } = await EF.client.from('tarefas').insert({
-        empresa_id: p.empresa_id,
-        autor_id: p.id,
-        autor_nome: nome,
-        texto: textoVal,
-        categoria: categoriaVal,
-        urgente: prioridadeVal === 'urgente',
-        prioridade: prioridadeVal,
-        prazo: prazoVal,
-        descricao: document.getElementById('nova-descricao-tarefa').value.trim(),
-        responsavel_id: document.getElementById('novo-responsavel-tarefa').value || null,
-        evento_id: document.getElementById('novo-evento-tarefa').value || null,
-        lead_id: document.getElementById('novo-lead-tarefa').value || null
+      var { error } = await EF.client.rpc('comunicacao_criar_tarefa', {
+        p_texto: textoVal,
+        p_categoria: categoriaVal,
+        p_prazo: prazoVal,
+        p_prioridade: prioridadeVal,
+        p_descricao: document.getElementById('nova-descricao-tarefa').value.trim(),
+        p_responsavel_id: document.getElementById('novo-responsavel-tarefa').value || null,
+        p_evento_id: document.getElementById('novo-evento-tarefa').value || null,
+        p_lead_id: document.getElementById('novo-lead-tarefa').value || null,
+        p_conversa_id: null
       });
 
       btn.disabled = false;
       if (error) {
         msg.style.color = '#c9695c';
-        msg.textContent = error.message;
+        msg.textContent = 'Execute a migração REV13: ' + error.message;
         return;
       }
       msg.style.color = '#7cae83';
@@ -301,21 +298,19 @@
       msg.style.color = '#8c8c91';
       msg.textContent = 'Salvando...';
 
-      var { error } = await EF.client.from('notas').insert({
-        empresa_id: p.empresa_id,
-        autor_id: p.id,
-        autor_nome: nome,
-        titulo: document.getElementById('novo-titulo-nota').value.trim(),
-        conteudo: conteudoVal,
-        evento_id: document.getElementById('novo-evento-nota').value || null,
-        lead_id: document.getElementById('novo-lead-nota').value || null,
-        fixada: document.getElementById('nova-nota-fixada').checked
+      var { error } = await EF.client.rpc('comunicacao_criar_nota', {
+        p_titulo: document.getElementById('novo-titulo-nota').value.trim(),
+        p_conteudo: conteudoVal,
+        p_evento_id: document.getElementById('novo-evento-nota').value || null,
+        p_lead_id: document.getElementById('novo-lead-nota').value || null,
+        p_conversa_id: null,
+        p_fixada: document.getElementById('nova-nota-fixada').checked
       });
 
       btn.disabled = false;
       if (error) {
         msg.style.color = '#c9695c';
-        msg.textContent = error.message;
+        msg.textContent = 'Execute a migração REV13: ' + error.message;
         return;
       }
       msg.style.color = '#7cae83';
@@ -549,6 +544,6 @@
 })();
 </script>
 
-<script src="ef-ui.js?v=32"></script>
+<script src="ef-ui.js?v=33"></script>
 </body>
 </html>
