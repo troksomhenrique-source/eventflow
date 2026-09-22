@@ -106,6 +106,10 @@
       location.href = 'dashboard.html';
       return false;
     }
+    if (opts.crmOnly && !EF.canSeeCRM()) {
+      location.href = 'dashboard.html';
+      return false;
+    }
 
     document.documentElement.dataset.role = EF.profile.role || '';
     if (g.EF_UI && EF_UI.syncUser) EF_UI.syncUser();
@@ -129,6 +133,7 @@
   EF.canCreateEventos = () => EF.isGerencia();                                // produção/estoque apenas consultam agenda
   EF.canSeeReembolsos = () => EF.isGerencia() || EF.isProducao();
   EF.canSeeEquipe = () => EF.isGerencia() || EF.isProducao();
+  EF.canSeeCRM = () => EF.isGerencia() || EF.isProducao();
 
   // Evento selecionado fica lembrado entre páginas (localStorage do navegador)
   // até o usuário trocar de evento de propósito — evita ter que reselecionar

@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
     const warnings: string[] = [];
     let arquivosRemovidos = 0;
 
-    for (const bucket of ['chat-anexos', 'reembolsos-notas']) {
+    for (const bucket of ['chat-anexos', 'reembolsos-notas', 'eventflow-crm', 'eventflow-company-assets']) {
       try {
         const paths = await listFilesRecursively(adminClient, bucket, empresaId);
         for (let i = 0; i < paths.length; i += 100) {

@@ -9,7 +9,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script src="ef-config.js"></script>
-<script src="ef-auth.js?v=29"></script>
+<script src="ef-auth.js?v=30"></script>
 <style>
   body{margin:0;background:#0a0a0b;font-family:'Inter',sans-serif;}
   .mono{font-family:'IBM Plex Mono',monospace;}
@@ -48,7 +48,7 @@
   .sales-tag{display:inline-flex;align-items:center;gap:8px;padding:10px 12px;border-radius:12px;background:#111214;border:1px solid #202227;color:#8c8c91;font-size:12px;}
   @media (max-width: 1100px){.sales-field.col-8,.sales-field.col-6,.sales-field.col-4,.sales-field.col-3{grid-column:span 12;}}
 </style>
-<link rel="stylesheet" href="ef-ui.css?v=29">
+<link rel="stylesheet" href="ef-ui.css?v=30">
 </head>
 <body>
 
@@ -138,6 +138,11 @@
           <input id="empresa-endereco" type="text"
             style="width: 100%; background: transparent; border: none; border-bottom: 1px solid #29292d; color: #f3f1ec; font-size: 13.5px; padding-bottom: 8px; box-sizing: border-box;">
         </div>
+        <div style="grid-column:1/-1;display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+          <img id="empresa-logo-preview" alt="Logo da empresa" style="display:none;max-width:170px;max-height:64px;object-fit:contain;background:#fff;border-radius:8px;padding:6px;">
+          <label><span class="sales-label">Logo PNG ou WebP</span><input id="empresa-logo" type="file" accept="image/png,image/webp" style="color:#8c8c91;font-size:12px;"></label>
+          <button id="btn-enviar-logo" type="button" class="sales-btn">Enviar logo</button>
+        </div>
       </form>
       <div style="margin-top: 14px;">
         <button id="btn-salvar-empresa" type="button" style="background: none; border: none; padding: 0; font-size: 13px; color: #7fa8c9; cursor: pointer; border-bottom: 1px solid #2a3d4d;">Salvar</button>
@@ -195,6 +200,18 @@
             <label class="sales-label" for="novo-endereco-cliente">Endereço do contratante</label>
             <input id="novo-endereco-cliente" type="text" class="sales-input">
           </div>
+          <div class="sales-field col-4">
+            <label class="sales-label" for="novo-lead">Lead do CRM</label>
+            <select id="novo-lead" class="sales-select"><option value="">Nenhum</option></select>
+          </div>
+          <div class="sales-field col-4">
+            <label class="sales-label" for="novo-carga-inicio">Carga / indisponível a partir de</label>
+            <input id="novo-carga-inicio" type="datetime-local" class="sales-input">
+          </div>
+          <div class="sales-field col-4">
+            <label class="sales-label" for="novo-retorno-previsto">Descarga / retorno ao estoque</label>
+            <input id="novo-retorno-previsto" type="datetime-local" class="sales-input">
+          </div>
           <div class="sales-field col-12">
             <label class="sales-label" for="novo-observacoes">Observações</label>
             <textarea id="novo-observacoes" rows="3" class="sales-textarea"></textarea>
@@ -239,6 +256,8 @@
   var CLIENTES = [];
   var ESTOQUE_ITENS = [];
   var EMPRESA = null;
+  var EMPRESA_LOGO_DATA = null;
+  var CRM_LEADS = [];
   var CATEGORIAS = ['Som', 'Luz', 'Vídeo', 'Estrutura', 'Internet', 'Cenografia', 'Extras', 'Serviços'];
 
   function fmtMoeda(v) {
@@ -286,6 +305,7 @@
       msg.textContent = 'Salvo!';
       await carregarEmpresa();
     });
+    document.getElementById('btn-enviar-logo').addEventListener('click', enviarLogoEmpresa);
 
     document.getElementById('novo-cliente-select').addEventListener('change', function () {
       var inputNome = document.getElementById('novo-cliente');
@@ -325,6 +345,12 @@
       var obsVal = document.getElementById('novo-observacoes').value.trim();
       var enderecoClienteVal = document.getElementById('novo-endereco-cliente').value.trim();
       var vendedorVal = document.getElementById('novo-vendedor').value.trim();
+      var leadVal = document.getElementById('novo-lead').value || null;
+      var cargaVal = document.getElementById('novo-carga-inicio').value || null;
+      var retornoVal = document.getElementById('novo-retorno-previsto').value || null;
+      if ((cargaVal && !retornoVal) || (!cargaVal && retornoVal) || (cargaVal && retornoVal && new Date(retornoVal) <= new Date(cargaVal))) {
+        msg.style.color = '#c9695c'; msg.textContent = 'Informe carga e retorno em ordem válida.'; return;
+      }
 
       btn.disabled = true;
       msg.style.color = '#8c8c91';
@@ -333,7 +359,8 @@
       var payload = {
         empresa_id: p.empresa_id, cliente: clienteVal, contato: contatoVal, observacoes: obsVal,
         endereco_cliente: enderecoClienteVal, vendedor: vendedorVal,
-        cliente_id: clienteSelecionado ? clienteSelecionado.id : null
+        cliente_id: clienteSelecionado ? clienteSelecionado.id : null,
+        crm_lead_id: leadVal, carga_inicio: cargaVal, retorno_previsto: retornoVal
       };
       if (eventoVal) payload.evento_id = eventoVal;
       if (dataVal) payload.data = dataVal;
@@ -385,6 +412,7 @@
     await carregarEmpresa();
     await carregarEventos();
     await carregarClientes();
+    await carregarLeadsCRM();
     await carregarEstoqueItens();
     await carregarOrcamentos();
   });
@@ -410,8 +438,46 @@
       document.getElementById('empresa-telefone').value = EMPRESA.telefone || '';
       document.getElementById('empresa-email').value = EMPRESA.email || '';
       document.getElementById('empresa-endereco').value = EMPRESA.endereco || '';
+      await carregarLogoEmpresa();
     }
   }
+
+  async function carregarLogoEmpresa() {
+    EMPRESA_LOGO_DATA = null;
+    var img = document.getElementById('empresa-logo-preview');
+    if (!EMPRESA || !EMPRESA.logo_path) { img.style.display = 'none'; return; }
+    var pub = EF.client.storage.from('eventflow-company-assets').getPublicUrl(EMPRESA.logo_path);
+    var url = pub.data && pub.data.publicUrl;
+    if (!url) return;
+    img.src = url; img.style.display = '';
+    try {
+      var blob = await fetch(url).then(function (r) { return r.blob(); });
+      EMPRESA_LOGO_DATA = await new Promise(function (resolve) { var rd = new FileReader(); rd.onload = function () { resolve(rd.result); }; rd.readAsDataURL(blob); });
+    } catch (e) { console.warn('Logo não pôde ser pré-carregada no PDF.', e); }
+  }
+
+  async function enviarLogoEmpresa() {
+    var input = document.getElementById('empresa-logo'), msg = document.getElementById('empresa-msg'), file = input.files[0];
+    if (!file) { msg.style.color='#c9695c'; msg.textContent='Escolha um PNG ou WebP.'; return; }
+    if (['image/png','image/webp'].indexOf(file.type)===-1 || file.size>5242880) { msg.style.color='#c9695c'; msg.textContent='Use PNG/WebP de até 5 MB.'; return; }
+    var ext=file.type==='image/webp'?'webp':'png', path=EF.profile.empresa_id+'/logo-'+Date.now()+'.'+ext, old=EMPRESA&&EMPRESA.logo_path;
+    msg.style.color='#8c8c91'; msg.textContent='Enviando logo...';
+    var up=await EF.client.storage.from('eventflow-company-assets').upload(path,file,{upsert:false});
+    if(up.error){msg.style.color='#c9695c';msg.textContent=up.error.message;return}
+    var rpc=await EF.client.rpc('atualizar_logo_empresa',{p_logo_path:path});
+    if(rpc.error){await EF.client.storage.from('eventflow-company-assets').remove([path]);msg.style.color='#c9695c';msg.textContent=rpc.error.message;return}
+    if(old)await EF.client.storage.from('eventflow-company-assets').remove([old]);
+    input.value='';msg.style.color='#7cae83';msg.textContent='Logo atualizada!';await carregarEmpresa();
+  }
+
+  async function carregarLeadsCRM() {
+    var r=await EF.client.from('crm_leads').select('id,nome_evento,empresa_cliente,contato_nome,carga_inicio,retorno_previsto').eq('empresa_id',EF.profile.empresa_id).not('etapa','eq','perdido').order('updated_at',{ascending:false});
+    if(r.error){CRM_LEADS=[];return} CRM_LEADS=r.data||[];
+    var sel=document.getElementById('novo-lead'); CRM_LEADS.forEach(function(l){var op=document.createElement('option');op.value=l.id;op.textContent=l.nome_evento+(l.empresa_cliente?' · '+l.empresa_cliente:'');sel.appendChild(op)});
+    sel.addEventListener('change',function(){var l=CRM_LEADS.find(function(x){return x.id===sel.value});if(!l)return;document.getElementById('novo-cliente').value=l.empresa_cliente||l.contato_nome||'';document.getElementById('novo-carga-inicio').value=toLocalInput(l.carga_inicio);document.getElementById('novo-retorno-previsto').value=toLocalInput(l.retorno_previsto)});
+    var wanted=new URLSearchParams(location.search).get('lead');if(wanted&&CRM_LEADS.some(function(l){return l.id===wanted})){sel.value=wanted;sel.dispatchEvent(new Event('change'));document.getElementById('bloco-form').style.display='block'}
+  }
+  function toLocalInput(v){if(!v)return'';var d=new Date(v);d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,16)}
 
   async function carregarEventos() {
     var res = await EF.client.from('eventos').select('id, nome, data_inicio').eq('empresa_id', EF.profile.empresa_id).order('data_inicio', { ascending: false });
@@ -776,6 +842,19 @@
       }
       if (qtd <= 0) { alert('Preencha uma quantidade válida.'); return; }
 
+      // Orçamentos reservam provisoriamente. O vendedor é avisado sobre a
+      // projeção, mas pode manter a proposta; a aprovação bloqueia conflito real.
+      if (itemId && o.carga_inicio && o.retorno_previsto) {
+        var disp = await EF.client.rpc('estoque_disponibilidade_periodo', {
+          p_inicio: o.carga_inicio, p_fim: o.retorno_previsto, p_ignorar_orcamento: o.id
+        });
+        var d = (disp.data || []).find(function (x) { return x.item_id === itemId; });
+        if (!disp.error && d && qtd > Number(d.disponivel_projetado || 0)) {
+          var seguir = confirm('Atenção: considerando outras propostas, há ' + d.disponivel_projetado + ' unidade(s) projetada(s) neste período. Deseja manter este item como reserva provisória?');
+          if (!seguir) return;
+        }
+      }
+
       var { error } = await EF.client.from('orcamento_itens').insert(payload);
       if (error) { alert('Erro ao adicionar: ' + error.message); return; }
       await carregarOrcamentos();
@@ -917,6 +996,15 @@
     }
 
     function drawBrand(y0) {
+      if (EMPRESA_LOGO_DATA) {
+        try {
+          var kind = String(EMPRESA_LOGO_DATA).indexOf('image/webp') >= 0 ? 'WEBP' : 'PNG';
+          doc.addImage(EMPRESA_LOGO_DATA, kind, M, y0, 26, 11, undefined, 'FAST');
+          textColor(C.subtle); doc.setFont('helvetica', 'normal'); doc.setFontSize(6.8);
+          doc.text('ORCAMENTO COMERCIAL', M + 31, y0 + 7);
+          return;
+        } catch (e) { console.warn('Logo não inserida no PDF.', e); }
+      }
       // marca vetorial simples, inspirada no ícone do EventFlow
       stroke(C.accent); doc.setLineWidth(0.75);
       doc.line(M, y0 + 4.2, M + 4.2, y0 + 2.5);
@@ -1177,6 +1265,6 @@
 })();
 </script>
 
-<script src="ef-ui.js?v=29"></script>
+<script src="ef-ui.js?v=30"></script>
 </body>
 </html>

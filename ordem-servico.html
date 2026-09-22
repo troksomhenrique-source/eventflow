@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="ef-config.js"></script>
-<script src="ef-auth.js?v=29"></script>
+<script src="ef-auth.js?v=30"></script>
 <style>
   body{margin:0;background:#0a0a0b;font-family:'Inter',sans-serif;}
   .mono{font-family:'IBM Plex Mono',monospace;}
@@ -56,6 +56,7 @@
     #print-os{display:block !important;color:#111;background:#fff;font-family:Arial,Helvetica,sans-serif;}
     body{background:#fff !important;color:#111 !important;margin:0 !important;}
     .po-head{border-bottom:2px solid #111;padding-bottom:8px;margin-bottom:10px;}
+    .po-logo{max-width:42mm;max-height:15mm;object-fit:contain;display:block;margin-bottom:4px;}
     .po-brand{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#555;}
     .po-title{font-size:22px;font-weight:800;margin:3px 0 2px;}
     .po-sub{font-size:10px;color:#555;line-height:1.45;}
@@ -81,7 +82,7 @@
     .po-page-break{break-before:page;}
   }
 </style>
-<link rel="stylesheet" href="ef-ui.css?v=29">
+<link rel="stylesheet" href="ef-ui.css?v=30">
 </head>
 <body>
 <div id="print-os"></div>
@@ -593,7 +594,10 @@
     var areas={};itens.forEach(function(it){var a=it.area||'Geral';(areas[a]||(areas[a]=[])).push(it);});
     var qtd=0,peso=0,cons=0,cases=0;itens.forEach(function(it){var q=Number(it.quantidade)||0;qtd+=q;if(it.peso_manual!=null)peso+=Number(it.peso_manual)*q;if(it.consumo_manual!=null)cons+=Number(it.consumo_manual)*q;if(it.unidades_por_case_snapshot)cases+=Math.ceil(q/Number(it.unidades_por_case_snapshot));});
 
-    var html='<div class="po-head"><div class="po-brand">EventFlow · Separação de Barracão</div><div class="po-title">ORDEM DE SERVIÇO</div><div class="po-sub">Documento operacional de separação, conferência, carregamento e logística. Sem valores comerciais.</div></div>';
+    var empresaRes=await EF.client.from('empresas').select('nome,logo_path').eq('id',EF.profile.empresa_id).maybeSingle();
+    var empresaDoc=empresaRes.data||{}, logoUrl='';
+    if(empresaDoc.logo_path){var logoPub=EF.client.storage.from('eventflow-company-assets').getPublicUrl(empresaDoc.logo_path);logoUrl=(logoPub.data&&logoPub.data.publicUrl)||'';}
+    var html='<div class="po-head">'+(logoUrl?'<img class="po-logo" src="'+escPrint(logoUrl)+'" alt="Logo">':'')+'<div class="po-brand">'+escPrint(empresaDoc.nome||'EventFlow')+' · Separação de Barracão</div><div class="po-title">ORDEM DE SERVIÇO</div><div class="po-sub">Documento operacional de separação, conferência, carregamento e logística. Sem valores comerciais.</div></div>';
     html+='<div class="po-grid">'+
       '<div class="po-box"><div class="po-label">Evento</div><div class="po-value">'+escPrint(ev.nome||'—')+'</div></div>'+
       '<div class="po-box"><div class="po-label">Cliente</div><div class="po-value">'+escPrint(ev.cliente||'—')+'</div></div>'+
@@ -705,6 +709,6 @@
 })();
 </script>
 
-<script src="ef-ui.js?v=29"></script>
+<script src="ef-ui.js?v=30"></script>
 </body>
 </html>

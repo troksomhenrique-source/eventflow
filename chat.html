@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="ef-config.js"></script>
-<script src="ef-auth.js?v=29"></script>
+<script src="ef-auth.js?v=30"></script>
 <style>
   html,body{margin:0;height:100%;background:#0a0a0b;font-family:'Inter',sans-serif;}
   .mono{font-family:'IBM Plex Mono',monospace;}
@@ -95,7 +95,7 @@
   .lista-check{max-height:180px; overflow-y:auto; display:flex; flex-direction:column; gap:9px; margin: 10px 0;}
   .lista-check label{display:flex; align-items:center; gap:9px; font-size:12.5px; color:#c8c8cc; cursor:pointer;}
 </style>
-<link rel="stylesheet" href="ef-ui.css?v=29">
+<link rel="stylesheet" href="ef-ui.css?v=30">
 </head>
 <body>
 
@@ -207,6 +207,7 @@
           <div id="thread-titulo" class="disp" style="font-size: 15px; font-weight: 600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">—</div>
           <div id="thread-sub" class="mono" style="font-size: 10.5px; color: #6e6e73; margin-top: 3px;">—</div>
         </div>
+        <button id="btn-video-call" class="btn-menu-grupo" style="display:inline-flex;align-items:center;justify-content:center;font-size:16px" type="button" title="Criar chamada no Google Meet" aria-label="Criar chamada no Google Meet">▣</button>
         <button id="btn-config-grupo" class="btn-menu-grupo" type="button" title="Dados do grupo" aria-label="Dados do grupo">⋮</button>
       </div>
 
@@ -326,6 +327,7 @@
     document.getElementById('btn-confirmar-grupo').addEventListener('click', criarGrupo);
     document.getElementById('btn-voltar-conversas').addEventListener('click', voltarParaConversas);
     document.getElementById('btn-config-grupo').addEventListener('click', abrirConfiguracoesGrupo);
+    document.getElementById('btn-video-call').addEventListener('click', criarChamadaMeet);
     document.getElementById('btn-fechar-grupo').addEventListener('click', fecharConfiguracoesGrupo);
     document.getElementById('modal-grupo').addEventListener('click', function (e) {
       if (e.target === e.currentTarget) fecharConfiguracoesGrupo();
@@ -364,6 +366,18 @@
         enviarTexto();
       }
     });
+  }
+
+  async function criarChamadaMeet(){
+    if(!conversaAtivaId)return;
+    var conversa=CONVERSAS.find(function(c){return c.id===conversaAtivaId}),titulo='Chamada · '+nomeConversa(conversa);
+    var sess=await EF.client.auth.getSession(),token=sess.data.session&&sess.data.session.access_token;
+    var start=new Date(Date.now()+2*60000).toISOString();
+    var r=await fetch(EF_CONFIG.url+'/functions/v1/google-calendar',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token,'apikey':EF_CONFIG.anonKey},body:JSON.stringify({action:'create_quick_meeting',title:titulo,start:start,duration_minutes:60})});
+    var out=await r.json().catch(function(){return{}});
+    if(r.status===409&&out.connect_url){if(confirm('Conecte sua conta Google para criar a chamada. Abrir agora?'))location.href=out.connect_url;return}
+    if(!r.ok||!out.meet_url){alert(out.error||'Não foi possível criar a chamada.');return}
+    document.getElementById('input-mensagem').value='Chamada de vídeo: '+out.meet_url;await enviarTexto();window.open(out.meet_url,'_blank','noopener');
   }
 
   function montarEmojiPicker() {
@@ -1009,6 +1023,6 @@
 })();
 </script>
 
-<script src="ef-ui.js?v=29"></script>
+<script src="ef-ui.js?v=30"></script>
 </body>
 </html>

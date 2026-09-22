@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="ef-config.js"></script>
-<script src="ef-auth.js?v=29"></script>
+<script src="ef-auth.js?v=30"></script>
 <style>
   body{margin:0;background:#0a0a0b;font-family:'Inter',sans-serif;}
   .mono{font-family:'IBM Plex Mono',monospace;}
@@ -38,7 +38,7 @@
   @media(max-width:1050px){.evento-head,.evento-row{grid-template-columns:68px minmax(190px,1.4fr) minmax(140px,1fr) 115px 80px}.evento-head>div:nth-child(4),.evento-row>.local{display:none}}
   @media(max-width:720px){.agenda-tools{grid-template-columns:1fr}.evento-head{display:none}.evento-table{border:0;background:transparent;overflow:visible}.linha-evento{border:1px solid rgba(243,240,234,.08);border-radius:13px;margin-bottom:9px;background:#101012}.evento-row{grid-template-columns:62px 1fr auto}.evento-row>.evento-cell{grid-column:2/-1}.evento-row>.local{display:block}.evento-row>.badge{grid-column:2;justify-self:start}.evento-actions{grid-column:3;grid-row:1}}
 </style>
-<link rel="stylesheet" href="ef-ui.css?v=29">
+<link rel="stylesheet" href="ef-ui.css?v=30">
 </head>
 <body>
 
@@ -107,7 +107,7 @@
         <h1 style="font-family: 'Space Grotesk', sans-serif; font-size: 24px; font-weight: 600; margin: 0 0 6px; letter-spacing: -.01em;">Agenda</h1>
         <div style="color: #8c8c91; font-size: 13px;" id="resumo">Carregando…</div>
       </div>
-      <span id="btn-toggle-form" style="font-size: 12.5px; color: #7fa8c9; cursor: pointer;">+ Cadastrar evento</span>
+      <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><button id="btn-google" type="button" style="border:1px solid #29292d;border-radius:10px;background:#111214;color:#b8b8bc;padding:9px 11px;cursor:pointer;font-size:11px">Conectar Google</button><span id="btn-toggle-form" style="font-size: 12.5px; color: #7fa8c9; cursor: pointer;">+ Cadastrar evento</span></div>
     </div>
 
     <!-- KPI row -->
@@ -220,6 +220,8 @@
       btnToggleForm.style.display = 'none';
       blocoForm.style.display = 'none';
     }
+    await atualizarGoogle();
+    document.getElementById('btn-google').addEventListener('click', conectarGoogle);
     document.getElementById('busca-eventos').addEventListener('input', renderizar);
     document.getElementById('filtro-eventos').addEventListener('change', renderizar);
 
@@ -279,6 +281,17 @@
 
     await carregarEventos();
   });
+
+  async function atualizarGoogle(){
+    if(!(EF.canSeeCRM&&EF.canSeeCRM())){document.getElementById('btn-google').style.display='none';return}
+    var r=await EF.client.rpc('google_status'),s=r.data&&r.data[0],b=document.getElementById('btn-google');
+    if(!r.error&&s&&s.conectado){b.textContent='Google: '+s.google_email;b.style.color='#7cae83'}
+  }
+  async function conectarGoogle(){
+    var s=await EF.client.auth.getSession(),token=s.data.session&&s.data.session.access_token;
+    var r=await fetch(EF_CONFIG.url+'/functions/v1/google-calendar',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token,'apikey':EF_CONFIG.anonKey},body:JSON.stringify({action:'connect'})});
+    var out=await r.json().catch(function(){return{}});if(!r.ok){alert(out.error||'Não foi possível conectar o Google.');return}location.href=out.connect_url;
+  }
 
   async function carregarEventos() {
     var { data, error } = await EF.client.from('eventos').select('*').eq('empresa_id', EF.profile.empresa_id).order('data_inicio', { ascending: true });
@@ -537,6 +550,6 @@
 })();
 </script>
 
-<script src="ef-ui.js?v=29"></script>
+<script src="ef-ui.js?v=30"></script>
 </body>
 </html>

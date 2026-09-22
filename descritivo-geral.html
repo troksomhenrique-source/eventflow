@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="ef-config.js"></script>
-<script src="ef-auth.js?v=29"></script>
+<script src="ef-auth.js?v=30"></script>
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <style>
@@ -74,7 +74,7 @@
   .engenharia-input{width:100%;background:transparent;border:none;border-bottom:1px solid #29292d;color:#f3f1ec;font-size:13.5px;padding:8px 0;box-sizing:border-box;}
   .engenharia-input:focus{border-bottom-color:#3b82c9 !important;}
 </style>
-<link rel="stylesheet" href="ef-ui.css?v=29">
+<link rel="stylesheet" href="ef-ui.css?v=30">
 </head>
 <body>
 
@@ -251,6 +251,8 @@
   var CENO_PECAS = [];
   var SERV_EQUIP = [];
   var SERV_AVULSOS = [];
+  var EMPRESA_DOC = null;
+  var EMPRESA_LOGO_DATA = null;
   var AREAS_ATIVAS = [
     { id:'som', nome:'Som' }, { id:'luz', nome:'Luz' }, { id:'video', nome:'Vídeo' },
     { id:'estrutura', nome:'Estrutura' }, { id:'internet', nome:'Internet' },
@@ -279,8 +281,20 @@
 
     await carregarEventos();
     await carregarEstoque();
+    await carregarMarcaDocumento();
     renderizarEstruturaDocumento();
   });
+
+  async function carregarMarcaDocumento() {
+    var r=await EF.client.from('empresas').select('nome,logo_path').eq('id',EF.profile.empresa_id).maybeSingle();
+    EMPRESA_DOC=r.data||null; EMPRESA_LOGO_DATA=null;
+    if(!EMPRESA_DOC||!EMPRESA_DOC.logo_path)return;
+    try{
+      var p=EF.client.storage.from('eventflow-company-assets').getPublicUrl(EMPRESA_DOC.logo_path),u=p.data&&p.data.publicUrl;
+      if(!u)return;var blob=await fetch(u).then(function(x){return x.blob()});
+      EMPRESA_LOGO_DATA=await new Promise(function(resolve){var rd=new FileReader();rd.onload=function(){resolve(rd.result)};rd.readAsDataURL(blob)});
+    }catch(e){console.warn('Logo não carregada para o documento.',e)}
+  }
 
   async function selecionarEvento(id) {
     eventoSelecionadoId = id;
@@ -933,6 +947,7 @@
     var dataFim = ev && ev.data_fim ? new Date(ev.data_fim).toLocaleDateString('pt-BR') : '';
     var periodo = dataIni + (dataFim && dataFim !== dataIni ? ' — ' + dataFim : '');
 
+    if(EMPRESA_LOGO_DATA){try{doc.addImage(EMPRESA_LOGO_DATA,String(EMPRESA_LOGO_DATA).indexOf('image/webp')>=0?'WEBP':'PNG',DIREITA-38,y-18,38,14,undefined,'FAST')}catch(e){console.warn(e)}}
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(26);
     doc.setTextColor(15, 15, 15);
@@ -940,7 +955,7 @@
     doc.setFontSize(10);
     doc.text(agora, DIREITA, y - 12, { align: 'right' });
     doc.setFont('helvetica', 'normal');
-    doc.text('EventFlow', DIREITA, y - 6, { align: 'right' });
+    if(!EMPRESA_LOGO_DATA)doc.text((EMPRESA_DOC&&EMPRESA_DOC.nome)||'EventFlow', DIREITA, y - 6, { align: 'right' });
 
     y += 10;
     doc.setFont('helvetica', 'bold');
@@ -1403,6 +1418,19 @@
     setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
   }
 
+  function adicionarLogoMemorial(wb, ws) {
+    if (!EMPRESA_LOGO_DATA) return;
+    try {
+      var isWebp=String(EMPRESA_LOGO_DATA).indexOf('image/webp')>=0;
+      // ExcelJS trabalha de forma mais consistente com PNG. O cadastro aceita
+      // WebP para PDFs/telas; no XLSX a imagem é incluída quando for PNG.
+      if(isWebp)return;
+      var imageId=wb.addImage({base64:EMPRESA_LOGO_DATA,extension:'png'});
+      ws.addImage(imageId,{tl:{col:1,row:0},ext:{width:120,height:32}});
+      ws.getRow(1).height=26;
+    } catch(e) { console.warn('Logo não adicionada ao memorial.',e); }
+  }
+
   async function exportarMemorialAereo() {
     if (typeof ExcelJS === 'undefined') { alert('Biblioteca de exportação (ExcelJS) não carregou — verifique a conexão e tente de novo.'); return; }
     var ev = EVENTO_ATUAL;
@@ -1417,6 +1445,7 @@
     ];
 
     construirCabecalhoMemorial(ws, 'MEMORIAL DE CÁLCULO DE ESTRUTURA AÉREA', ev);
+    adicionarLogoMemorial(wb,ws);
 
     var proximaLinha = construirGradeMemorial(ws, 6, aereas, {
       labelSecundario: 'Kg por ponto',
@@ -1483,6 +1512,7 @@
     ];
 
     construirCabecalhoMemorial(ws, 'MEMORIAL DE CÁLCULO DE ESTRUTURAS EM SOLO', ev);
+    adicionarLogoMemorial(wb,ws);
 
     var proximaLinha = construirGradeMemorial(ws, 6, solos, {
       labelSecundario: 'DISTRIBUIÇÃO DE CARGA KG/M²',
@@ -1540,6 +1570,6 @@
 
 </script>
 
-<script src="ef-ui.js?v=29"></script>
+<script src="ef-ui.js?v=30"></script>
 </body>
 </html>

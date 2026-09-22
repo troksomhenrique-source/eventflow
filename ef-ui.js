@@ -84,7 +84,7 @@
   var NAV=[
     ['Operação',[
       ['dashboard.html','Operação','dashboard'],['agenda.html','Eventos','agenda'],['estoque.html','Equipamentos','estoque'],
-      ['clientes.html','Clientes','clientes','finance'],['vendas.html','Comercial','vendas','finance'],['chat.html','Chat','chat'],['notas.html','Notas','notas'],['ordem-venda.html','Ordens de Venda','ordemvenda','salesorder'],['reembolsos.html','Reembolsos','reembolso','reimburse']
+      ['clientes.html','Clientes','clientes','finance'],['crm.html','CRM Comercial','vendas','crm'],['vendas.html','Orçamentos','ordemvenda','finance'],['chat.html','Chat','chat'],['notas.html','Notas','notas'],['ordem-venda.html','Ordens de Venda','ordemvenda','salesorder'],['reembolsos.html','Reembolsos','reembolso','reimburse']
     ]],
     ['Áreas',[
       ['calculadora-som.html','Som','som','areas'],['calculadora-luz.html','Luz','luz','areas'],['video.html','Vídeo','video','areas'],['estrutura.html','Estrutura','estrutura','areas'],
@@ -109,6 +109,7 @@
     if(scope==='logistica') return EF.canSeeLogistica ? EF.canSeeLogistica() : false;
     if(scope==='reimburse') return EF.canSeeReembolsos ? EF.canSeeReembolsos() : !!(EF.profile && ['gerencia','producao'].indexOf(EF.profile.role)!==-1);
     if(scope==='equipe') return EF.canSeeEquipe ? EF.canSeeEquipe() : !!(EF.profile && ['gerencia','producao'].indexOf(EF.profile.role)!==-1);
+    if(scope==='crm') return EF.canSeeCRM ? EF.canSeeCRM() : !!(EF.profile && ['gerencia','producao'].indexOf(EF.profile.role)!==-1);
     if(scope==='all') return true;
     return true;
   }
