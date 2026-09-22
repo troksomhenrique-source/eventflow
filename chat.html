@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="ef-config.js"></script>
-<script src="ef-auth.js?v=30"></script>
+<script src="ef-auth.js?v=31"></script>
 <style>
   html,body{margin:0;height:100%;background:#0a0a0b;font-family:'Inter',sans-serif;}
   .mono{font-family:'IBM Plex Mono',monospace;}
@@ -39,6 +39,7 @@
   .chat-back{display:none;width:38px;height:38px;border:0;background:transparent;color:#c8c8cc;border-radius:10px;font-size:22px;line-height:1;cursor:pointer;align-items:center;justify-content:center;flex:0 0 38px;}
   .btn-menu-grupo{display:none;width:34px;height:34px;border:1px solid #29292d;border-radius:50%;background:transparent;color:#b8b8bc;font-size:20px;line-height:1;cursor:pointer;}
   .btn-menu-grupo:hover{color:#f3f1ec;background:#15171c;border-color:#3a3a40;}
+  .chat-action{width:auto;min-width:34px;height:34px;border:1px solid #29292d;border-radius:9px;background:transparent;color:#a9abb1;padding:0 9px;font-size:10px;cursor:pointer}.chat-action:hover{color:#e9eef2;border-color:#496579}.msg-actions{display:flex;gap:8px;margin-top:4px;opacity:0;transition:.15s}.msg-row:hover .msg-actions,.msg-actions:focus-within{opacity:1}.msg-link{border:0;background:transparent;color:#666970;padding:0;font-size:9px;cursor:pointer}.msg-link:hover{color:#91b5cf}.chat-search{width:100%;margin-top:12px;background:#111214;border:1px solid #24262b;border-radius:9px;color:#f3f1ec;padding:9px 10px;box-sizing:border-box;font-size:12px}
 
   .modal-fundo{position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.72);display:none;align-items:center;justify-content:center;padding:18px;box-sizing:border-box;}
   .modal-fundo.aberto{display:flex;}
@@ -90,12 +91,13 @@
     #btn-enviar{font-size:0!important;padding:8px!important;width:40px;height:40px;display:grid;place-items:center;border-radius:12px;background:#203952!important;}
     #btn-enviar::after{content:'➤';font-size:17px;color:#dceaf4;}
     .bolha{max-width:88%;font-size:14px;}
+    .thread-head .chat-action{padding:0 7px;min-width:34px;font-size:0}.thread-head .chat-action::first-letter{font-size:14px}.msg-actions{opacity:1}
   }
 
   .lista-check{max-height:180px; overflow-y:auto; display:flex; flex-direction:column; gap:9px; margin: 10px 0;}
   .lista-check label{display:flex; align-items:center; gap:9px; font-size:12.5px; color:#c8c8cc; cursor:pointer;}
 </style>
-<link rel="stylesheet" href="ef-ui.css?v=30">
+<link rel="stylesheet" href="ef-ui.css?v=31">
 </head>
 <body>
 
@@ -166,6 +168,7 @@
         <span id="btn-nova-conversa" style="font-size: 12px; color: #7fa8c9; cursor: pointer;">+ Conversa</span>
         <span id="btn-novo-grupo" style="font-size: 12px; color: #7fa8c9; cursor: pointer;">+ Grupo</span>
       </div>
+      <input id="busca-conversas" class="chat-search" type="search" placeholder="Buscar conversa">
     </div>
 
     <div style="padding: 14px 16px 0; overflow-y: auto;">
@@ -207,6 +210,8 @@
           <div id="thread-titulo" class="disp" style="font-size: 15px; font-weight: 600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">—</div>
           <div id="thread-sub" class="mono" style="font-size: 10.5px; color: #6e6e73; margin-top: 3px;">—</div>
         </div>
+        <button id="btn-chat-tarefa" class="chat-action" type="button" title="Criar tarefa com o texto digitado">✓ Tarefa</button>
+        <button id="btn-chat-nota" class="chat-action" type="button" title="Criar nota com o texto digitado">▤ Nota</button>
         <button id="btn-video-call" class="btn-menu-grupo" style="display:inline-flex;align-items:center;justify-content:center;font-size:16px" type="button" title="Criar chamada no Google Meet" aria-label="Criar chamada no Google Meet">▣</button>
         <button id="btn-config-grupo" class="btn-menu-grupo" type="button" title="Dados do grupo" aria-label="Dados do grupo">⋮</button>
       </div>
@@ -297,6 +302,8 @@
 
     await carregarPessoas();
     await carregarConversas();
+    var abrirId=new URLSearchParams(location.search).get('conversa');
+    if(abrirId&&CONVERSAS.some(function(c){return c.id===abrirId}))await abrirConversa(abrirId);
   });
 
   function iniciaisDe(nome) {
@@ -327,6 +334,9 @@
     document.getElementById('btn-confirmar-grupo').addEventListener('click', criarGrupo);
     document.getElementById('btn-voltar-conversas').addEventListener('click', voltarParaConversas);
     document.getElementById('btn-config-grupo').addEventListener('click', abrirConfiguracoesGrupo);
+    document.getElementById('btn-chat-tarefa').addEventListener('click',function(){criarDoChat('tarefa',document.getElementById('input-mensagem').value)});
+    document.getElementById('btn-chat-nota').addEventListener('click',function(){criarDoChat('nota',document.getElementById('input-mensagem').value)});
+    document.getElementById('busca-conversas').addEventListener('input',renderizarListaConversas);
     document.getElementById('btn-video-call').addEventListener('click', criarChamadaMeet);
     document.getElementById('btn-fechar-grupo').addEventListener('click', fecharConfiguracoesGrupo);
     document.getElementById('modal-grupo').addEventListener('click', function (e) {
@@ -370,7 +380,7 @@
 
   async function criarChamadaMeet(){
     if(!conversaAtivaId)return;
-    var conversa=CONVERSAS.find(function(c){return c.id===conversaAtivaId}),titulo='Chamada · '+nomeConversa(conversa);
+    var conversa=CONVERSAS.find(function(c){return c.id===conversaAtivaId}),titulo='Chamada · '+nomeDaConversa(conversa);
     var sess=await EF.client.auth.getSession(),token=sess.data.session&&sess.data.session.access_token;
     var start=new Date(Date.now()+2*60000).toISOString();
     var r=await fetch(EF_CONFIG.url+'/functions/v1/google-calendar',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token,'apikey':EF_CONFIG.anonKey},body:JSON.stringify({action:'create_quick_meeting',title:titulo,start:start,duration_minutes:60})});
@@ -378,6 +388,13 @@
     if(r.status===409&&out.connect_url){if(confirm('Conecte sua conta Google para criar a chamada. Abrir agora?'))location.href=out.connect_url;return}
     if(!r.ok||!out.meet_url){alert(out.error||'Não foi possível criar a chamada.');return}
     document.getElementById('input-mensagem').value='Chamada de vídeo: '+out.meet_url;await enviarTexto();window.open(out.meet_url,'_blank','noopener');
+  }
+
+  async function criarDoChat(tipo,texto){
+    if(!conversaAtivaId)return;
+    var fn=tipo==='tarefa'?'chat_criar_tarefa':'chat_criar_nota',args=tipo==='tarefa'?{p_conversa_id:conversaAtivaId,p_texto:texto||null,p_responsavel_id:EU.id,p_prazo:null}:{p_conversa_id:conversaAtivaId,p_conteudo:texto||null};
+    var r=await EF.client.rpc(fn,args);if(r.error){alert('Execute a migração REV11: '+r.error.message);return}
+    document.getElementById('input-mensagem').value='';var sub=document.getElementById('thread-sub'),old=sub.textContent;sub.textContent=tipo==='tarefa'?'Tarefa criada ✓':'Nota criada ✓';sub.style.color='#7cae83';setTimeout(function(){sub.textContent=old;sub.style.color=''},1800);
   }
 
   function montarEmojiPicker() {
@@ -505,7 +522,8 @@
     wrap.innerHTML = '';
     document.getElementById('conversas-vazio').style.display = CONVERSAS.length ? 'none' : '';
 
-    CONVERSAS.forEach(function (c) {
+    var busca=(document.getElementById('busca-conversas').value||'').trim().toLowerCase();
+    CONVERSAS.filter(function(c){return !busca||nomeDaConversa(c).toLowerCase().indexOf(busca)>=0}).forEach(function (c) {
       var item = document.createElement('div');
       item.className = 'item-conversa' + (c.id === conversaAtivaId ? ' ativo' : '');
       item.addEventListener('click', function () { abrirConversa(c.id); });
@@ -572,11 +590,10 @@
   }
 
   async function criarGrupo() {
-    var nomeGrupo = document.getElementById('novo-grupo-nome').value.trim();
+    var nomeGrupo = document.getElementById('novo-grupo-nome').value.trim() || 'Novo grupo';
     var msg = document.getElementById('novo-grupo-msg');
     var selecionados = Array.prototype.filter.call(document.querySelectorAll('.chk-participante-grupo'), function (c) { return c.checked; }).map(function (c) { return c.value; });
 
-    if (!nomeGrupo) { msg.style.color = '#c9695c'; msg.textContent = 'Dê um nome ao grupo.'; return; }
     if (!selecionados.length) { msg.style.color = '#c9695c'; msg.textContent = 'Escolha pelo menos uma pessoa.'; return; }
 
     msg.style.color = '#8c8c91'; msg.textContent = 'Criando...';
@@ -681,9 +698,8 @@
   async function salvarConfiguracoesGrupo() {
     var grupo = grupoAtivo();
     if (!grupo || grupo.criada_por !== EU.id) return;
-    var nome = document.getElementById('editar-grupo-nome').value.trim();
+    var nome = document.getElementById('editar-grupo-nome').value.trim() || grupo.nome || 'Novo grupo';
     var msg = document.getElementById('grupo-config-msg');
-    if (!nome) { msg.style.color = '#c9695c'; msg.textContent = 'O grupo precisa ter um nome.'; return; }
 
     definirBotoesGrupoOcupados(true);
     msg.style.color = '#8c8c91'; msg.textContent = 'Salvando...';
@@ -882,6 +898,7 @@
   async function bolhaMensagem(m) {
     var minha = m.autor_id === EU.id;
     var linha = document.createElement('div');
+    linha.className='msg-row';
     linha.style.cssText = 'display:flex; flex-direction:column; align-items:' + (minha ? 'flex-end' : 'flex-start') + ';';
 
     var autorEl = document.createElement('div');
@@ -918,6 +935,13 @@
     horaEl.style.cssText = 'font-size:9.5px; color:#4a4a4e; margin-top:3px;';
     horaEl.textContent = new Date(m.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
     linha.appendChild(horaEl);
+
+    if(m.tipo==='texto'){
+      var actions=document.createElement('div');actions.className='msg-actions';
+      var task=document.createElement('button');task.className='msg-link';task.textContent='criar tarefa';task.onclick=function(){criarDoChat('tarefa',m.conteudo)};
+      var note=document.createElement('button');note.className='msg-link';note.textContent='salvar nota';note.onclick=function(){criarDoChat('nota',m.conteudo)};
+      actions.appendChild(task);actions.appendChild(note);linha.appendChild(actions);
+    }
 
     return linha;
   }
@@ -1023,6 +1047,6 @@
 })();
 </script>
 
-<script src="ef-ui.js?v=30"></script>
+<script src="ef-ui.js?v=31"></script>
 </body>
 </html>

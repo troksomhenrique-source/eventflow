@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="ef-config.js"></script>
-<script src="ef-auth.js?v=30"></script>
+<script src="ef-auth.js?v=31"></script>
 <style>
   body{margin:0;background:#0a0a0b;font-family:'Inter',sans-serif;}
   .mono{font-family:'IBM Plex Mono',monospace;}
@@ -44,8 +44,10 @@
   .add-form-label{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.05em;text-transform:uppercase;color:#6e6e73;margin-bottom:6px;}
   .add-form-input{width:100%;background:transparent;border:none;border-bottom:1px solid #29292d;color:#f3f1ec;font-size:13px;padding-bottom:8px;box-sizing:border-box;}
   .add-form-link{background:none;border:none;padding:0 0 8px;font-size:13px;color:#7fa8c9;cursor:pointer;border-bottom:1px solid #2a3d4d;white-space:nowrap;}
+  .comm-filters{display:grid;grid-template-columns:minmax(220px,1fr) 180px 180px;gap:10px;margin-bottom:22px}.comm-field{width:100%;background:#111214;border:1px solid #25272c;border-radius:10px;color:#f3f1ec;padding:10px 11px;box-sizing:border-box;min-height:41px}.comm-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 16px}.comm-meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}.comm-pill{font:500 8.5px 'IBM Plex Mono',monospace;letter-spacing:.04em;text-transform:uppercase;color:#929399;background:#18191c;border:1px solid #25262b;border-radius:999px;padding:3px 6px}.comm-pill.urgent{color:#e59a90;border-color:#58312d}.nota-fixada{border-left:2px solid #90b6d1;padding-left:12px}.nota-titulo{font:600 12.5px 'Space Grotesk',sans-serif;margin-bottom:5px}
+  @media(max-width:760px){.comm-filters,.comm-grid{grid-template-columns:1fr}.notes-header{gap:14px}.notes-actions{gap:8px!important}.notes-actions span{padding:8px;border:1px solid #26313a;border-radius:9px}.linha-tarefa{align-items:flex-start}.tag-tarefa{display:none}}
 </style>
-<link rel="stylesheet" href="ef-ui.css?v=30">
+<link rel="stylesheet" href="ef-ui.css?v=31">
 </head>
 <body>
 
@@ -59,6 +61,12 @@
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none" style="flex-shrink: 0;"><path d="M2 12c2 0 2-6.5 4-6.5S8 12 10 12s2-6.5 4-6.5" stroke="#7fa8c9" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
         <div style="font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 13.5px; letter-spacing: -.01em; color: #f3f1ec;">EventFlow</div>
       </a>
+    </div>
+
+    <div class="comm-filters">
+      <input id="busca-comunicacao" class="comm-field" type="search" placeholder="Buscar em notas e tarefas">
+      <select id="filtro-responsavel" class="comm-field"><option value="">Todos os responsáveis</option><option value="me">Minhas tarefas</option><option value="none">Sem responsável</option></select>
+      <select id="filtro-status" class="comm-field"><option value="open">Pendentes</option><option value="all">Todas</option><option value="done">Concluídas</option></select>
     </div>
 
     <div style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 32px;">
@@ -135,8 +143,9 @@
           <form id="form-tarefa">
             <div style="margin-bottom: 10px;">
               <div class="add-form-label">Descrição</div>
-              <input id="novo-texto-tarefa" type="text" required class="add-form-input">
+              <input id="novo-texto-tarefa" type="text" class="add-form-input" placeholder="Opcional">
             </div>
+            <div style="margin-bottom:12px"><div class="add-form-label">Detalhes</div><textarea id="nova-descricao-tarefa" rows="2" class="comm-field" placeholder="Opcional"></textarea></div>
             <div style="display: flex; align-items: end; gap: 16px; flex-wrap: wrap; margin-bottom: 12px;">
               <div>
                 <div class="add-form-label">Categoria</div>
@@ -146,10 +155,9 @@
                 <div class="add-form-label">Prazo</div>
                 <input id="novo-prazo-tarefa" type="date" style="background: transparent; border: 1px solid #29292d; border-radius: 5px; color: #f3f1ec; font-size: 12px; padding: 5px 8px; font-family: 'IBM Plex Mono', monospace;">
               </div>
-              <label style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #8c8c91; cursor: pointer; padding-bottom: 6px;">
-                <input id="nova-urgente-tarefa" type="checkbox" style="accent-color: #c9695c; cursor: pointer;"> urgente
-              </label>
+              <div><div class="add-form-label">Prioridade</div><select id="nova-prioridade-tarefa" class="comm-field"><option value="normal">Normal</option><option value="baixa">Baixa</option><option value="alta">Alta</option><option value="urgente">Urgente</option></select></div>
             </div>
+            <div class="comm-grid" style="margin-bottom:12px"><div><div class="add-form-label">Responsável</div><select id="novo-responsavel-tarefa" class="comm-field"><option value="">Sem responsável</option></select></div><div><div class="add-form-label">Evento</div><select id="novo-evento-tarefa" class="comm-field"><option value="">Nenhum evento</option></select></div><div><div class="add-form-label">Lead</div><select id="novo-lead-tarefa" class="comm-field"><option value="">Nenhum lead</option></select></div></div>
             <div style="display: flex; justify-content: flex-end;">
               <button id="btn-tarefa" type="submit" class="add-form-link">+ Adicionar tarefa</button>
             </div>
@@ -176,10 +184,13 @@
           <div class="add-form-titulo">Nova nota</div>
           <form id="form-nota">
             <div style="margin-bottom: 12px;">
+              <div class="add-form-label">Título</div><input id="novo-titulo-nota" class="add-form-input" placeholder="Opcional" style="margin-bottom:12px">
               <div class="add-form-label">Conteúdo</div>
-              <textarea id="novo-conteudo" required rows="3"
+              <textarea id="novo-conteudo" rows="3" placeholder="Opcional"
                 style="width: 100%; background: transparent; border: 1px solid #29292d; border-radius: 6px; color: #f3f1ec; font-size: 13px; padding: 10px 12px; box-sizing: border-box; resize: vertical;"></textarea>
             </div>
+            <div class="comm-grid" style="margin-bottom:12px"><div><div class="add-form-label">Evento</div><select id="novo-evento-nota" class="comm-field"><option value="">Nenhum evento</option></select></div><div><div class="add-form-label">Lead</div><select id="novo-lead-nota" class="comm-field"><option value="">Nenhum lead</option></select></div></div>
+            <label style="display:flex;align-items:center;gap:7px;color:#8c8c91;font-size:12px;margin-bottom:12px"><input id="nova-nota-fixada" type="checkbox"> Fixar no topo</label>
             <div style="display: flex; justify-content: flex-end;">
               <button id="btn-nota" type="submit" class="add-form-link">+ Adicionar nota</button>
             </div>
@@ -207,6 +218,7 @@
   var TAREFAS = [];
   var NOTAS = [];
   var EU_NOME = '';
+  var PESSOAS = [], EVENTOS = [], LEADS = [];
 
   document.addEventListener('DOMContentLoaded', async function () {
     if (!window.EF || !EF.ready) return;
@@ -223,6 +235,10 @@
     var iniciais = nome.split(' ').filter(Boolean).slice(0, 2).map(function (s) { return s[0].toUpperCase(); }).join('');
 
     montarSelectCategorias();
+    await carregarReferencias();
+    ['busca-comunicacao','filtro-responsavel','filtro-status'].forEach(function(id){
+      document.getElementById(id).addEventListener(id==='busca-comunicacao'?'input':'change',function(){renderizarTarefas();renderizarNotas()});
+    });
 
     document.getElementById('btn-toggle-form-tarefa').addEventListener('click', function () {
       var bloco = document.getElementById('bloco-form-tarefa');
@@ -237,16 +253,10 @@
       e.preventDefault();
       var btn = document.getElementById('btn-tarefa');
       var msg = document.getElementById('tarefa-msg');
-      var textoVal = document.getElementById('novo-texto-tarefa').value.trim();
+      var textoVal = document.getElementById('novo-texto-tarefa').value.trim() || 'Nova tarefa';
       var categoriaVal = document.getElementById('nova-categoria-tarefa').value;
       var prazoVal = document.getElementById('novo-prazo-tarefa').value || null;
-      var urgenteVal = document.getElementById('nova-urgente-tarefa').checked;
-
-      if (!textoVal) {
-        msg.style.color = '#c9695c';
-        msg.textContent = 'Escreva o que precisa ser feito.';
-        return;
-      }
+      var prioridadeVal = document.getElementById('nova-prioridade-tarefa').value;
 
       btn.disabled = true;
       msg.style.color = '#8c8c91';
@@ -258,8 +268,13 @@
         autor_nome: nome,
         texto: textoVal,
         categoria: categoriaVal,
-        urgente: urgenteVal,
-        prazo: prazoVal
+        urgente: prioridadeVal === 'urgente',
+        prioridade: prioridadeVal,
+        prazo: prazoVal,
+        descricao: document.getElementById('nova-descricao-tarefa').value.trim(),
+        responsavel_id: document.getElementById('novo-responsavel-tarefa').value || null,
+        evento_id: document.getElementById('novo-evento-tarefa').value || null,
+        lead_id: document.getElementById('novo-lead-tarefa').value || null
       });
 
       btn.disabled = false;
@@ -279,13 +294,7 @@
       e.preventDefault();
       var btn = document.getElementById('btn-nota');
       var msg = document.getElementById('nota-msg');
-      var conteudoVal = document.getElementById('novo-conteudo').value.trim();
-
-      if (!conteudoVal) {
-        msg.style.color = '#c9695c';
-        msg.textContent = 'Escreva algo na nota.';
-        return;
-      }
+      var conteudoVal = document.getElementById('novo-conteudo').value.trim() || 'Nota rápida';
 
       btn.disabled = true;
       msg.style.color = '#8c8c91';
@@ -295,7 +304,11 @@
         empresa_id: p.empresa_id,
         autor_id: p.id,
         autor_nome: nome,
-        conteudo: conteudoVal
+        titulo: document.getElementById('novo-titulo-nota').value.trim(),
+        conteudo: conteudoVal,
+        evento_id: document.getElementById('novo-evento-nota').value || null,
+        lead_id: document.getElementById('novo-lead-nota').value || null,
+        fixada: document.getElementById('nova-nota-fixada').checked
       });
 
       btn.disabled = false;
@@ -323,6 +336,24 @@
       sel.appendChild(opt);
     });
   }
+
+  async function carregarReferencias() {
+    var empresa=EF.profile.empresa_id;
+    var rs=await Promise.all([
+      EF.client.from('profiles').select('id,nome,email').eq('empresa_id',empresa).eq('ativo',true).order('nome'),
+      EF.client.from('eventos').select('id,nome').eq('empresa_id',empresa).order('data_inicio',{ascending:false}),
+      EF.client.from('crm_leads').select('id,nome_evento').eq('empresa_id',empresa).not('etapa','eq','perdido').order('updated_at',{ascending:false})
+    ]);
+    PESSOAS=rs[0].data||[];EVENTOS=rs[1].data||[];LEADS=rs[2].data||[];
+    PESSOAS.forEach(function(p){appendOption('novo-responsavel-tarefa',p.id,p.nome||p.email)});
+    EVENTOS.forEach(function(e){appendOption('novo-evento-tarefa',e.id,e.nome);appendOption('novo-evento-nota',e.id,e.nome)});
+    LEADS.forEach(function(l){appendOption('novo-lead-tarefa',l.id,l.nome_evento);appendOption('novo-lead-nota',l.id,l.nome_evento)});
+  }
+  function appendOption(id,value,label){var o=document.createElement('option');o.value=value;o.textContent=label;document.getElementById(id).appendChild(o)}
+  function pessoaNome(id){var p=PESSOAS.find(function(x){return x.id===id});return p?(p.nome||p.email):''}
+  function eventoNome(id){var p=EVENTOS.find(function(x){return x.id===id});return p?p.nome:''}
+  function leadNome(id){var p=LEADS.find(function(x){return x.id===id});return p?p.nome_evento:''}
+  function matchBusca(obj){var q=document.getElementById('busca-comunicacao').value.trim().toLowerCase();return !q||Object.keys(obj).some(function(k){return typeof obj[k]==='string'&&obj[k].toLowerCase().indexOf(q)>=0})}
 
   function atualizarResumo() {
     var pendentes = TAREFAS.filter(function (t) { return !t.concluida; }).length;
@@ -362,11 +393,13 @@
   function renderizarTarefas() {
     var wrap = document.getElementById('lista-tarefas');
     wrap.innerHTML = '';
-    document.getElementById('vazio-tarefas').style.display = TAREFAS.length ? 'none' : '';
+    var resp=document.getElementById('filtro-responsavel').value,status=document.getElementById('filtro-status').value;
+    var visiveis=TAREFAS.filter(function(t){return matchBusca(t)&&(!resp||(resp==='me'?t.responsavel_id===EF.user.id:!t.responsavel_id))&&(status==='all'||(status==='done'?!!t.concluida:!t.concluida))});
+    document.getElementById('vazio-tarefas').style.display = visiveis.length ? 'none' : '';
 
     var grupos = {};
     BUCKET_ORDEM.forEach(function (b) { grupos[b] = []; });
-    TAREFAS.forEach(function (t) { grupos[bucketDe(t.prazo)].push(t); });
+    visiveis.forEach(function (t) { grupos[bucketDe(t.prazo)].push(t); });
 
     BUCKET_ORDEM.forEach(function (b) {
       if (!grupos[b].length) return;
@@ -395,7 +428,7 @@
 
     var texto = document.createElement('div');
     texto.className = 'texto-tarefa' + (t.concluida ? ' feita' : '');
-    texto.textContent = t.texto;
+    texto.innerHTML = '<div>'+escapeHtml(t.texto||'Nova tarefa')+'</div>'+(t.descricao?'<div style="color:#707178;font-size:11px;margin-top:3px">'+escapeHtml(t.descricao)+'</div>':'')+'<div class="comm-meta">'+(t.responsavel_id?'<span class="comm-pill">'+escapeHtml(pessoaNome(t.responsavel_id))+'</span>':'')+(t.evento_id?'<span class="comm-pill">Evento · '+escapeHtml(eventoNome(t.evento_id))+'</span>':'')+(t.lead_id?'<span class="comm-pill">Lead · '+escapeHtml(leadNome(t.lead_id))+'</span>':'')+(t.conversa_id?'<a class="comm-pill" style="text-decoration:none" href="chat.html?conversa='+encodeURIComponent(t.conversa_id)+'">Abrir chat</a>':'')+'</div>';
     linha.appendChild(texto);
 
     var tag = document.createElement('span');
@@ -403,7 +436,7 @@
     if (t.concluida) {
       tag.textContent = 'FEITO';
       tag.style.color = '#5a5a5e';
-    } else if (t.urgente) {
+    } else if (t.urgente || t.prioridade === 'urgente') {
       tag.textContent = 'URGENTE';
       tag.style.color = '#c9695c';
     } else {
@@ -443,8 +476,9 @@
   function renderizarNotas() {
     var wrap = document.getElementById('lista-notas');
     wrap.innerHTML = '';
-    document.getElementById('vazio-notas').style.display = NOTAS.length ? 'none' : '';
-    NOTAS.forEach(function (n) { wrap.appendChild(linhaNota(n)); });
+    var visiveis=NOTAS.filter(matchBusca).sort(function(a,b){return Number(!!b.fixada)-Number(!!a.fixada)||new Date(b.created_at)-new Date(a.created_at)});
+    document.getElementById('vazio-notas').style.display = visiveis.length ? 'none' : '';
+    visiveis.forEach(function (n) { wrap.appendChild(linhaNota(n)); });
   }
 
   function formatarDataNota(iso) {
@@ -462,6 +496,7 @@
   function linhaNota(n) {
     var linha = document.createElement('div');
     linha.className = 'linha-nota';
+    if(n.fixada)linha.classList.add('nota-fixada');
 
     var header = document.createElement('div');
     header.style.cssText = 'display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:6px;';
@@ -495,16 +530,20 @@
     header.appendChild(direita);
     linha.appendChild(header);
 
+    if(n.titulo){var titulo=document.createElement('div');titulo.className='nota-titulo';titulo.textContent=n.titulo;linha.appendChild(titulo)}
+
     var conteudo = document.createElement('div');
     conteudo.style.cssText = 'font-size:12.5px; color:#a8a8ac; line-height:1.55; white-space:pre-wrap;';
     conteudo.textContent = n.conteudo;
     linha.appendChild(conteudo);
+    var meta=document.createElement('div');meta.className='comm-meta';meta.innerHTML=(n.fixada?'<span class="comm-pill">Fixada</span>':'')+(n.evento_id?'<span class="comm-pill">Evento · '+escapeHtml(eventoNome(n.evento_id))+'</span>':'')+(n.lead_id?'<span class="comm-pill">Lead · '+escapeHtml(leadNome(n.lead_id))+'</span>':'')+(n.conversa_id?'<a class="comm-pill" style="text-decoration:none" href="chat.html?conversa='+encodeURIComponent(n.conversa_id)+'">Abrir chat</a>':'');linha.appendChild(meta);
 
     return linha;
   }
+  function escapeHtml(s){var d=document.createElement('div');d.textContent=s==null?'':s;return d.innerHTML}
 })();
 </script>
 
-<script src="ef-ui.js?v=30"></script>
+<script src="ef-ui.js?v=31"></script>
 </body>
 </html>

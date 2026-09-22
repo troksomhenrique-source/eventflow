@@ -84,7 +84,10 @@
   var NAV=[
     ['Operação',[
       ['dashboard.html','Operação','dashboard'],['agenda.html','Eventos','agenda'],['estoque.html','Equipamentos','estoque'],
-      ['clientes.html','Clientes','clientes','finance'],['crm.html','CRM Comercial','vendas','crm'],['vendas.html','Orçamentos','ordemvenda','finance'],['chat.html','Chat','chat'],['notas.html','Notas','notas'],['ordem-venda.html','Ordens de Venda','ordemvenda','salesorder'],['reembolsos.html','Reembolsos','reembolso','reimburse']
+      ['clientes.html','Clientes','clientes','finance'],['crm.html','CRM Comercial','vendas','crm'],['vendas.html','Orçamentos','ordemvenda','finance'],['ordem-venda.html','Ordens de Venda','ordemvenda','salesorder'],['reembolsos.html','Reembolsos','reembolso','reimburse']
+    ]],
+    ['Comunicação',[
+      ['chat.html','Chat e chamadas','chat'],['notas.html','Notas e tarefas','notas']
     ]],
     ['Áreas',[
       ['calculadora-som.html','Som','som','areas'],['calculadora-luz.html','Luz','luz','areas'],['video.html','Vídeo','video','areas'],['estrutura.html','Estrutura','estrutura','areas'],
