@@ -12,6 +12,21 @@
 (function (g) {
   'use strict';
 
+  // Calendário único para todos os campos de data do sistema, inclusive os
+  // criados dinamicamente em modais e edições de eventos.
+  (function loadEventFlowCalendar() {
+    if (!document.querySelector('link[data-ef-calendar]')) {
+      var link = document.createElement('link');
+      link.rel = 'stylesheet'; link.href = 'ef-calendar.css?v=34'; link.dataset.efCalendar = '1';
+      document.head.appendChild(link);
+    }
+    if (!document.querySelector('script[data-ef-calendar]')) {
+      var script = document.createElement('script');
+      script.src = 'ef-calendar.js?v=34'; script.defer = true; script.dataset.efCalendar = '1';
+      document.head.appendChild(script);
+    }
+  })();
+
   // Define o tema antes da renderização para evitar mudança visível de cor
   // ao navegar. O seletor e a sincronização ficam centralizados no ef-ui.js.
   (function applyInitialTheme() {

@@ -1,0 +1,32 @@
+/* EventFlow Calendar v34 — seletor compartilhado de data e hora */
+.ef-cal-field{position:relative;display:block;width:100%;min-width:0}
+.ef-cal-display{padding-right:42px!important;cursor:pointer!important;text-align:left;color:inherit!important;background-color:inherit}
+.ef-cal-display::placeholder{color:#62636a!important}
+.ef-cal-trigger{position:absolute;right:5px;top:50%;width:32px;height:32px;transform:translateY(-50%);display:grid;place-items:center;border:0!important;border-radius:9px;background:transparent!important;color:#8daabd!important;padding:0!important;min-height:0!important;cursor:pointer;z-index:1}
+.ef-cal-trigger:hover,.ef-cal-trigger:focus-visible{background:rgba(155,188,210,.12)!important;color:#c3d9e8!important;outline:0}
+.ef-cal-trigger svg{width:17px;height:17px;pointer-events:none}
+.ef-cal-popover{position:fixed;z-index:10050;width:min(370px,calc(100vw - 24px));border:1px solid #30343a;border-radius:18px;background:#121316;color:#f3f1ec;box-shadow:0 22px 70px rgba(0,0,0,.58);padding:16px;font-family:Inter,system-ui,sans-serif}
+.ef-cal-head{display:grid;grid-template-columns:38px 1fr 38px;align-items:center;gap:7px;margin-bottom:13px}
+.ef-cal-title{font:600 15px 'Space Grotesk',Inter,sans-serif;text-align:center;text-transform:capitalize}
+.ef-cal-nav{width:38px;height:38px;border:1px solid #2b2e33;border-radius:10px;background:#191a1e;color:#d7d7da;font-size:20px;line-height:1;cursor:pointer}
+.ef-cal-nav:hover{border-color:#668da9;background:#1c2630}
+.ef-cal-week,.ef-cal-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.ef-cal-week{margin-bottom:5px}
+.ef-cal-week span{text-align:center;color:#676970;font:600 9px 'IBM Plex Mono',monospace;text-transform:uppercase;padding:5px 0}
+.ef-cal-day{aspect-ratio:1;border:1px solid transparent;border-radius:10px;background:transparent;color:#d5d5d8;font:500 12px 'IBM Plex Mono',monospace;cursor:pointer;padding:0;min-height:39px}
+.ef-cal-day:hover{background:#20252b;border-color:#354553}
+.ef-cal-day.out{color:#4f5157}.ef-cal-day.today{border-color:#54758c;color:#acd0e8}.ef-cal-day.selected{background:#a9c4d8;color:#071016;border-color:#a9c4d8;font-weight:700}.ef-cal-day:disabled{opacity:.28;cursor:not-allowed;background:transparent}
+.ef-cal-time{display:flex;align-items:flex-end;gap:8px;padding:13px 0 2px;margin-top:10px;border-top:1px solid #282a2f}
+.ef-cal-time-field{flex:1;min-width:0}.ef-cal-time label{display:block;color:#777980;font:600 8px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px}
+.ef-cal-time select{width:100%;height:40px;border:1px solid #303238;border-radius:10px;background:#191a1e;color:#f3f1ec;padding:0 10px;font:500 13px 'IBM Plex Mono',monospace;color-scheme:dark}
+.ef-cal-colon{height:40px;display:grid;place-items:center;color:#777980;font-weight:700}
+.ef-cal-quick{display:flex;gap:6px;flex-wrap:wrap;padding-top:13px;margin-top:10px;border-top:1px solid #282a2f}
+.ef-cal-quick button{border:1px solid #2b2e33;border-radius:9px;background:#191a1e;color:#a9aaaf;padding:8px 10px;font:600 10px Inter,sans-serif;cursor:pointer}
+.ef-cal-quick button:hover{border-color:#5a7d96;color:#c5d9e7}.ef-cal-quick .danger{color:#ce8177}.ef-cal-quick .apply{margin-left:auto;background:#a9c4d8;color:#071016;border-color:#a9c4d8}
+.ef-cal-caption{color:#74767d;font-size:10.5px;line-height:1.4;margin-top:10px}
+html[data-theme="light"] .ef-cal-popover{background:#fff;color:#181a1d;border-color:#d9dde2;box-shadow:0 22px 65px rgba(35,42,50,.2)}
+html[data-theme="light"] .ef-cal-nav,html[data-theme="light"] .ef-cal-time select,html[data-theme="light"] .ef-cal-quick button{background:#f5f7f9;color:#25282c;border-color:#dce1e6;color-scheme:light}
+html[data-theme="light"] .ef-cal-day{color:#34373b}html[data-theme="light"] .ef-cal-day.out{color:#a5a8ad}html[data-theme="light"] .ef-cal-day:hover{background:#edf3f7}html[data-theme="light"] .ef-cal-day.selected{background:#6f9fbd;color:#fff;border-color:#6f9fbd}
+html[data-theme="light"] .ef-cal-time,html[data-theme="light"] .ef-cal-quick{border-color:#e2e5e8}
+@media(max-width:620px){.ef-cal-popover{left:8px!important;right:8px!important;bottom:8px!important;top:auto!important;width:auto;border-radius:20px;padding:14px}.ef-cal-day{min-height:43px}.ef-cal-quick button{flex:1;min-height:40px}.ef-cal-quick .apply{margin-left:0;flex-basis:100%}}
+
