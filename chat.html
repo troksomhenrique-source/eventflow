@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="ef-config.js"></script>
-<script src="ef-auth.js?v=31"></script>
+<script src="ef-auth.js?v=32"></script>
 <style>
   html,body{margin:0;height:100%;background:#0a0a0b;font-family:'Inter',sans-serif;}
   .mono{font-family:'IBM Plex Mono',monospace;}
@@ -69,11 +69,13 @@
   .chat-workspace{flex:1;min-width:0;height:100vh;display:flex!important;padding:0!important;overflow:hidden;background:#09090b;}
   .chat-conversations{width:300px;min-width:300px;border-right:1px solid #1c1c1f;display:flex;flex-direction:column;box-sizing:border-box;background:#0d0d0f;}
   .chat-thread{flex:1;display:flex;flex-direction:column;min-width:0;background:#09090b;}
+  .participants-panel{width:280px;min-width:280px;border-left:1px solid #1c1c1f;background:#0d0d0f;padding:18px;overflow:auto;display:none}.participants-panel.open{display:block}.participant{display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid #1d1e22}.participant .avatar-conversa{width:32px;height:32px}.participant b{font-size:11px;display:block}.participant small{font-size:9px;color:#707178}.copy-chat{width:100%;border:1px solid #31506a;background:#12202b;color:#9dc4df;border-radius:9px;padding:9px;font-size:10px;cursor:pointer;margin:12px 0}
   @media(max-width:900px){.chat-workspace{height:100dvh}.chat-conversations{width:280px;min-width:280px}}
   @media(max-width:680px){
     .chat-workspace{display:flex!important;overflow:hidden!important;position:relative;}
     .chat-conversations{display:flex!important;width:100%!important;min-width:0!important;height:100%!important;border:0!important;}
     .chat-thread{display:none!important;width:100%;height:100%!important;min-height:0;}
+    .participants-panel{position:absolute;z-index:20;inset:0 0 0 auto;width:86%!important;min-width:0!important;box-shadow:-20px 0 50px rgba(0,0,0,.5)}
     .chat-workspace.mobile-thread-open .chat-conversations{display:none!important;}
     .chat-workspace.mobile-thread-open .chat-thread{display:flex!important;}
     .chat-back{display:flex;}
@@ -97,7 +99,7 @@
   .lista-check{max-height:180px; overflow-y:auto; display:flex; flex-direction:column; gap:9px; margin: 10px 0;}
   .lista-check label{display:flex; align-items:center; gap:9px; font-size:12.5px; color:#c8c8cc; cursor:pointer;}
 </style>
-<link rel="stylesheet" href="ef-ui.css?v=31">
+<link rel="stylesheet" href="ef-ui.css?v=32">
 </head>
 <body>
 
@@ -212,6 +214,7 @@
         </div>
         <button id="btn-chat-tarefa" class="chat-action" type="button" title="Criar tarefa com o texto digitado">✓ Tarefa</button>
         <button id="btn-chat-nota" class="chat-action" type="button" title="Criar nota com o texto digitado">▤ Nota</button>
+        <button id="btn-participants" class="chat-action" type="button" title="Participantes">👥 <span id="participant-count">0</span></button>
         <button id="btn-video-call" class="btn-menu-grupo" style="display:inline-flex;align-items:center;justify-content:center;font-size:16px" type="button" title="Criar chamada no Google Meet" aria-label="Criar chamada no Google Meet">▣</button>
         <button id="btn-config-grupo" class="btn-menu-grupo" type="button" title="Dados do grupo" aria-label="Dados do grupo">⋮</button>
       </div>
@@ -233,6 +236,7 @@
       </div>
     </div>
   </div>
+  <aside id="participants-panel" class="participants-panel"><div style="display:flex;align-items:center;justify-content:space-between"><b class="disp">Participantes</b><button id="close-participants" class="icon-btn">✕</button></div><button id="copy-chat-link" class="copy-chat">Copiar link do bate-papo</button><div id="participants-list"></div></aside>
   </div><!-- /chat-workspace -->
 </div>
 
@@ -336,6 +340,9 @@
     document.getElementById('btn-config-grupo').addEventListener('click', abrirConfiguracoesGrupo);
     document.getElementById('btn-chat-tarefa').addEventListener('click',function(){criarDoChat('tarefa',document.getElementById('input-mensagem').value)});
     document.getElementById('btn-chat-nota').addEventListener('click',function(){criarDoChat('nota',document.getElementById('input-mensagem').value)});
+    document.getElementById('btn-participants').addEventListener('click',function(){document.getElementById('participants-panel').classList.toggle('open')});
+    document.getElementById('close-participants').addEventListener('click',function(){document.getElementById('participants-panel').classList.remove('open')});
+    document.getElementById('copy-chat-link').addEventListener('click',copiarLinkChat);
     document.getElementById('busca-conversas').addEventListener('input',renderizarListaConversas);
     document.getElementById('btn-video-call').addEventListener('click', criarChamadaMeet);
     document.getElementById('btn-fechar-grupo').addEventListener('click', fecharConfiguracoesGrupo);
@@ -396,6 +403,7 @@
     var r=await EF.client.rpc(fn,args);if(r.error){alert('Execute a migração REV11: '+r.error.message);return}
     document.getElementById('input-mensagem').value='';var sub=document.getElementById('thread-sub'),old=sub.textContent;sub.textContent=tipo==='tarefa'?'Tarefa criada ✓':'Nota criada ✓';sub.style.color='#7cae83';setTimeout(function(){sub.textContent=old;sub.style.color=''},1800);
   }
+  async function copiarLinkChat(){var url=location.origin+location.pathname+'?conversa='+encodeURIComponent(conversaAtivaId);try{await navigator.clipboard.writeText(url);document.getElementById('copy-chat-link').textContent='Link copiado ✓';setTimeout(function(){document.getElementById('copy-chat-link').textContent='Copiar link do bate-papo'},1600)}catch(e){prompt('Copie o link:',url)}}
 
   function montarEmojiPicker() {
     var picker = document.getElementById('emoji-picker');
@@ -866,7 +874,10 @@
       : 'Conversa privada';
     preencherAvatar(document.getElementById('thread-avatar'), c, nome);
     document.getElementById('btn-config-grupo').style.display = c && c.tipo === 'grupo' && c.criada_por === EU.id ? 'block' : 'none';
+    renderParticipantes(c);
   }
+
+  function renderParticipantes(c){var ids=c?(PARTICIPANTES[c.id]||[]):[],all=[EU].concat(PESSOAS),list=ids.map(function(id){return all.find(function(p){return p.id===id})}).filter(Boolean);document.getElementById('participant-count').textContent=list.length;document.getElementById('participants-list').innerHTML=list.map(function(p){var n=p.nome||p.email||'Usuário';return'<div class="participant"><div class="avatar-conversa">'+iniciaisDe(n)+'</div><div><b>'+escapeHtml(n)+(p.id===EU.id?' (você)':'')+'</b><small>'+escapeHtml(ROLE_LABEL[p.role]||p.role||'Equipe')+'</small></div></div>'}).join('')}
 
   async function carregarMensagens(conversaId) {
     var res = await EF.client.from('mensagens').select('*').eq('conversa_id', conversaId).order('created_at', { ascending: true });
@@ -1047,6 +1058,6 @@
 })();
 </script>
 
-<script src="ef-ui.js?v=31"></script>
+<script src="ef-ui.js?v=32"></script>
 </body>
 </html>

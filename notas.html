@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="ef-config.js"></script>
-<script src="ef-auth.js?v=31"></script>
+<script src="ef-auth.js?v=32"></script>
 <style>
   body{margin:0;background:#0a0a0b;font-family:'Inter',sans-serif;}
   .mono{font-family:'IBM Plex Mono',monospace;}
@@ -28,12 +28,13 @@
   .icone-acao{cursor:pointer;color:#6e6e73;font-size:11px;}
   .icone-acao:hover{color:#c9695c;}
   .icone-acao.neutro:hover{color:#7fa8c9;}
-  .linha-tarefa{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid #17171a;}
+  .tasks-table-head,.linha-tarefa{display:grid;grid-template-columns:28px minmax(210px,1fr) 100px 120px 120px 72px 20px;align-items:center;gap:10px}.tasks-table-head{padding:9px 0;border-bottom:1px solid #24252a;color:#5f6066;font:500 8px 'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.07em}.linha-tarefa{padding:11px 0;border-bottom:1px solid #17171a;}
   .linha-tarefa:last-child{border-bottom:none;}
   .chk-tarefa{width:15px;height:15px;flex-shrink:0;margin-top:2px;cursor:pointer;accent-color:#7fa8c9;}
   .texto-tarefa{flex:1;min-width:0;font-size:13px;line-height:1.45;color:#e4e2dc;word-break:break-word;}
   .texto-tarefa.feita{color:#5a5a5e;text-decoration:line-through;}
   .tag-tarefa{flex-shrink:0;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;padding-top:2px;}
+  .task-cell{font-size:10px;color:#888990;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.task-due.late{color:#dc8379}
   .del-tarefa{flex-shrink:0;padding-top:2px;}
   .bucket-label{font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:#4a4a4e;margin:18px 0 4px;}
   .bucket-label:first-child{margin-top:0;}
@@ -45,9 +46,9 @@
   .add-form-input{width:100%;background:transparent;border:none;border-bottom:1px solid #29292d;color:#f3f1ec;font-size:13px;padding-bottom:8px;box-sizing:border-box;}
   .add-form-link{background:none;border:none;padding:0 0 8px;font-size:13px;color:#7fa8c9;cursor:pointer;border-bottom:1px solid #2a3d4d;white-space:nowrap;}
   .comm-filters{display:grid;grid-template-columns:minmax(220px,1fr) 180px 180px;gap:10px;margin-bottom:22px}.comm-field{width:100%;background:#111214;border:1px solid #25272c;border-radius:10px;color:#f3f1ec;padding:10px 11px;box-sizing:border-box;min-height:41px}.comm-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 16px}.comm-meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}.comm-pill{font:500 8.5px 'IBM Plex Mono',monospace;letter-spacing:.04em;text-transform:uppercase;color:#929399;background:#18191c;border:1px solid #25262b;border-radius:999px;padding:3px 6px}.comm-pill.urgent{color:#e59a90;border-color:#58312d}.nota-fixada{border-left:2px solid #90b6d1;padding-left:12px}.nota-titulo{font:600 12.5px 'Space Grotesk',sans-serif;margin-bottom:5px}
-  @media(max-width:760px){.comm-filters,.comm-grid{grid-template-columns:1fr}.notes-header{gap:14px}.notes-actions{gap:8px!important}.notes-actions span{padding:8px;border:1px solid #26313a;border-radius:9px}.linha-tarefa{align-items:flex-start}.tag-tarefa{display:none}}
+  @media(max-width:900px){.tasks-table-head{display:none}.linha-tarefa{grid-template-columns:24px minmax(0,1fr) 20px;align-items:start}.linha-tarefa .task-cell,.linha-tarefa .tag-tarefa{display:none}.del-tarefa{grid-column:3;grid-row:1}.texto-tarefa{grid-column:2;grid-row:1}}@media(max-width:760px){.comm-filters,.comm-grid{grid-template-columns:1fr}.notes-header{gap:14px}.notes-actions{gap:8px!important}.notes-actions span{padding:8px;border:1px solid #26313a;border-radius:9px}}
 </style>
-<link rel="stylesheet" href="ef-ui.css?v=31">
+<link rel="stylesheet" href="ef-ui.css?v=32">
 </head>
 <body>
 
@@ -165,7 +166,7 @@
           <div id="tarefa-msg" style="margin-top: 10px; font-size: 12.5px; min-height: 16px;"></div>
         </div>
 
-        <div id="lista-tarefas"></div>
+        <div class="tasks-table-head"><span></span><span>Tarefa</span><span>Prazo</span><span>Criado por</span><span>Responsável</span><span>Prioridade</span><span></span></div><div id="lista-tarefas"></div>
         <div id="vazio-tarefas" style="display:none; color: #4a4a4e; font-size: 13px; padding: 6px 0;">Nenhuma tarefa ainda.</div>
       </div>
 
@@ -428,8 +429,12 @@
 
     var texto = document.createElement('div');
     texto.className = 'texto-tarefa' + (t.concluida ? ' feita' : '');
-    texto.innerHTML = '<div>'+escapeHtml(t.texto||'Nova tarefa')+'</div>'+(t.descricao?'<div style="color:#707178;font-size:11px;margin-top:3px">'+escapeHtml(t.descricao)+'</div>':'')+'<div class="comm-meta">'+(t.responsavel_id?'<span class="comm-pill">'+escapeHtml(pessoaNome(t.responsavel_id))+'</span>':'')+(t.evento_id?'<span class="comm-pill">Evento · '+escapeHtml(eventoNome(t.evento_id))+'</span>':'')+(t.lead_id?'<span class="comm-pill">Lead · '+escapeHtml(leadNome(t.lead_id))+'</span>':'')+(t.conversa_id?'<a class="comm-pill" style="text-decoration:none" href="chat.html?conversa='+encodeURIComponent(t.conversa_id)+'">Abrir chat</a>':'')+'</div>';
+    texto.innerHTML = '<div>'+escapeHtml(t.texto||'Nova tarefa')+'</div>'+(t.descricao?'<div style="color:#707178;font-size:11px;margin-top:3px">'+escapeHtml(t.descricao)+'</div>':'')+'<div class="comm-meta">'+(t.categoria?'<span class="comm-pill">'+escapeHtml(t.categoria)+'</span>':'')+(t.responsavel_id?'<span class="comm-pill">'+escapeHtml(pessoaNome(t.responsavel_id))+'</span>':'')+(t.evento_id?'<span class="comm-pill">Evento · '+escapeHtml(eventoNome(t.evento_id))+'</span>':'')+(t.lead_id?'<span class="comm-pill">Lead · '+escapeHtml(leadNome(t.lead_id))+'</span>':'')+(t.conversa_id?'<a class="comm-pill" style="text-decoration:none" href="chat.html?conversa='+encodeURIComponent(t.conversa_id)+'">Abrir chat</a>':'')+'</div>';
     linha.appendChild(texto);
+
+    var prazo=document.createElement('div');prazo.className='task-cell task-due';prazo.textContent=t.prazo?new Date(t.prazo+'T12:00:00').toLocaleDateString('pt-BR'):'Sem prazo';if(t.prazo&&!t.concluida&&new Date(t.prazo+'T23:59:59')<new Date())prazo.classList.add('late');linha.appendChild(prazo);
+    var criador=document.createElement('div');criador.className='task-cell';criador.textContent=t.autor_nome||'—';linha.appendChild(criador);
+    var responsavel=document.createElement('div');responsavel.className='task-cell';responsavel.textContent=pessoaNome(t.responsavel_id)||'Sem responsável';linha.appendChild(responsavel);
 
     var tag = document.createElement('span');
     tag.className = 'mono tag-tarefa';
@@ -440,8 +445,8 @@
       tag.textContent = 'URGENTE';
       tag.style.color = '#c9695c';
     } else {
-      tag.textContent = t.categoria || 'Geral';
-      tag.style.color = '#6e6e73';
+      tag.textContent = String(t.prioridade || 'normal').toUpperCase();
+      tag.style.color = t.prioridade === 'alta' ? '#d1a663' : t.prioridade === 'baixa' ? '#7396ad' : '#6e6e73';
     }
     linha.appendChild(tag);
 
@@ -544,6 +549,6 @@
 })();
 </script>
 
-<script src="ef-ui.js?v=31"></script>
+<script src="ef-ui.js?v=32"></script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-/* EventFlow UI System — v29
+/* EventFlow UI System — v32
    Single source of truth for navigation, keyboard UX and consistent shell. */
 (function(){
   'use strict';
@@ -14,6 +14,7 @@
       clientes:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
       vendas:'<path d="M3 3v18h18"/><path d="m7 16 4-5 4 3 5-7"/>',
       chat:'<path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z"/>',
+      feed:'<path d="M4 5h16M4 12h16M4 19h10"/><circle cx="19" cy="19" r="2"/>',
       notas:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h6"/>',
       reembolso:'<path d="M6 3h12v18H6z"/><path d="M9 7h6M9 11h6M9 15h3"/><path d="M16 14a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z"/><path d="M16 15.5v3M17.2 16.2h-1.8a.7.7 0 0 0 0 1.4h1.2a.7.7 0 0 1 0 1.4h-1.8"/>',
       ordemvenda:'<path d="M6 3h12v18H6z"/><path d="M9 7h6M9 11h6M9 15h4"/><path d="m15 16 2 2 4-4"/>',
@@ -87,7 +88,7 @@
       ['clientes.html','Clientes','clientes','finance'],['crm.html','CRM Comercial','vendas','crm'],['vendas.html','Orçamentos','ordemvenda','finance'],['ordem-venda.html','Ordens de Venda','ordemvenda','salesorder'],['reembolsos.html','Reembolsos','reembolso','reimburse']
     ]],
     ['Comunicação',[
-      ['chat.html','Chat e chamadas','chat'],['notas.html','Notas e tarefas','notas']
+      ['feed.html','Feed','feed'],['chat.html','Chat e chamadas','chat'],['notas.html','Notas e tarefas','notas']
     ]],
     ['Áreas',[
       ['calculadora-som.html','Som','som','areas'],['calculadora-luz.html','Luz','luz','areas'],['video.html','Vídeo','video','areas'],['estrutura.html','Estrutura','estrutura','areas'],

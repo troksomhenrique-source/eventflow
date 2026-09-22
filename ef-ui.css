@@ -158,6 +158,15 @@ html[data-theme="light"] .bolha.minha{background:#e4eef5;border-color:#c8dbe8;co
 html[data-theme="light"] .modal-fundo{background:rgba(26,35,43,.46)}
 html[data-theme="light"] select{color-scheme:light}
 
+/* Superficies novas de colaboracao e CRM. */
+html[data-theme="light"] body{background:var(--ef-bg)!important;color:var(--ef-text)!important}
+html[data-theme="light"] :where(.composer,.post,.side-card,.crm-main .kpis,.crm-main .kpi,.crm-main .column,.crm-main .lead,.crm-main .modal,.crm-main .file-row,.crm-main .upload,.participants-panel,.comment-copy,.linked,.attachment){background:var(--ef-panel)!important;border-color:var(--ef-border)!important;color:var(--ef-text)!important}
+html[data-theme="light"] :where(.composer-title,.composer-text,.feed-search,.select,.comment-input,.crm-main .field){background:#fff!important;border-color:var(--ef-border)!important;color:var(--ef-text)!important}
+html[data-theme="light"] :where(.composer-tabs,.post-actions,.side-item,.crm-main .tabs,.crm-main .activity,.tasks-table-head,.linha-tarefa){border-color:var(--ef-border)!important}
+html[data-theme="light"] .crm-main .column.drag-over{background:#edf5fa!important;border-color:#527c99!important}
+html[data-theme="light"] .crm-main .file-preview{background:var(--ef-panel-2)!important}
+html[data-theme="light"] .post.pinned{border-color:#7194ac!important}
+
 .ef-theme-float{position:fixed;right:18px;top:18px;z-index:120}
 .ef-theme-float .ef-theme-toggle{width:42px;height:42px;background:var(--ef-panel);border:1px solid var(--ef-border);box-shadow:var(--ef-shadow);color:var(--ef-text)}
 .ef-theme-float .ef-theme-toggle .ef-icon{width:18px;height:18px}
